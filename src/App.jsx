@@ -35,9 +35,14 @@ const styles = {
     alignItems: "center",
   },
   title: {
-    fontSize: "2rem",
+    fontSize: "3rem",
     fontWeight: "700",
-    color: "#111827",
+    background: "linear-gradient(90deg, #6366F1, #EC4899, #F59E0B)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+    backgroundClip: "text",
+    color: "transparent",
+
     margin: 0,
   },
   subtitle: {
@@ -412,7 +417,7 @@ function App() {
                 size={20}
                 style={loading ? { animation: "spin 1s linear infinite" } : {}}
               />
-              {loading ? "Refreshing..." : "Refresh Data"}
+              {loading ? "Refreshing..." : "Refresh"}
             </button>
           </div>
         </div>
@@ -603,7 +608,7 @@ function App() {
                       color: "#581c87",
                     }}
                   >
-                    Avg Profit
+                    Average Profit
                   </div>
                   <TrendingUp
                     size={32}
