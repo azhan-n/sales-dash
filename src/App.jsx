@@ -35,9 +35,9 @@ const styles = {
     alignItems: "center",
   },
   title: {
-    fontSize: "3rem",
+    fontSize: "2.5rem",
     fontWeight: "700",
-    background: "linear-gradient(90deg, #6366F1, #EC4899, #F59E0B)",
+    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
     WebkitBackgroundClip: "text",
     WebkitTextFillColor: "transparent",
     backgroundClip: "text",
