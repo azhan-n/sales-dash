@@ -2,40 +2,40 @@ import React, { useState, useEffect } from "react";
 import {
   TrendingUp,
   DollarSign,
-  Calendar,
   Filter,
   User,
   RefreshCw,
+  Moon,
+  Sun,
 } from "lucide-react";
 
 // Google Sheets Configuration
 const GOOGLE_SHEETS_URL =
   "https://script.google.com/macros/s/AKfycbxVwc0buJoICP6sIzK6GxmZNtdvdYA4lw7MhmMxxYjI2weRxDReGIK4sbKyKESUPhEUHQ/exec";
 
-const styles = {
+const getStyles = (dark) => ({
   container: {
     minHeight: "100vh",
-    backgroundColor: "#f3f4f6",
+    backgroundColor: dark ? "#0f172a" : "#f3f4f6",
     fontFamily:
       '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    transition: "background-color 0.3s ease",
   },
   header: {
-    backgroundColor: "#ffffff",
+    backgroundColor: dark ? "#1e293b" : "#ffffff",
     boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-    borderBottom: "1px solid #e5e7eb",
+    borderBottom: `1px solid ${dark ? "#334155" : "#e5e7eb"}`,
     padding: "1.5rem 1rem",
+    transition: "background-color 0.3s ease",
   },
-  headerContent: {
-    maxWidth: "80rem",
-    margin: "0 auto",
-  },
+  headerContent: { maxWidth: "80rem", margin: "0 auto" },
   headerFlex: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
   },
   title: {
-    fontSize: "3rem",
+    fontSize: "2.5rem",
     fontWeight: "700",
     background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
     WebkitBackgroundClip: "text",
@@ -46,22 +46,19 @@ const styles = {
   },
   subtitle: {
     fontSize: "0.875rem",
-    color: "#6b7280",
+    color: dark ? "#94a3b8" : "#6b7280",
     marginTop: "0.25rem",
+    display: "flex",
+    alignItems: "center",
+    gap: "0.75rem",
   },
   tabs: {
-    backgroundColor: "#ffffff",
-    borderBottom: "1px solid #e5e7eb",
+    backgroundColor: dark ? "#1e293b" : "#ffffff",
+    borderBottom: `1px solid ${dark ? "#334155" : "#e5e7eb"}`,
+    transition: "background-color 0.3s ease",
   },
-  tabsContent: {
-    maxWidth: "80rem",
-    margin: "0 auto",
-    padding: "0 1rem",
-  },
-  tabsNav: {
-    display: "flex",
-    gap: "2rem",
-  },
+  tabsContent: { maxWidth: "80rem", margin: "0 auto", padding: "0 1rem" },
+  tabsNav: { display: "flex", gap: "2rem" },
   tab: {
     padding: "1rem 0.25rem",
     border: "none",
@@ -71,19 +68,11 @@ const styles = {
     fontWeight: "500",
     cursor: "pointer",
     transition: "all 0.15s",
+    color: dark ? "#94a3b8" : "#6b7280",
   },
-  tabActive: {
-    borderBottomColor: "#2563eb",
-    color: "#2563eb",
-  },
-  tabInactive: {
-    color: "#6b7280",
-  },
-  mainContent: {
-    maxWidth: "80rem",
-    margin: "0 auto",
-    padding: "2rem 1rem",
-  },
+  tabActive: { borderBottomColor: "#2563eb", color: "#2563eb" },
+  tabInactive: { color: dark ? "#94a3b8" : "#6b7280" },
+  mainContent: { maxWidth: "80rem", margin: "0 auto", padding: "2rem 1rem" },
   statsGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
@@ -111,11 +100,13 @@ const styles = {
     background: "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
   },
   card: {
-    backgroundColor: "#ffffff",
+    backgroundColor: dark ? "#1e293b" : "#ffffff",
     borderRadius: "1rem",
     padding: "2rem",
-    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+    boxShadow: dark ? "0 1px 3px rgba(0,0,0,0.3)" : "0 1px 3px rgba(0,0,0,0.1)",
     marginBottom: "2rem",
+    border: `1px solid ${dark ? "#334155" : "transparent"}`,
+    transition: "background-color 0.3s ease",
   },
   refreshButton: {
     padding: "0.875rem 1.75rem",
@@ -132,6 +123,18 @@ const styles = {
     transition: "all 0.3s ease",
     boxShadow: "0 4px 15px rgba(102, 126, 234, 0.4)",
   },
+  darkToggle: {
+    padding: "0.5rem",
+    borderRadius: "0.5rem",
+    border: `1px solid ${dark ? "#475569" : "#e5e7eb"}`,
+    backgroundColor: dark ? "#334155" : "#f9fafb",
+    color: dark ? "#f1f5f9" : "#374151",
+    cursor: "pointer",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    transition: "all 0.2s ease",
+  },
   button: {
     padding: "0.75rem 1.5rem",
     borderRadius: "0.5rem",
@@ -145,35 +148,33 @@ const styles = {
     transition: "all 0.2s",
     boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
   },
-  buttonPrimary: {
-    backgroundColor: "#2563eb",
-    color: "#ffffff",
-  },
-  table: {
-    width: "100%",
-    borderCollapse: "collapse",
-  },
+  buttonPrimary: { backgroundColor: "#2563eb", color: "#ffffff" },
+  table: { width: "100%", borderCollapse: "collapse" },
   th: {
     padding: "0.75rem 1rem",
     textAlign: "left",
     fontSize: "0.75rem",
     fontWeight: "600",
-    color: "#6b7280",
-    backgroundColor: "#f9fafb",
-    borderBottom: "1px solid #e5e7eb",
+    color: dark ? "#94a3b8" : "#6b7280",
+    backgroundColor: dark ? "#0f172a" : "#f9fafb",
+    borderBottom: `1px solid ${dark ? "#334155" : "#e5e7eb"}`,
   },
   td: {
     padding: "0.75rem 1rem",
     fontSize: "0.875rem",
-    borderBottom: "1px solid #e5e7eb",
+    borderBottom: `1px solid ${dark ? "#334155" : "#e5e7eb"}`,
+    color: dark ? "#e2e8f0" : "#111827",
+    backgroundColor: dark ? "#1e293b" : "#ffffff",
   },
   select: {
     padding: "0.5rem 0.75rem",
-    border: "1px solid #e5e7eb",
+    border: `1px solid ${dark ? "#475569" : "#e5e7eb"}`,
     borderRadius: "0.25rem",
     fontSize: "0.875rem",
     minWidth: "150px",
     width: "100%",
+    backgroundColor: dark ? "#334155" : "#ffffff",
+    color: dark ? "#e2e8f0" : "#111827",
   },
   loading: {
     display: "flex",
@@ -181,18 +182,37 @@ const styles = {
     alignItems: "center",
     minHeight: "100vh",
     fontSize: "1.125rem",
-    color: "#6b7280",
+    color: dark ? "#94a3b8" : "#6b7280",
     flexDirection: "column",
     gap: "1rem",
+    backgroundColor: dark ? "#0f172a" : "#f3f4f6",
   },
   error: {
     padding: "1rem",
-    backgroundColor: "#fee2e2",
-    border: "1px solid #ef4444",
+    backgroundColor: dark ? "#450a0a" : "#fee2e2",
+    border: `1px solid ${dark ? "#991b1b" : "#ef4444"}`,
     borderRadius: "0.5rem",
-    color: "#991b1b",
+    color: dark ? "#fca5a5" : "#991b1b",
     marginBottom: "2rem",
     textAlign: "center",
+  },
+  ownerCard: {
+    padding: "1.5rem",
+    backgroundColor: dark ? "#0f172a" : "#f9fafb",
+    borderRadius: "0.75rem",
+    border: `1px solid ${dark ? "#334155" : "#e5e7eb"}`,
+  },
+  ownerStatBox: {
+    textAlign: "center",
+    padding: "1rem",
+    backgroundColor: dark ? "#1e293b" : "#ffffff",
+    borderRadius: "0.5rem",
+  },
+  cardTypeStat: {
+    padding: "1.5rem",
+    border: `2px solid ${dark ? "#334155" : "#e5e7eb"}`,
+    borderRadius: "0.75rem",
+    backgroundColor: dark ? "#0f172a" : "#ffffff",
   },
   badge: {
     display: "inline-flex",
@@ -202,12 +222,47 @@ const styles = {
     fontSize: "0.75rem",
     fontWeight: "600",
   },
-  badgeGreen: { backgroundColor: "#d1fae5", color: "#065f46" },
-  badgeYellow: { backgroundColor: "#fef3c7", color: "#92400e" },
-  badgeRed: { backgroundColor: "#fee2e2", color: "#991b1b" },
-};
+  badgeGreen: {
+    backgroundColor: dark ? "#064e3b" : "#d1fae5",
+    color: dark ? "#6ee7b7" : "#065f46",
+  },
+  badgeYellow: {
+    backgroundColor: dark ? "#78350f" : "#fef3c7",
+    color: dark ? "#fcd34d" : "#92400e",
+  },
+  badgeRed: {
+    backgroundColor: dark ? "#7f1d1d" : "#fee2e2",
+    color: dark ? "#fca5a5" : "#991b1b",
+  },
+  sectionTitle: {
+    fontSize: "1.5rem",
+    fontWeight: "700",
+    marginBottom: "1.5rem",
+    display: "flex",
+    alignItems: "center",
+    gap: "0.75rem",
+    color: dark ? "#f1f5f9" : "#111827",
+  },
+  ownerName: {
+    fontWeight: "700",
+    fontSize: "1.25rem",
+    color: dark ? "#f1f5f9" : "#111827",
+  },
+  ownerCount: {
+    fontSize: "0.875rem",
+    color: dark ? "#94a3b8" : "#6b7280",
+    backgroundColor: dark ? "#1e293b" : "#ffffff",
+    padding: "0.25rem 0.75rem",
+    borderRadius: "0.5rem",
+    fontWeight: "600",
+  },
+  cardTypeText: {
+    fontWeight: "700",
+    fontSize: "1.125rem",
+    color: dark ? "#f1f5f9" : "#111827",
+  },
+});
 
-// ✅ Same normalizeCardType as compact version
 const normalizeCardType = (type) => {
   if (!type) return "UNKNOWN";
   const normalized = type.toString().trim().toUpperCase();
@@ -221,7 +276,6 @@ const normalizeCardType = (type) => {
   return normalized;
 };
 
-// ✅ Same card colors as compact version
 const cardTypeColors = {
   "VISA DEBIT": "#3b82f6",
   "VISA CREDIT": "#10b981",
@@ -236,13 +290,6 @@ const getCardTypeColor = (type) => {
   return cardTypeColors[normalized] || cardTypeColors["UNKNOWN"];
 };
 
-// ✅ Same profit margin badge as compact version
-const getProfitMarginBadge = (margin) => {
-  if (margin >= 20) return { style: styles.badgeGreen, label: "Excellent" };
-  if (margin >= 10) return { style: styles.badgeYellow, label: "Good" };
-  return { style: styles.badgeRed, label: "Low" };
-};
-
 function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [transactions, setTransactions] = useState([]);
@@ -255,18 +302,25 @@ function App() {
   const [error, setError] = useState(null);
   const [lastSync, setLastSync] = useState(null);
   const [isRefreshHovered, setIsRefreshHovered] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+
+  const styles = getStyles(darkMode);
+
+  const getProfitMarginBadge = (margin) => {
+    if (margin >= 20) return { style: styles.badgeGreen, label: "Excellent" };
+    if (margin >= 10) return { style: styles.badgeYellow, label: "Good" };
+    return { style: styles.badgeRed, label: "Low" };
+  };
 
   const fetchFromGoogleSheets = async () => {
     setLoading(true);
     setError(null);
-
     try {
       const response = await fetch(GOOGLE_SHEETS_URL);
       if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       if (data.error) throw new Error(data.error);
-
       if (!data || data.length === 0) {
         setTransactions([]);
         setOwners([]);
@@ -277,7 +331,6 @@ function App() {
         processTransactions(data);
       }
     } catch (err) {
-      console.error("Error fetching from Google Sheets:", err);
       setError(
         "Failed to load data. Please check your connection and try again."
       );
@@ -291,7 +344,6 @@ function App() {
   }, []);
 
   const processTransactions = (transactionsData) => {
-    // ✅ Normalize card types just like compact version
     const normalizedData = transactionsData.map((t) => ({
       ...t,
       cardType: normalizeCardType(t.cardType),
@@ -323,14 +375,9 @@ function App() {
       const cost = parseFloat(t.cost) || 0;
       const grossProfit = parseFloat(t.grossProfit) || 0;
       let netProfit = parseFloat(t.netProfit) || 0;
-
-      // Auto-calculate if missing
-      if (netProfit === 0 && (cost > 0 || grossProfit > 0)) {
+      if (netProfit === 0 && (cost > 0 || grossProfit > 0))
         netProfit = grossProfit - cost;
-      }
-
       const profitMargin = cost > 0 ? (netProfit / cost) * 100 : 0;
-
       return {
         ...t,
         cost,
@@ -367,9 +414,8 @@ function App() {
 
     const cardTypeStats = {};
     crds.forEach((c) => {
-      if (!cardTypeStats[c.type]) {
+      if (!cardTypeStats[c.type])
         cardTypeStats[c.type] = { count: 0, netProfit: 0 };
-      }
       const cardTxns = txns.filter((t) => t.cardId === c.id);
       cardTypeStats[c.type].count += cardTxns.length;
       cardTypeStats[c.type].netProfit += cardTxns.reduce(
@@ -409,14 +455,10 @@ function App() {
 
   if (loading && transactions.length === 0) {
     return (
-      <div style={styles.container}>
-        <div style={styles.loading}>
-          <RefreshCw
-            size={48}
-            style={{ animation: "spin 1s linear infinite" }}
-          />
-          <div>Loading dashboard...</div>
-        </div>
+      <div style={styles.loading}>
+        <RefreshCw size={48} style={{ animation: "spin 1s linear infinite" }} />
+        <div>Loading dashboard...</div>
+        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -432,6 +474,16 @@ function App() {
                 {lastSync
                   ? `Last updated: ${lastSync.toLocaleTimeString()}`
                   : "Real-time data from Google Sheets"}
+                {/* ✅ Dark mode toggle right next to last updated */}
+                <button
+                  onClick={() => setDarkMode(!darkMode)}
+                  style={styles.darkToggle}
+                  title={
+                    darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"
+                  }
+                >
+                  {darkMode ? <Sun size={16} /> : <Moon size={16} />}
+                </button>
               </p>
             </div>
             <button
@@ -676,17 +728,7 @@ function App() {
             </div>
 
             <div style={styles.card}>
-              <h2
-                style={{
-                  fontSize: "1.5rem",
-                  fontWeight: "700",
-                  marginBottom: "1.5rem",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                  color: "#111827",
-                }}
-              >
+              <h2 style={styles.sectionTitle}>
                 <User size={24} />
                 Owner Performance
               </h2>
@@ -699,15 +741,7 @@ function App() {
                     totalNetProfit: 0,
                   };
                   return (
-                    <div
-                      key={o.id}
-                      style={{
-                        padding: "1.5rem",
-                        backgroundColor: "#f9fafb",
-                        borderRadius: "0.75rem",
-                        border: "1px solid #e5e7eb",
-                      }}
-                    >
+                    <div key={o.id} style={styles.ownerCard}>
                       <div
                         style={{
                           display: "flex",
@@ -716,25 +750,8 @@ function App() {
                           marginBottom: "1rem",
                         }}
                       >
-                        <span
-                          style={{
-                            fontWeight: "700",
-                            fontSize: "1.25rem",
-                            color: "#111827",
-                          }}
-                        >
-                          {o.name}
-                        </span>
-                        <span
-                          style={{
-                            fontSize: "0.875rem",
-                            color: "#6b7280",
-                            backgroundColor: "#ffffff",
-                            padding: "0.25rem 0.75rem",
-                            borderRadius: "0.5rem",
-                            fontWeight: "600",
-                          }}
-                        >
+                        <span style={styles.ownerName}>{o.name}</span>
+                        <span style={styles.ownerCount}>
                           {oStats.count} transactions
                         </span>
                       </div>
@@ -746,18 +763,11 @@ function App() {
                           gap: "1rem",
                         }}
                       >
-                        <div
-                          style={{
-                            textAlign: "center",
-                            padding: "1rem",
-                            backgroundColor: "#ffffff",
-                            borderRadius: "0.5rem",
-                          }}
-                        >
+                        <div style={styles.ownerStatBox}>
                           <div
                             style={{
                               fontSize: "0.75rem",
-                              color: "#6b7280",
+                              color: darkMode ? "#94a3b8" : "#6b7280",
                               marginBottom: "0.25rem",
                               fontWeight: "600",
                             }}
@@ -774,18 +784,11 @@ function App() {
                             ${oStats.totalCost.toFixed(2)}
                           </div>
                         </div>
-                        <div
-                          style={{
-                            textAlign: "center",
-                            padding: "1rem",
-                            backgroundColor: "#ffffff",
-                            borderRadius: "0.5rem",
-                          }}
-                        >
+                        <div style={styles.ownerStatBox}>
                           <div
                             style={{
                               fontSize: "0.75rem",
-                              color: "#6b7280",
+                              color: darkMode ? "#94a3b8" : "#6b7280",
                               marginBottom: "0.25rem",
                               fontWeight: "600",
                             }}
@@ -802,18 +805,11 @@ function App() {
                             ${oStats.totalGrossProfit.toFixed(2)}
                           </div>
                         </div>
-                        <div
-                          style={{
-                            textAlign: "center",
-                            padding: "1rem",
-                            backgroundColor: "#ffffff",
-                            borderRadius: "0.5rem",
-                          }}
-                        >
+                        <div style={styles.ownerStatBox}>
                           <div
                             style={{
                               fontSize: "0.75rem",
-                              color: "#6b7280",
+                              color: darkMode ? "#94a3b8" : "#6b7280",
                               marginBottom: "0.25rem",
                               fontWeight: "600",
                             }}
@@ -838,14 +834,7 @@ function App() {
             </div>
 
             <div style={styles.card}>
-              <h2
-                style={{
-                  fontSize: "1.5rem",
-                  fontWeight: "700",
-                  marginBottom: "1.5rem",
-                  color: "#111827",
-                }}
-              >
+              <h2 style={{ ...styles.sectionTitle, marginBottom: "1.5rem" }}>
                 Card Type Statistics
               </h2>
               <div
@@ -857,15 +846,7 @@ function App() {
               >
                 {Object.entries(stats.cardTypeStats || {}).map(
                   ([type, data]) => (
-                    <div
-                      key={type}
-                      style={{
-                        padding: "1.5rem",
-                        border: "2px solid #e5e7eb",
-                        borderRadius: "0.75rem",
-                        backgroundColor: "#ffffff",
-                      }}
-                    >
+                    <div key={type} style={styles.cardTypeStat}>
                       <div
                         style={{
                           display: "flex",
@@ -874,7 +855,6 @@ function App() {
                           marginBottom: "1rem",
                         }}
                       >
-                        {/* ✅ Fixed color dot */}
                         <div
                           style={{
                             width: "16px",
@@ -884,20 +864,12 @@ function App() {
                             flexShrink: 0,
                           }}
                         ></div>
-                        <span
-                          style={{
-                            fontWeight: "700",
-                            fontSize: "1.125rem",
-                            color: "#111827",
-                          }}
-                        >
-                          {type}
-                        </span>
+                        <span style={styles.cardTypeText}>{type}</span>
                       </div>
                       <div
                         style={{
                           fontSize: "0.875rem",
-                          color: "#6b7280",
+                          color: darkMode ? "#94a3b8" : "#6b7280",
                           marginBottom: "0.5rem",
                         }}
                       >
@@ -938,8 +910,17 @@ function App() {
                     gap: "0.5rem",
                   }}
                 >
-                  <Filter size={16} style={{ color: "#6b7280" }} />
-                  <span style={{ fontSize: "0.875rem", fontWeight: "500" }}>
+                  <Filter
+                    size={16}
+                    style={{ color: darkMode ? "#94a3b8" : "#6b7280" }}
+                  />
+                  <span
+                    style={{
+                      fontSize: "0.875rem",
+                      fontWeight: "500",
+                      color: darkMode ? "#e2e8f0" : "#111827",
+                    }}
+                  >
                     Filters:
                   </span>
                 </div>
@@ -1009,7 +990,7 @@ function App() {
                       const cardColor = getCardTypeColor(card?.type);
                       const marginBadge = getProfitMarginBadge(t.profitMargin);
                       return (
-                        <tr key={t.id} style={{ backgroundColor: "#ffffff" }}>
+                        <tr key={t.id}>
                           <td style={styles.td}>
                             <div
                               style={{
@@ -1018,7 +999,6 @@ function App() {
                                 gap: "0.5rem",
                               }}
                             >
-                              {/* ✅ Fixed color dot */}
                               <div
                                 style={{
                                   width: "10px",
@@ -1070,7 +1050,6 @@ function App() {
                           >
                             ${t.netProfit.toFixed(2)}
                           </td>
-                          {/* ✅ New profit margin column */}
                           <td style={{ ...styles.td, textAlign: "right" }}>
                             <span
                               style={{ ...styles.badge, ...marginBadge.style }}
@@ -1089,14 +1068,12 @@ function App() {
         )}
       </div>
 
-      <style>
-        {`
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-        `}
-      </style>
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
