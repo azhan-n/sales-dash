@@ -42,7 +42,6 @@ const styles = {
     WebkitTextFillColor: "transparent",
     backgroundClip: "text",
     color: "transparent",
-
     margin: 0,
   },
   subtitle: {
@@ -133,10 +132,6 @@ const styles = {
     transition: "all 0.3s ease",
     boxShadow: "0 4px 15px rgba(102, 126, 234, 0.4)",
   },
-  refreshButtonHover: {
-    transform: "translateY(-2px)",
-    boxShadow: "0 6px 20px rgba(102, 126, 234, 0.6)",
-  },
   button: {
     padding: "0.75rem 1.5rem",
     borderRadius: "0.5rem",
@@ -199,13 +194,53 @@ const styles = {
     marginBottom: "2rem",
     textAlign: "center",
   },
+  badge: {
+    display: "inline-flex",
+    alignItems: "center",
+    padding: "0.25rem 0.625rem",
+    borderRadius: "9999px",
+    fontSize: "0.75rem",
+    fontWeight: "600",
+  },
+  badgeGreen: { backgroundColor: "#d1fae5", color: "#065f46" },
+  badgeYellow: { backgroundColor: "#fef3c7", color: "#92400e" },
+  badgeRed: { backgroundColor: "#fee2e2", color: "#991b1b" },
 };
 
+// ✅ Same normalizeCardType as compact version
+const normalizeCardType = (type) => {
+  if (!type) return "UNKNOWN";
+  const normalized = type.toString().trim().toUpperCase();
+  if (normalized.includes("VISA") && normalized.includes("DEBIT"))
+    return "VISA DEBIT";
+  if (normalized.includes("VISA") && normalized.includes("CREDIT"))
+    return "VISA CREDIT";
+  if (normalized.includes("AMEX")) return "AMEX";
+  if (normalized.includes("SELLER")) return "SELLER";
+  if (normalized.includes("MASTERCARD")) return "MASTERCARD";
+  return normalized;
+};
+
+// ✅ Same card colors as compact version
 const cardTypeColors = {
   "VISA DEBIT": "#3b82f6",
-  "VISA CREDIT": "#22c55e",
-  AMEX: "#a855f7",
-  SELLER: "#6b7280",
+  "VISA CREDIT": "#10b981",
+  AMEX: "#8b5cf6",
+  SELLER: "#64748b",
+  MASTERCARD: "#f59e0b",
+  UNKNOWN: "#94a3b8",
+};
+
+const getCardTypeColor = (type) => {
+  const normalized = normalizeCardType(type);
+  return cardTypeColors[normalized] || cardTypeColors["UNKNOWN"];
+};
+
+// ✅ Same profit margin badge as compact version
+const getProfitMarginBadge = (margin) => {
+  if (margin >= 20) return { style: styles.badgeGreen, label: "Excellent" };
+  if (margin >= 10) return { style: styles.badgeYellow, label: "Good" };
+  return { style: styles.badgeRed, label: "Low" };
 };
 
 function App() {
@@ -227,16 +262,10 @@ function App() {
 
     try {
       const response = await fetch(GOOGLE_SHEETS_URL);
-
-      if (!response.ok) {
+      if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
       const data = await response.json();
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
+      if (data.error) throw new Error(data.error);
 
       if (!data || data.length === 0) {
         setTransactions([]);
@@ -262,16 +291,19 @@ function App() {
   }, []);
 
   const processTransactions = (transactionsData) => {
-    const uniqueOwners = [...new Set(transactionsData.map((t) => t.owner))].map(
-      (name, index) => ({
-        id: index + 1,
-        name,
-      })
+    // ✅ Normalize card types just like compact version
+    const normalizedData = transactionsData.map((t) => ({
+      ...t,
+      cardType: normalizeCardType(t.cardType),
+    }));
+
+    const uniqueOwners = [...new Set(normalizedData.map((t) => t.owner))].map(
+      (name, index) => ({ id: index + 1, name })
     );
 
     const uniqueCards = [];
     const cardMap = new Map();
-    transactionsData.forEach((t) => {
+    normalizedData.forEach((t) => {
       const key = `${t.cardType}-${t.cardNumber}`;
       if (!cardMap.has(key)) {
         cardMap.set(key, {
@@ -283,15 +315,30 @@ function App() {
       }
     });
 
-    const processedTransactions = transactionsData.map((t) => {
+    const processedTransactions = normalizedData.map((t) => {
       const card = uniqueCards.find(
         (c) => c.type === t.cardType && c.number === t.cardNumber
       );
       const owner = uniqueOwners.find((o) => o.name === t.owner);
+      const cost = parseFloat(t.cost) || 0;
+      const grossProfit = parseFloat(t.grossProfit) || 0;
+      let netProfit = parseFloat(t.netProfit) || 0;
+
+      // Auto-calculate if missing
+      if (netProfit === 0 && (cost > 0 || grossProfit > 0)) {
+        netProfit = grossProfit - cost;
+      }
+
+      const profitMargin = cost > 0 ? (netProfit / cost) * 100 : 0;
+
       return {
         ...t,
+        cost,
+        grossProfit,
+        netProfit,
         cardId: card.id,
         ownerId: owner.id,
+        profitMargin,
       };
     });
 
@@ -302,18 +349,9 @@ function App() {
   };
 
   const calculateStats = (txns, ownrs, crds) => {
-    const totalCost = txns.reduce(
-      (sum, t) => sum + (parseFloat(t.cost) || 0),
-      0
-    );
-    const totalGrossProfit = txns.reduce(
-      (sum, t) => sum + (parseFloat(t.grossProfit) || 0),
-      0
-    );
-    const totalNetProfit = txns.reduce(
-      (sum, t) => sum + (parseFloat(t.netProfit) || 0),
-      0
-    );
+    const totalCost = txns.reduce((sum, t) => sum + t.cost, 0);
+    const totalGrossProfit = txns.reduce((sum, t) => sum + t.grossProfit, 0);
+    const totalNetProfit = txns.reduce((sum, t) => sum + t.netProfit, 0);
     const avgNetProfit = txns.length > 0 ? totalNetProfit / txns.length : 0;
 
     const ownerStats = {};
@@ -321,18 +359,9 @@ function App() {
       const ownerTxns = txns.filter((t) => t.ownerId === o.id);
       ownerStats[o.id] = {
         count: ownerTxns.length,
-        totalCost: ownerTxns.reduce(
-          (sum, t) => sum + (parseFloat(t.cost) || 0),
-          0
-        ),
-        totalGrossProfit: ownerTxns.reduce(
-          (sum, t) => sum + (parseFloat(t.grossProfit) || 0),
-          0
-        ),
-        totalNetProfit: ownerTxns.reduce(
-          (sum, t) => sum + (parseFloat(t.netProfit) || 0),
-          0
-        ),
+        totalCost: ownerTxns.reduce((sum, t) => sum + t.cost, 0),
+        totalGrossProfit: ownerTxns.reduce((sum, t) => sum + t.grossProfit, 0),
+        totalNetProfit: ownerTxns.reduce((sum, t) => sum + t.netProfit, 0),
       };
     });
 
@@ -344,7 +373,7 @@ function App() {
       const cardTxns = txns.filter((t) => t.cardId === c.id);
       cardTypeStats[c.type].count += cardTxns.length;
       cardTypeStats[c.type].netProfit += cardTxns.reduce(
-        (sum, t) => sum + (parseFloat(t.netProfit) || 0),
+        (sum, t) => sum + t.netProfit,
         0
       );
     });
@@ -370,7 +399,13 @@ function App() {
     return true;
   });
 
-  const cardTypes = ["VISA DEBIT", "VISA CREDIT", "AMEX", "SELLER"];
+  const cardTypes = [
+    "VISA DEBIT",
+    "VISA CREDIT",
+    "AMEX",
+    "SELLER",
+    "MASTERCARD",
+  ];
 
   if (loading && transactions.length === 0) {
     return (
@@ -406,7 +441,10 @@ function App() {
               style={{
                 ...styles.refreshButton,
                 ...(isRefreshHovered && !loading
-                  ? styles.refreshButtonHover
+                  ? {
+                      transform: "translateY(-2px)",
+                      boxShadow: "0 6px 20px rgba(102, 126, 234, 0.6)",
+                    }
                   : {}),
                 opacity: loading ? 0.7 : 1,
                 cursor: loading ? "not-allowed" : "pointer",
@@ -836,12 +874,14 @@ function App() {
                           marginBottom: "1rem",
                         }}
                       >
+                        {/* ✅ Fixed color dot */}
                         <div
                           style={{
                             width: "16px",
                             height: "16px",
                             borderRadius: "50%",
-                            backgroundColor: cardTypeColors[type],
+                            backgroundColor: getCardTypeColor(type),
+                            flexShrink: 0,
                           }}
                         ></div>
                         <span
@@ -957,12 +997,17 @@ function App() {
                       <th style={{ ...styles.th, textAlign: "right" }}>
                         Net Profit
                       </th>
+                      <th style={{ ...styles.th, textAlign: "right" }}>
+                        Margin
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredTransactions.map((t) => {
                       const card = getCardById(t.cardId);
                       const owner = getOwnerById(t.ownerId);
+                      const cardColor = getCardTypeColor(card?.type);
+                      const marginBadge = getProfitMarginBadge(t.profitMargin);
                       return (
                         <tr key={t.id} style={{ backgroundColor: "#ffffff" }}>
                           <td style={styles.td}>
@@ -973,15 +1018,17 @@ function App() {
                                 gap: "0.5rem",
                               }}
                             >
+                              {/* ✅ Fixed color dot */}
                               <div
                                 style={{
-                                  width: "8px",
-                                  height: "8px",
+                                  width: "10px",
+                                  height: "10px",
                                   borderRadius: "50%",
-                                  backgroundColor: cardTypeColors[card?.type],
+                                  backgroundColor: cardColor,
+                                  flexShrink: 0,
                                 }}
                               ></div>
-                              <span>{card?.type}</span>
+                              <span>{card?.type || "UNKNOWN"}</span>
                             </div>
                           </td>
                           <td style={styles.td}>{card?.number || "-"}</td>
@@ -1001,7 +1048,7 @@ function App() {
                             ${parseFloat(t.sellAmount).toFixed(2)}
                           </td>
                           <td style={{ ...styles.td, textAlign: "right" }}>
-                            ${parseFloat(t.cost).toFixed(2)}
+                            ${t.cost.toFixed(2)}
                           </td>
                           <td
                             style={{
@@ -1011,7 +1058,7 @@ function App() {
                               fontWeight: "600",
                             }}
                           >
-                            ${parseFloat(t.grossProfit).toFixed(2)}
+                            ${t.grossProfit.toFixed(2)}
                           </td>
                           <td
                             style={{
@@ -1021,7 +1068,15 @@ function App() {
                               fontWeight: "600",
                             }}
                           >
-                            ${parseFloat(t.netProfit).toFixed(2)}
+                            ${t.netProfit.toFixed(2)}
+                          </td>
+                          {/* ✅ New profit margin column */}
+                          <td style={{ ...styles.td, textAlign: "right" }}>
+                            <span
+                              style={{ ...styles.badge, ...marginBadge.style }}
+                            >
+                              {t.profitMargin.toFixed(1)}%
+                            </span>
                           </td>
                         </tr>
                       );
@@ -1036,11 +1091,11 @@ function App() {
 
       <style>
         {`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}
       </style>
     </div>
   );
