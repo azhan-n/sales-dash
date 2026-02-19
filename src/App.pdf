@@ -99,9 +99,6 @@ const getStyles = (dark) => ({
   statCardOrange: {
     background: "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
   },
-  statCardTeal: {
-    background: "linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%)",
-  },
   card: {
     backgroundColor: dark ? "#1e293b" : "#ffffff",
     borderRadius: "1rem",
@@ -402,10 +399,6 @@ function App() {
     const totalCost = txns.reduce((sum, t) => sum + t.cost, 0);
     const totalGrossProfit = txns.reduce((sum, t) => sum + t.grossProfit, 0);
     const totalNetProfit = txns.reduce((sum, t) => sum + t.netProfit, 0);
-    const totalUsdtSold = txns.reduce(
-      (sum, t) => sum + (parseFloat(t.sellAmount) || 0),
-      0
-    );
     const avgNetProfit = txns.length > 0 ? totalNetProfit / txns.length : 0;
 
     const ownerStats = {};
@@ -435,7 +428,6 @@ function App() {
       totalCost,
       totalGrossProfit,
       totalNetProfit,
-      totalUsdtSold,
       avgNetProfit,
       ownerStats,
       cardTypeStats,
@@ -731,40 +723,6 @@ function App() {
                   }}
                 >
                   Per transaction
-                </div>
-              </div>
-
-              <div style={{ ...styles.statCard, ...styles.statCardTeal }}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: "1rem",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: "1rem",
-                      opacity: 0.9,
-                      fontWeight: "600",
-                    }}
-                  >
-                    Total USDT Sold
-                  </div>
-                  <DollarSign size={32} style={{ opacity: 0.7 }} />
-                </div>
-                <div style={{ fontSize: "2.5rem", fontWeight: "700" }}>
-                  ${stats.totalUsdtSold?.toFixed(2) || 0}
-                </div>
-                <div
-                  style={{
-                    fontSize: "0.875rem",
-                    opacity: 0.8,
-                    marginTop: "0.5rem",
-                  }}
-                >
-                  Total sell amount
                 </div>
               </div>
             </div>
@@ -1103,208 +1061,6 @@ function App() {
                       );
                     })}
                   </tbody>
-                  <tfoot>
-                    <tr
-                      style={{
-                        backgroundColor: darkMode ? "#0f172a" : "#f9fafb",
-                        fontWeight: "700",
-                        borderTop:
-                          "2px solid " + (darkMode ? "#475569" : "#d1d5db"),
-                      }}
-                    >
-                      <td
-                        colSpan="7"
-                        style={{
-                          ...styles.td,
-                          textAlign: "right",
-                          fontWeight: "700",
-                          fontSize: "0.9375rem",
-                          color: darkMode ? "#f1f5f9" : "#111827",
-                        }}
-                      >
-                        TOTALS / AVERAGES:
-                      </td>
-                      <td
-                        style={{
-                          ...styles.td,
-                          textAlign: "right",
-                          fontWeight: "700",
-                          fontSize: "0.9375rem",
-                        }}
-                      >
-                        {/* Cost column - empty */}
-                      </td>
-                      <td
-                        style={{
-                          ...styles.td,
-                          textAlign: "right",
-                          color: "#f97316",
-                          fontWeight: "700",
-                          fontSize: "0.9375rem",
-                        }}
-                      >
-                        $
-                        {filteredTransactions
-                          .reduce(
-                            (sum, t) => sum + (parseFloat(t.grossProfit) || 0),
-                            0
-                          )
-                          .toFixed(2)}
-                      </td>
-                      <td
-                        style={{
-                          ...styles.td,
-                          textAlign: "right",
-                          color: "#16a34a",
-                          fontWeight: "700",
-                          fontSize: "0.9375rem",
-                        }}
-                      >
-                        $
-                        {filteredTransactions
-                          .reduce(
-                            (sum, t) => sum + (parseFloat(t.netProfit) || 0),
-                            0
-                          )
-                          .toFixed(2)}
-                      </td>
-                      <td
-                        style={{
-                          ...styles.td,
-                          textAlign: "right",
-                          fontWeight: "700",
-                          fontSize: "0.9375rem",
-                        }}
-                      >
-                        {/* Margin column - empty */}
-                      </td>
-                    </tr>
-                    <tr
-                      style={{
-                        backgroundColor: darkMode ? "#0f172a" : "#f9fafb",
-                        fontWeight: "600",
-                      }}
-                    >
-                      <td
-                        colSpan="3"
-                        style={{
-                          ...styles.td,
-                          textAlign: "right",
-                          fontWeight: "600",
-                          fontSize: "0.875rem",
-                          color: darkMode ? "#cbd5e1" : "#475569",
-                        }}
-                      >
-                        Total Sell Amount:
-                      </td>
-                      <td
-                        colSpan="2"
-                        style={{
-                          ...styles.td,
-                          textAlign: "left",
-                          fontWeight: "700",
-                          fontSize: "0.9375rem",
-                          color: darkMode ? "#f1f5f9" : "#111827",
-                        }}
-                      >
-                        $
-                        {filteredTransactions
-                          .reduce(
-                            (sum, t) => sum + (parseFloat(t.sellAmount) || 0),
-                            0
-                          )
-                          .toFixed(2)}
-                      </td>
-                      <td
-                        colSpan="2"
-                        style={{
-                          ...styles.td,
-                          textAlign: "right",
-                          fontWeight: "600",
-                          fontSize: "0.875rem",
-                          color: darkMode ? "#cbd5e1" : "#475569",
-                        }}
-                      >
-                        Avg Sell Rate:
-                      </td>
-                      <td
-                        colSpan="2"
-                        style={{
-                          ...styles.td,
-                          textAlign: "left",
-                          fontWeight: "700",
-                          fontSize: "0.9375rem",
-                          color: darkMode ? "#f1f5f9" : "#111827",
-                        }}
-                      >
-                        {filteredTransactions.length > 0
-                          ? (
-                              filteredTransactions.reduce(
-                                (sum, t) => sum + (parseFloat(t.sellRate) || 0),
-                                0
-                              ) / filteredTransactions.length
-                            ).toFixed(2)
-                          : "0.00"}
-                      </td>
-                      <td
-                        colSpan="2"
-                        style={{
-                          ...styles.td,
-                          textAlign: "right",
-                          fontWeight: "600",
-                          fontSize: "0.875rem",
-                          color: darkMode ? "#cbd5e1" : "#475569",
-                        }}
-                      >
-                        Avg Buy Rate (MVR):
-                      </td>
-                    </tr>
-                    <tr
-                      style={{
-                        backgroundColor: darkMode ? "#0f172a" : "#f9fafb",
-                        fontWeight: "600",
-                        borderBottom:
-                          "2px solid " + (darkMode ? "#475569" : "#d1d5db"),
-                      }}
-                    >
-                      <td
-                        colSpan="7"
-                        style={{
-                          ...styles.td,
-                          textAlign: "right",
-                          fontWeight: "600",
-                          fontSize: "0.875rem",
-                          color: darkMode ? "#cbd5e1" : "#475569",
-                        }}
-                      ></td>
-                      <td
-                        colSpan="4"
-                        style={{
-                          ...styles.td,
-                          textAlign: "left",
-                          fontWeight: "700",
-                          fontSize: "0.9375rem",
-                          color: darkMode ? "#f1f5f9" : "#111827",
-                        }}
-                      >
-                        {(() => {
-                          const totalCost = filteredTransactions.reduce(
-                            (sum, t) => sum + (parseFloat(t.cost) || 0),
-                            0
-                          );
-                          const totalSellAmount = filteredTransactions.reduce(
-                            (sum, t) => sum + (parseFloat(t.sellAmount) || 0),
-                            0
-                          );
-                          const avgBuyRate =
-                            totalSellAmount > 0
-                              ? totalCost / totalSellAmount
-                              : 0;
-                          return avgBuyRate.toFixed(2) + " MVR";
-                        })()}
-                      </td>
-                    </tr>
-                  </tfoot>
                 </table>
               </div>
             </div>
@@ -1321,4 +1077,5 @@ function App() {
     </div>
   );
 }
+
 export default App;
