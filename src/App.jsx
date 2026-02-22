@@ -37,6 +37,7 @@ const getStyles = (theme) => {
     headerContent: { maxWidth: "80rem", margin: "0 auto" },
     headerFlex: { display: "flex", justifyContent: "space-between", alignItems: "center" },
     title: {
+      font: "Aptos Narrow",
       fontSize: "2.5rem",
       fontWeight: "700",
       background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
