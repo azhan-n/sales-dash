@@ -24,7 +24,7 @@ const getStyles = (theme) => {
     container: {
       minHeight: "100vh",
       backgroundColor: dark ? "#0f172a" : "#f3f4f6",
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontFamily: '"Aptos Narrow", "Aptos", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
       transition: "background-color 0.3s ease",
     },
     header: {
@@ -904,6 +904,9 @@ function App() {
       </div>
 
       <style>{`
+        /* Aptos Narrow is a Microsoft system font available on Windows 11+ */
+        /* If not available, falls back to Aptos, then system fonts */
+        
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
