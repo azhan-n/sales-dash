@@ -11,28 +11,41 @@ import {
   LayoutGrid,
   List,
   Sparkles,
+  Settings,
+  X,
 } from "lucide-react";
 
 // Google Sheets Configuration
 const GOOGLE_SHEETS_URL =
   "https://script.google.com/macros/s/AKfycbxVwc0buJoICP6sIzK6GxmZNtdvdYA4lw7MhmMxxYjI2weRxDReGIK4sbKyKESUPhEUHQ/exec";
 
-// Load font
+// Available fonts
+const FONTS = [
+  { name: "Roboto Condensed", value: "Roboto Condensed" },
+  { name: "Inter", value: "Inter" },
+  { name: "Open Sans", value: "Open Sans" },
+  { name: "Poppins", value: "Poppins" },
+  { name: "Montserrat", value: "Montserrat" },
+  { name: "Lato", value: "Lato" },
+];
+
+// Load all fonts
 if (typeof document !== 'undefined') {
   const link = document.createElement('link');
-  link.href = 'https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;500;600;700&display=swap';
+  link.href = 'https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700&family=Lato:wght@300;400;700&display=swap';
   link.rel = 'stylesheet';
   document.head.appendChild(link);
 }
 
-const getStyles = (theme) => {
+const getStyles = (theme, font = "Roboto Condensed", fontSize = 16) => {
   const dark = theme === "dark" || (theme === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   
   return {
     container: {
       minHeight: "100vh",
       backgroundColor: dark ? "#0f172a" : "#f3f4f6",
-      fontFamily: '"Roboto Condensed", "Aptos Narrow", "Aptos", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontFamily: `"${font}", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
+      fontSize: `${fontSize}px`,
       transition: "background-color 0.3s ease",
     },
     header: {
@@ -318,6 +331,139 @@ const getStyles = (theme) => {
       transition: "all 0.3s ease",
     },
     cardTypeText: { fontWeight: "700", fontSize: "1.125rem", color: dark ? "#f1f5f9" : "#111827", transition: "color 0.3s ease" },
+    settingsButton: {
+      padding: "0.5rem",
+      borderRadius: "0.5rem",
+      border: `1px solid ${dark ? "#475569" : "#e5e7eb"}`,
+      backgroundColor: dark ? "#334155" : "#f9fafb",
+      color: dark ? "#f1f5f9" : "#374151",
+      cursor: "pointer",
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      transition: "all 0.3s ease",
+      marginLeft: "0.5rem",
+    },
+    settingsModal: {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "1rem",
+      zIndex: 100,
+      animation: "fadeIn 0.2s ease-out",
+    },
+    settingsContent: {
+      backgroundColor: dark ? "#1e293b" : "#ffffff",
+      borderRadius: "1rem",
+      padding: "2rem",
+      maxWidth: "500px",
+      width: "100%",
+      maxHeight: "90vh",
+      overflowY: "auto",
+      boxShadow: dark ? "0 20px 25px -5px rgba(0,0,0,0.5)" : "0 20px 25px -5px rgba(0,0,0,0.2)",
+      animation: "slideUp 0.3s ease-out",
+      border: `1px solid ${dark ? "#334155" : "#e5e7eb"}`,
+    },
+    settingsHeader: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: "2rem",
+      paddingBottom: "1rem",
+      borderBottom: `1px solid ${dark ? "#334155" : "#e5e7eb"}`,
+    },
+    settingsTitle: {
+      fontSize: "1.5rem",
+      fontWeight: "700",
+      color: dark ? "#f1f5f9" : "#111827",
+      margin: 0,
+      display: "flex",
+      alignItems: "center",
+      gap: "0.75rem",
+    },
+    closeButton: {
+      padding: "0.5rem",
+      border: "none",
+      background: "none",
+      cursor: "pointer",
+      color: dark ? "#94a3b8" : "#6b7280",
+      borderRadius: "0.5rem",
+      transition: "all 0.2s ease",
+      display: "flex",
+      alignItems: "center",
+    },
+    settingsSection: {
+      marginBottom: "2rem",
+    },
+    settingsLabel: {
+      display: "block",
+      fontSize: "0.875rem",
+      fontWeight: "600",
+      marginBottom: "0.75rem",
+      color: dark ? "#e2e8f0" : "#374151",
+    },
+    themeOptions: {
+      display: "flex",
+      gap: "0.75rem",
+    },
+    themeOption: {
+      flex: 1,
+      padding: "0.75rem",
+      border: `2px solid ${dark ? "#475569" : "#e5e7eb"}`,
+      borderRadius: "0.75rem",
+      backgroundColor: dark ? "#334155" : "#f9fafb",
+      cursor: "pointer",
+      transition: "all 0.3s ease",
+      textAlign: "center",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: "0.5rem",
+      color: dark ? "#e2e8f0" : "#374151",
+    },
+    themeOptionActive: {
+      borderColor: "#2563eb",
+      backgroundColor: dark ? "#1e3a8a" : "#dbeafe",
+      color: "#2563eb",
+    },
+    fontSelect: {
+      padding: "0.75rem",
+      border: `1px solid ${dark ? "#475569" : "#e5e7eb"}`,
+      borderRadius: "0.5rem",
+      fontSize: "0.9375rem",
+      width: "100%",
+      backgroundColor: dark ? "#334155" : "#ffffff",
+      color: dark ? "#e2e8f0" : "#111827",
+      cursor: "pointer",
+      transition: "all 0.3s ease",
+    },
+    fontSizeSlider: {
+      width: "100%",
+      height: "8px",
+      borderRadius: "4px",
+      background: dark ? "#475569" : "#e5e7eb",
+      outline: "none",
+      transition: "all 0.3s ease",
+    },
+    fontSizeDisplay: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginTop: "0.5rem",
+      fontSize: "0.875rem",
+      color: dark ? "#94a3b8" : "#6b7280",
+    },
+    fontSizeValue: {
+      fontSize: "1.125rem",
+      fontWeight: "700",
+      color: dark ? "#f1f5f9" : "#111827",
+    },
   };
 };
 
@@ -387,8 +533,11 @@ function App() {
   const [viewMode, setViewMode] = useState("table"); // table or cards
   const [hoveredCard, setHoveredCard] = useState(null);
   const [hoveredStat, setHoveredStat] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [selectedFont, setSelectedFont] = useState("Roboto Condensed");
+  const [fontSize, setFontSize] = useState(16);
 
-  const styles = getStyles(theme);
+  const styles = getStyles(theme, selectedFont, fontSize);
   const isDark = theme === "dark" || (theme === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches);
 
   const getProfitMarginBadge = (margin) => {
@@ -541,6 +690,9 @@ function App() {
                 {lastSync ? `Last updated: ${lastSync.toLocaleTimeString()}` : "Real-time data from Google Sheets"}
                 <button onClick={cycleTheme} style={styles.themeToggle} title={`Theme: ${theme}`}>
                   {getThemeIcon()}
+                </button>
+                <button onClick={() => setShowSettings(true)} style={styles.settingsButton} title="Settings">
+                  <Settings size={16} />
                 </button>
               </p>
             </div>
@@ -910,6 +1062,94 @@ function App() {
           </div>
         )}
       </div>
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div style={styles.settingsModal} onClick={() => setShowSettings(false)}>
+          <div style={styles.settingsContent} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.settingsHeader}>
+              <h2 style={styles.settingsTitle}>
+                <Settings size={24} />
+                Settings
+              </h2>
+              <button onClick={() => setShowSettings(false)} style={styles.closeButton}>
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Dark Mode Section */}
+            <div style={styles.settingsSection}>
+              <label style={styles.settingsLabel}>Theme</label>
+              <div style={styles.themeOptions}>
+                <div
+                  onClick={() => setTheme("light")}
+                  style={{
+                    ...styles.themeOption,
+                    ...(theme === "light" ? styles.themeOptionActive : {}),
+                  }}
+                >
+                  <Sun size={24} />
+                  <span>Light</span>
+                </div>
+                <div
+                  onClick={() => setTheme("dark")}
+                  style={{
+                    ...styles.themeOption,
+                    ...(theme === "dark" ? styles.themeOptionActive : {}),
+                  }}
+                >
+                  <Moon size={24} />
+                  <span>Dark</span>
+                </div>
+                <div
+                  onClick={() => setTheme("auto")}
+                  style={{
+                    ...styles.themeOption,
+                    ...(theme === "auto" ? styles.themeOptionActive : {}),
+                  }}
+                >
+                  <Monitor size={24} />
+                  <span>Auto</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Font Style Section */}
+            <div style={styles.settingsSection}>
+              <label style={styles.settingsLabel}>Font Style</label>
+              <select
+                value={selectedFont}
+                onChange={(e) => setSelectedFont(e.target.value)}
+                style={styles.fontSelect}
+              >
+                {FONTS.map((font) => (
+                  <option key={font.value} value={font.value} style={{ fontFamily: font.value }}>
+                    {font.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Font Size Section */}
+            <div style={styles.settingsSection}>
+              <label style={styles.settingsLabel}>Font Size</label>
+              <input
+                type="range"
+                min="12"
+                max="20"
+                value={fontSize}
+                onChange={(e) => setFontSize(parseInt(e.target.value))}
+                style={styles.fontSizeSlider}
+              />
+              <div style={styles.fontSizeDisplay}>
+                <span>Small (12px)</span>
+                <span style={styles.fontSizeValue}>{fontSize}px</span>
+                <span>Large (20px)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         /* Aptos Narrow is a Microsoft system font available on Windows 11+ */
