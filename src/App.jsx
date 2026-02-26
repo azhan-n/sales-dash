@@ -17,6 +17,14 @@ import {
 const GOOGLE_SHEETS_URL =
   "https://script.google.com/macros/s/AKfycbxVwc0buJoICP6sIzK6GxmZNtdvdYA4lw7MhmMxxYjI2weRxDReGIK4sbKyKESUPhEUHQ/exec";
 
+// Load font
+if (typeof document !== 'undefined') {
+  const link = document.createElement('link');
+  link.href = 'https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;500;600;700&display=swap';
+  link.rel = 'stylesheet';
+  document.head.appendChild(link);
+}
+
 const getStyles = (theme) => {
   const dark = theme === "dark" || (theme === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   
@@ -24,7 +32,7 @@ const getStyles = (theme) => {
     container: {
       minHeight: "100vh",
       backgroundColor: dark ? "#0f172a" : "#f3f4f6",
-      fontFamily: '"Aptos Narrow", "Aptos", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      fontFamily: '"Roboto Condensed", "Aptos Narrow", "Aptos", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       transition: "background-color 0.3s ease",
     },
     header: {
@@ -37,7 +45,6 @@ const getStyles = (theme) => {
     headerContent: { maxWidth: "80rem", margin: "0 auto" },
     headerFlex: { display: "flex", justifyContent: "space-between", alignItems: "center" },
     title: {
-      font: "Aptos Narrow",
       fontSize: "2.5rem",
       fontWeight: "700",
       background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
