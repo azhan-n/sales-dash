@@ -466,11 +466,11 @@ const normalizeCardType = (type) => {
 };
 
 const cardTypeColors = {
-  "VISA DEBIT": "rgb(0, 98, 255)",
-  "VISA CREDIT": "#02ff9e",
-  AMEX: "#5cdff6",
+  "VISA DEBIT": "#3b82f6",
+  "VISA CREDIT": "#10b981",
+  AMEX: "#8b5cf6",
   SELLER: "#64748b",
-  MASTERCARD: "#ffae00",
+  MASTERCARD: "#f59e0b",
   UNKNOWN: "#94a3b8",
 };
 
@@ -491,7 +491,7 @@ const SkeletonCard = ({ isDark }) => (
     <div style={{
       height: "24px",
       width: "40%",
-      backgroundColor: isDark ? "#101b2b" : "#e5e7eb",
+      backgroundColor: isDark ? "#334155" : "#e5e7eb",
       borderRadius: "0.5rem",
       marginBottom: "1rem",
       animation: "pulse 1.5s ease-in-out infinite",
@@ -516,13 +516,13 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastSync, setLastSync] = useState(null);
-  const [theme, setTheme] = useState("auto"); // light, dark, auto
+  const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "auto");
   const [viewMode, setViewMode] = useState("table"); // table or cards
   const [hoveredCard, setHoveredCard] = useState(null);
   const [hoveredStat, setHoveredStat] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [selectedFont, setSelectedFont] = useState("Roboto Condensed");
-  const [fontSize, setFontSize] = useState(16);
+  const [selectedFont, setSelectedFont] = useState(() => localStorage.getItem("font") || "Roboto Condensed");
+  const [fontSize, setFontSize] = useState(() => parseInt(localStorage.getItem("fontSize")) || 16);
 
   const styles = getStyles(theme, selectedFont, fontSize);
   const isDark = theme === "dark" || (theme === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches);
@@ -532,6 +532,21 @@ function App() {
     if (margin >= 10) return { style: styles.badgeYellow, label: "Good" };
     return { style: styles.badgeRed, label: "Low" };
   };
+
+  // Save theme to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  // Save font to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("font", selectedFont);
+  }, [selectedFont]);
+
+  // Save fontSize to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("fontSize", fontSize.toString());
+  }, [fontSize]);
 
   const fetchFromGoogleSheets = async () => {
     setLoading(true);
