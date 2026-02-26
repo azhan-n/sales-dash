@@ -521,8 +521,8 @@ function App() {
   const [hoveredCard, setHoveredCard] = useState(null);
   const [hoveredStat, setHoveredStat] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [selectedFont, setSelectedFont] = useState(() => localStorage.getItem("font") || "Roboto Condensed");
-  const [fontSize, setFontSize] = useState(() => parseInt(localStorage.getItem("fontSize")) || 16);
+  const [selectedFont, setSelectedFont] = useState(() => localStorage.getItem("font") || "Poppins");
+  const [fontSize, setFontSize] = useState(() => parseInt(localStorage.getItem("fontSize")) || 20);
 
   const styles = getStyles(theme, selectedFont, fontSize);
   const isDark = theme === "dark" || (theme === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches);
@@ -752,7 +752,7 @@ function App() {
                       </div>
                       <Icon size={32} style={{ opacity: 0.7, color: stat.color === "Orange" || stat.color === "Purple" ? (stat.color === "Orange" ? "#78350f" : "#581c87") : undefined }} />
                     </div>
-                    <div style={{ fontSize: "2.5rem", fontWeight: "700", color: stat.color === "Orange" || stat.color === "Purple" ? (stat.color === "Orange" ? "#78350f" : "#581c87") : undefined }}>
+                    <div style={{ fontSize: "3.5rem", fontWeight: "700", color: stat.color === "Orange" || stat.color === "Purple" ? (stat.color === "Orange" ? "#78350f" : "#581c87") : undefined }}>
                       ${stat.value?.toFixed(2) || 0}
                     </div>
                     <div style={{ fontSize: "0.875rem", opacity: 0.8, marginTop: "0.5rem", color: stat.color === "Orange" || stat.color === "Purple" ? (stat.color === "Orange" ? "#78350f" : "#581c87") : undefined }}>
