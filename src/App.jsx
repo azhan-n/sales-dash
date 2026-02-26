@@ -156,19 +156,6 @@ const getStyles = (theme, font = "Roboto Condensed", fontSize = 16) => {
       transition: "all 0.3s ease",
       boxShadow: "0 4px 15px rgba(102, 126, 234, 0.4)",
     },
-    themeToggle: {
-      padding: "0.5rem",
-      borderRadius: "0.5rem",
-      border: `1px solid ${dark ? "#475569" : "#e5e7eb"}`,
-      backgroundColor: dark ? "#334155" : "#f9fafb",
-      color: dark ? "#f1f5f9" : "#374151",
-      cursor: "pointer",
-      display: "inline-flex",
-      alignItems: "center",
-      justifyContent: "center",
-      transition: "all 0.3s ease",
-      marginLeft: "0.5rem",
-    },
     viewToggle: {
       padding: "0.5rem 1rem",
       borderRadius: "0.5rem",
@@ -655,18 +642,6 @@ function App() {
 
   const cardTypes = ["VISA DEBIT", "VISA CREDIT", "AMEX", "SELLER", "MASTERCARD"];
 
-  const cycleTheme = () => {
-    if (theme === "light") setTheme("dark");
-    else if (theme === "dark") setTheme("auto");
-    else setTheme("light");
-  };
-
-  const getThemeIcon = () => {
-    if (theme === "light") return <Sun size={16} />;
-    if (theme === "dark") return <Moon size={16} />;
-    return <Monitor size={16} />;
-  };
-
   if (loading && transactions.length === 0) {
     return (
       <div style={styles.loading}>
@@ -688,9 +663,6 @@ function App() {
               <h1 style={styles.title}>Sales Dashboard</h1>
               <p style={styles.subtitle}>
                 {lastSync ? `Last updated: ${lastSync.toLocaleTimeString()}` : "Real-time data from Google Sheets"}
-                <button onClick={cycleTheme} style={styles.themeToggle} title={`Theme: ${theme}`}>
-                  {getThemeIcon()}
-                </button>
                 <button onClick={() => setShowSettings(true)} style={styles.settingsButton} title="Settings">
                   <Settings size={16} />
                 </button>
