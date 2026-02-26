@@ -466,11 +466,11 @@ const normalizeCardType = (type) => {
 };
 
 const cardTypeColors = {
-  "VISA DEBIT": "#3b82f6",
-  "VISA CREDIT": "#10b981",
-  AMEX: "#8b5cf6",
+  "VISA DEBIT": "rgb(0, 98, 255)",
+  "VISA CREDIT": "#02ff9e",
+  AMEX: "#5cdff6",
   SELLER: "#64748b",
-  MASTERCARD: "#f59e0b",
+  MASTERCARD: "#ffae00",
   UNKNOWN: "#94a3b8",
 };
 
@@ -491,7 +491,7 @@ const SkeletonCard = ({ isDark }) => (
     <div style={{
       height: "24px",
       width: "40%",
-      backgroundColor: isDark ? "#334155" : "#e5e7eb",
+      backgroundColor: isDark ? "#101b2b" : "#e5e7eb",
       borderRadius: "0.5rem",
       marginBottom: "1rem",
       animation: "pulse 1.5s ease-in-out infinite",
