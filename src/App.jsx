@@ -145,15 +145,15 @@ const getStyles = (theme, font = "Roboto Condensed", fontSize = 16, viewStyle = 
       animation: "fadeIn 0.5s ease-out",
     },
     refreshButton: {
-      padding: "0.875rem 1.75rem",
-      borderRadius: "0.75rem",
+      padding: "0.625rem 1.25rem",
+      borderRadius: "0.5rem",
       border: "none",
       cursor: "pointer",
-      fontSize: "0.9375rem",
+      fontSize: "0.875rem",
       fontWeight: "600",
       display: "inline-flex",
       alignItems: "center",
-      gap: "0.625rem",
+      gap: "0.5rem",
       background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
       color: "#ffffff",
       transition: "all 0.3s ease",
@@ -722,7 +722,7 @@ function App() {
               }}
               disabled={loading}
             >
-              <RefreshCw size={20} style={loading ? { animation: "spin 1s linear infinite" } : {}} />
+              <RefreshCw size={18} style={loading ? { animation: "spin 1s linear infinite" } : {}} />
               {loading ? "Refreshing..." : "Refresh"}
             </button>
           </div>
