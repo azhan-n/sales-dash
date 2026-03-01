@@ -557,6 +557,10 @@ function App() {
       const response = await fetch(GOOGLE_SHEETS_URL);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
+      
+      console.log("📊 Full data from Google Sheets:", data);
+      console.log("📅 Monthly data:", data.monthly);
+      
       if (data.error) throw new Error(data.error);
       
       if (!data || (!data.transactions && !data.monthly)) {
@@ -571,10 +575,14 @@ function App() {
           processTransactions(data.transactions);
         }
         if (data.monthly && data.monthly.length > 0) {
+          console.log("✅ Setting monthly data:", data.monthly);
           setMonthly(data.monthly);
+        } else {
+          console.log("❌ No monthly data found");
         }
       }
     } catch (err) {
+      console.error("❌ Error:", err);
       setError("Failed to load data. Please check your connection and try again.");
     } finally {
       setLoading(false);
@@ -1102,8 +1110,32 @@ function App() {
               
               {monthly.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "3rem", color: isDark ? "#94a3b8" : "#6b7280" }}>
-                  <p style={{ fontSize: "1.125rem", marginBottom: "0.5rem" }}>No monthly data available</p>
-                  <p style={{ fontSize: "0.875rem" }}>Make sure your Google Sheet has a "Monthly" worksheet</p>
+                  <p style={{ fontSize: "1.125rem", marginBottom: "0.5rem", fontWeight: "600" }}>No monthly data available</p>
+                  <p style={{ fontSize: "0.875rem", marginBottom: "1rem" }}>Make sure your Google Sheet has a "Monthly" worksheet with:</p>
+                  <div style={{ 
+                    backgroundColor: isDark ? "#1e293b" : "#f9fafb", 
+                    padding: "1rem", 
+                    borderRadius: "0.5rem",
+                    maxWidth: "400px",
+                    margin: "0 auto",
+                    textAlign: "left",
+                    fontSize: "0.875rem"
+                  }}>
+                    <p style={{ margin: "0.25rem 0" }}>📋 <strong>Column A:</strong> Month (e.g., "June", "July")</p>
+                    <p style={{ margin: "0.25rem 0" }}>💰 <strong>Column B:</strong> Amount (e.g., 4160.00)</p>
+                  </div>
+                  <div style={{ marginTop: "1.5rem" }}>
+                    <button 
+                      onClick={fetchFromGoogleSheets} 
+                      style={{...styles.button, ...styles.buttonPrimary}}
+                    >
+                      <RefreshCw size={16} />
+                      Refresh Data
+                    </button>
+                  </div>
+                  <p style={{ fontSize: "0.75rem", marginTop: "1rem", opacity: 0.7 }}>
+                    💡 Tip: Open browser console (F12) to see debug info
+                  </p>
                 </div>
               ) : (
                 <div style={{ overflowX: "auto" }}>
