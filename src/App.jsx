@@ -28,12 +28,16 @@ const FONTS = [
   { name: "Poppins", value: "Poppins" },
   { name: "Montserrat", value: "Montserrat" },
   { name: "Lato", value: "Lato" },
+  { name: "Outfit", value: "Outfit" },
+  { name: "Space Grotesk", value: "Space Grotesk" },
+  { name: "Plus Jakarta Sans", value: "Plus Jakarta Sans" },
+  { name: "League Spartan", value: "League Spartan" },
 ];
 
 // Load all fonts
 if (typeof document !== 'undefined') {
   const link = document.createElement('link');
-  link.href = 'https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700&family=Lato:wght@300;400;700&display=swap';
+  link.href = 'https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700&family=Lato:wght@300;400;700&family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=League+Spartan:wght@300;400;500;600;700;800;900&display=swap';
   link.rel = 'stylesheet';
   document.head.appendChild(link);
 }
