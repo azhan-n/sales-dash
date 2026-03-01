@@ -131,6 +131,7 @@ const getStyles = (theme, font = "Roboto Condensed", fontSize = 16) => {
     statCardPurple: { background: "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)" },
     statCardOrange: { background: "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)" },
     statCardTeal: { background: "linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%)" },
+    statCardPink: { background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" },
     card: {
       backgroundColor: dark ? "#1e293b" : "#ffffff",
       borderRadius: "1rem",
@@ -621,6 +622,7 @@ function App() {
     const totalGrossProfit = txns.reduce((sum, t) => sum + t.grossProfit, 0);
     const totalNetProfit = txns.reduce((sum, t) => sum + t.netProfit, 0);
     const totalUsdtSold = txns.reduce((sum, t) => sum + (parseFloat(t.sellAmount) || 0), 0);
+    const totalDollarUsed = txns.reduce((sum, t) => sum + (parseFloat(t.buyAmount) || 0), 0);
     const avgNetProfit = txns.length > 0 ? totalNetProfit / txns.length : 0;
 
     const ownerStats = {};
@@ -642,7 +644,7 @@ function App() {
       cardTypeStats[c.type].netProfit += cardTxns.reduce((sum, t) => sum + t.netProfit, 0);
     });
 
-    setStats({ totalCost, totalGrossProfit, totalNetProfit, totalUsdtSold, avgNetProfit, ownerStats, cardTypeStats });
+    setStats({ totalCost, totalGrossProfit, totalNetProfit, totalUsdtSold, totalDollarUsed, avgNetProfit, ownerStats, cardTypeStats });
   };
 
   const getCardById = (id) => cards.find((c) => c.id === id);
@@ -728,6 +730,7 @@ function App() {
             <div style={styles.statsGrid}>
               {[
                 { label: "Total Cost", value: stats.totalCost, icon: DollarSign, color: "Blue", count: transactions.length },
+                { label: "Dollar Used", value: stats.totalDollarUsed, icon: DollarSign, color: "Pink", sub: "Total buy amount" },
                 { label: "Gross Profit", value: stats.totalGrossProfit, icon: TrendingUp, color: "Orange", sub: "Total revenue" },
                 { label: "Net Profit", value: stats.totalNetProfit, icon: TrendingUp, color: "Green", sub: "After costs" },
                 { label: "Average Profit", value: stats.avgNetProfit, icon: TrendingUp, color: "Purple", sub: "Per transaction" },
@@ -752,7 +755,7 @@ function App() {
                       </div>
                       <Icon size={32} style={{ opacity: 0.7, color: stat.color === "Orange" || stat.color === "Purple" ? (stat.color === "Orange" ? "#78350f" : "#581c87") : undefined }} />
                     </div>
-                    <div style={{ fontSize: "3.5rem", fontWeight: "700", color: stat.color === "Orange" || stat.color === "Purple" ? (stat.color === "Orange" ? "#78350f" : "#581c87") : undefined }}>
+                    <div style={{ fontSize: "2.7rem", fontWeight: "700", color: stat.color === "Orange" || stat.color === "Purple" ? (stat.color === "Orange" ? "#78350f" : "#581c87") : undefined }}>
                       ${stat.value?.toFixed(2) || 0}
                     </div>
                     <div style={{ fontSize: "0.875rem", opacity: 0.8, marginTop: "0.5rem", color: stat.color === "Orange" || stat.color === "Purple" ? (stat.color === "Orange" ? "#78350f" : "#581c87") : undefined }}>
