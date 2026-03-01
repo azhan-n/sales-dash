@@ -136,11 +136,11 @@ const getStyles = (theme, font = "Roboto Condensed", fontSize = 16, viewStyle = 
     statCardPink: { background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" },
     card: {
       backgroundColor: dark ? "#1e293b" : "#ffffff",
-      borderRadius: "1rem",
-      padding: "2rem",
-      boxShadow: dark ? "0 1px 3px rgba(0,0,0,0.3)" : "0 1px 3px rgba(0,0,0,0.1)",
-      marginBottom: "2rem",
-      border: `1px solid ${dark ? "#334155" : "transparent"}`,
+      borderRadius: isCompact ? "0.375rem" : "1rem",
+      padding: isCompact ? "1rem" : "2rem",
+      boxShadow: dark ? "0 1px 3px rgba(0,0,0,0.3)" : (isCompact ? "0 1px 2px rgba(0,0,0,0.05)" : "0 1px 3px rgba(0,0,0,0.1)"),
+      marginBottom: isCompact ? "1rem" : "2rem",
+      border: `1px solid ${dark ? "#334155" : (isCompact ? "#e2e8f0" : "transparent")}`,
       transition: "all 0.3s ease",
       animation: "fadeIn 0.5s ease-out",
     },
@@ -263,23 +263,23 @@ const getStyles = (theme, font = "Roboto Condensed", fontSize = 16, viewStyle = 
       animation: "shake 0.5s ease-in-out",
     },
     ownerCard: {
-      padding: "1.5rem",
+      padding: isCompact ? "1rem" : "1.5rem",
       backgroundColor: dark ? "#0f172a" : "#f9fafb",
-      borderRadius: "0.75rem",
+      borderRadius: isCompact ? "0.375rem" : "0.75rem",
       border: `1px solid ${dark ? "#334155" : "#e5e7eb"}`,
       transition: "all 0.3s ease",
     },
     ownerStatBox: {
       textAlign: "center",
-      padding: "1rem",
+      padding: isCompact ? "0.625rem" : "1rem",
       backgroundColor: dark ? "#1e293b" : "#ffffff",
-      borderRadius: "0.5rem",
+      borderRadius: isCompact ? "0.25rem" : "0.5rem",
       transition: "all 0.3s ease",
     },
     cardTypeStat: {
-      padding: "1.5rem",
-      border: `2px solid ${dark ? "#334155" : "#e5e7eb"}`,
-      borderRadius: "0.75rem",
+      padding: isCompact ? "1rem" : "1.5rem",
+      border: `${isCompact ? "1px" : "2px"} solid ${dark ? "#334155" : "#e5e7eb"}`,
+      borderRadius: isCompact ? "0.375rem" : "0.75rem",
       backgroundColor: dark ? "#0f172a" : "#ffffff",
       transition: "all 0.3s ease, transform 0.2s ease",
       cursor: "pointer",
@@ -301,26 +301,36 @@ const getStyles = (theme, font = "Roboto Condensed", fontSize = 16, viewStyle = 
     badgeYellow: { backgroundColor: dark ? "#78350f" : "#fef3c7", color: dark ? "#fcd34d" : "#92400e" },
     badgeRed: { backgroundColor: dark ? "#7f1d1d" : "#fee2e2", color: dark ? "#fca5a5" : "#991b1b" },
     sectionTitle: {
-      fontSize: "1.5rem",
+      fontSize: isCompact ? "1.125rem" : "1.5rem",
       fontWeight: "700",
-      marginBottom: "1.5rem",
+      marginBottom: isCompact ? "1rem" : "1.5rem",
       display: "flex",
       alignItems: "center",
-      gap: "0.75rem",
+      gap: isCompact ? "0.5rem" : "0.75rem",
       color: dark ? "#f1f5f9" : "#111827",
       transition: "color 0.3s ease",
     },
-    ownerName: { fontWeight: "700", fontSize: "1.25rem", color: dark ? "#f1f5f9" : "#111827", transition: "color 0.3s ease" },
+    ownerName: { 
+      fontWeight: "700", 
+      fontSize: isCompact ? "1rem" : "1.25rem", 
+      color: dark ? "#f1f5f9" : "#111827", 
+      transition: "color 0.3s ease" 
+    },
     ownerCount: {
-      fontSize: "0.875rem",
+      fontSize: isCompact ? "0.75rem" : "0.875rem",
       color: dark ? "#94a3b8" : "#6b7280",
       backgroundColor: dark ? "#1e293b" : "#ffffff",
-      padding: "0.25rem 0.75rem",
+      padding: isCompact ? "0.125rem 0.5rem" : "0.25rem 0.75rem",
       borderRadius: "0.5rem",
       fontWeight: "600",
       transition: "all 0.3s ease",
     },
-    cardTypeText: { fontWeight: "700", fontSize: "1.125rem", color: dark ? "#f1f5f9" : "#111827", transition: "color 0.3s ease" },
+    cardTypeText: { 
+      fontWeight: "700", 
+      fontSize: isCompact ? "0.9375rem" : "1.125rem", 
+      color: dark ? "#f1f5f9" : "#111827", 
+      transition: "color 0.3s ease" 
+    },
     settingsButton: {
       padding: "0.5rem",
       borderRadius: "0.5rem",
@@ -805,30 +815,30 @@ function App() {
               <>
                 <div style={styles.card}>
                   <h2 style={styles.sectionTitle}>
-                    <User size={24} />
+                    <User size={viewStyle === "compact" ? 20 : 24} />
                     Owner Performance
                   </h2>
-                  <div style={{ display: "grid", gap: "1.5rem" }}>
+                  <div style={{ display: "grid", gap: viewStyle === "compact" ? "1rem" : "1.5rem" }}>
                     {owners.map((o) => {
                       const oStats = stats.ownerStats?.[o.id] || { count: 0, totalCost: 0, totalGrossProfit: 0, totalNetProfit: 0 };
                       return (
                         <div key={o.id} style={styles.ownerCard}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: viewStyle === "compact" ? "0.625rem" : "1rem" }}>
                             <span style={styles.ownerName}>{o.name}</span>
                             <span style={styles.ownerCount}>{oStats.count} transactions</span>
                           </div>
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem" }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: viewStyle === "compact" ? "0.625rem" : "1rem" }}>
                             <div style={styles.ownerStatBox}>
-                              <div style={{ fontSize: "0.75rem", color: isDark ? "#94a3b8" : "#6b7280", marginBottom: "0.25rem", fontWeight: "600" }}>COST</div>
-                              <div style={{ fontSize: "1.5rem", fontWeight: "700", color: "#3b82f6" }}>${oStats.totalCost.toFixed(2)}</div>
+                              <div style={{ fontSize: viewStyle === "compact" ? "0.6875rem" : "0.75rem", color: isDark ? "#94a3b8" : "#6b7280", marginBottom: "0.25rem", fontWeight: "600" }}>COST</div>
+                              <div style={{ fontSize: viewStyle === "compact" ? "1.125rem" : "1.5rem", fontWeight: "700", color: "#3b82f6" }}>${oStats.totalCost.toFixed(2)}</div>
                             </div>
                             <div style={styles.ownerStatBox}>
-                              <div style={{ fontSize: "0.75rem", color: isDark ? "#94a3b8" : "#6b7280", marginBottom: "0.25rem", fontWeight: "600" }}>GROSS</div>
-                              <div style={{ fontSize: "1.5rem", fontWeight: "700", color: "#f97316" }}>${oStats.totalGrossProfit.toFixed(2)}</div>
+                              <div style={{ fontSize: viewStyle === "compact" ? "0.6875rem" : "0.75rem", color: isDark ? "#94a3b8" : "#6b7280", marginBottom: "0.25rem", fontWeight: "600" }}>GROSS</div>
+                              <div style={{ fontSize: viewStyle === "compact" ? "1.125rem" : "1.5rem", fontWeight: "700", color: "#f97316" }}>${oStats.totalGrossProfit.toFixed(2)}</div>
                             </div>
                             <div style={styles.ownerStatBox}>
-                              <div style={{ fontSize: "0.75rem", color: isDark ? "#94a3b8" : "#6b7280", marginBottom: "0.25rem", fontWeight: "600" }}>NET PROFIT</div>
-                              <div style={{ fontSize: "1.5rem", fontWeight: "700", color: "#16a34a" }}>${oStats.totalNetProfit.toFixed(2)}</div>
+                              <div style={{ fontSize: viewStyle === "compact" ? "0.6875rem" : "0.75rem", color: isDark ? "#94a3b8" : "#6b7280", marginBottom: "0.25rem", fontWeight: "600" }}>NET PROFIT</div>
+                              <div style={{ fontSize: viewStyle === "compact" ? "1.125rem" : "1.5rem", fontWeight: "700", color: "#16a34a" }}>${oStats.totalNetProfit.toFixed(2)}</div>
                             </div>
                           </div>
                         </div>
@@ -838,8 +848,8 @@ function App() {
                 </div>
 
                 <div style={styles.card}>
-                  <h2 style={{ ...styles.sectionTitle, marginBottom: "1.5rem" }}>Card Type Statistics</h2>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.5rem" }}>
+                  <h2 style={{ ...styles.sectionTitle, marginBottom: viewStyle === "compact" ? "1rem" : "1.5rem" }}>Card Type Statistics</h2>
+                  <div style={{ display: "grid", gridTemplateColumns: viewStyle === "compact" ? "repeat(auto-fit, minmax(180px, 1fr))" : "repeat(auto-fit, minmax(240px, 1fr))", gap: viewStyle === "compact" ? "0.75rem" : "1.5rem" }}>
                     {Object.entries(stats.cardTypeStats || {}).map(([type, data], idx) => (
                       <div
                         key={type}
@@ -850,12 +860,12 @@ function App() {
                         onMouseEnter={() => setHoveredCard(idx)}
                         onMouseLeave={() => setHoveredCard(null)}
                       >
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
-                          <div style={{ width: "16px", height: "16px", borderRadius: "50%", backgroundColor: getCardTypeColor(type), flexShrink: 0 }}></div>
+                        <div style={{ display: "flex", alignItems: "center", gap: viewStyle === "compact" ? "0.5rem" : "0.75rem", marginBottom: viewStyle === "compact" ? "0.625rem" : "1rem" }}>
+                          <div style={{ width: viewStyle === "compact" ? "12px" : "16px", height: viewStyle === "compact" ? "12px" : "16px", borderRadius: "50%", backgroundColor: getCardTypeColor(type), flexShrink: 0 }}></div>
                           <span style={styles.cardTypeText}>{type}</span>
                         </div>
-                        <div style={{ fontSize: "0.875rem", color: isDark ? "#94a3b8" : "#6b7280", marginBottom: "0.5rem" }}>{data.count} transactions</div>
-                        <div style={{ fontSize: "1.75rem", fontWeight: "700", color: "#16a34a" }}>${data.netProfit.toFixed(2)}</div>
+                        <div style={{ fontSize: viewStyle === "compact" ? "0.75rem" : "0.875rem", color: isDark ? "#94a3b8" : "#6b7280", marginBottom: "0.5rem" }}>{data.count} transactions</div>
+                        <div style={{ fontSize: viewStyle === "compact" ? "1.25rem" : "1.75rem", fontWeight: "700", color: "#16a34a" }}>${data.netProfit.toFixed(2)}</div>
                       </div>
                     ))}
                   </div>
@@ -1086,24 +1096,24 @@ function App() {
           <div>
             {/* All Time Profit Stat Card */}
             {monthly.length > 0 && (
-              <div style={{ marginBottom: "2rem" }}>
+              <div style={{ marginBottom: viewStyle === "compact" ? "1rem" : "2rem" }}>
                 <div
                   style={{
                     ...styles.statCard,
                     background: "linear-gradient(135deg, #16a34a 0%, #059669 100%)",
-                    maxWidth: "500px",
+                    maxWidth: viewStyle === "compact" ? "400px" : "500px",
                     margin: "0 auto",
                     textAlign: "center",
                     animation: "slideUp 0.5s ease-out",
                   }}
                 >
-                  <div style={{ fontSize: "1.125rem", opacity: 0.9, marginBottom: "0.5rem", fontWeight: "600" }}>
+                  <div style={{ fontSize: viewStyle === "compact" ? "0.9375rem" : "1.125rem", opacity: 0.9, marginBottom: "0.5rem", fontWeight: "600" }}>
                     All Time Profit
                   </div>
-                  <div style={{ fontSize: "3.5rem", fontWeight: "700", marginBottom: "0.25rem" }}>
+                  <div style={{ fontSize: viewStyle === "compact" ? "2.5rem" : "3.5rem", fontWeight: "700", marginBottom: "0.25rem" }}>
                     ${monthly.reduce((sum, m) => sum + m.profit, 0).toFixed(2)}
                   </div>
-                  <div style={{ fontSize: "0.9375rem", opacity: 0.85 }}>
+                  <div style={{ fontSize: viewStyle === "compact" ? "0.8125rem" : "0.9375rem", opacity: 0.85 }}>
                     Total from {monthly.length} months
                   </div>
                 </div>
@@ -1112,7 +1122,7 @@ function App() {
 
             <div style={styles.card}>
               <h2 style={styles.sectionTitle}>
-                <Calendar size={24} />
+                <Calendar size={viewStyle === "compact" ? 20 : 24} />
                 Monthly Breakdown
               </h2>
               
