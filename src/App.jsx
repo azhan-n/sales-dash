@@ -13,6 +13,7 @@ import {
   Sparkles,
   Settings,
   X,
+  Calendar,
 } from "lucide-react";
 
 // Google Sheets Configuration
