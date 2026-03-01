@@ -509,6 +509,7 @@ const SkeletonCard = ({ isDark }) => (
 function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [transactions, setTransactions] = useState([]);
+  const [monthly, setMonthly] = useState([]);
   const [owners, setOwners] = useState([]);
   const [cards, setCards] = useState([]);
   const [stats, setStats] = useState({});
@@ -557,11 +558,21 @@ function App() {
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       if (data.error) throw new Error(data.error);
-      if (!data || data.length === 0) {
-        setTransactions([]); setOwners([]); setCards([]); setStats({});
+      
+      if (!data || (!data.transactions && !data.monthly)) {
+        setTransactions([]);
+        setMonthly([]);
+        setOwners([]);
+        setCards([]);
+        setStats({});
       } else {
         setLastSync(new Date());
-        processTransactions(data);
+        if (data.transactions && data.transactions.length > 0) {
+          processTransactions(data.transactions);
+        }
+        if (data.monthly && data.monthly.length > 0) {
+          setMonthly(data.monthly);
+        }
       }
     } catch (err) {
       setError("Failed to load data. Please check your connection and try again.");
@@ -710,6 +721,9 @@ function App() {
             </button>
             <button onClick={() => setActiveTab("transactions")} style={{ ...styles.tab, ...(activeTab === "transactions" ? styles.tabActive : styles.tabInactive) }}>
               Transactions
+            </button>
+            <button onClick={() => setActiveTab("monthly")} style={{ ...styles.tab, ...(activeTab === "monthly" ? styles.tabActive : styles.tabInactive) }}>
+              Monthly
             </button>
           </nav>
         </div>
@@ -1049,6 +1063,86 @@ function App() {
                 })}
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === "monthly" && (
+          <div>
+            {/* All Time Profit Stat Card */}
+            {monthly.length > 0 && (
+              <div style={{ marginBottom: "2rem" }}>
+                <div
+                  style={{
+                    ...styles.statCard,
+                    background: "linear-gradient(135deg, #16a34a 0%, #059669 100%)",
+                    maxWidth: "500px",
+                    margin: "0 auto",
+                    textAlign: "center",
+                    animation: "slideUp 0.5s ease-out",
+                  }}
+                >
+                  <div style={{ fontSize: "1.125rem", opacity: 0.9, marginBottom: "0.5rem", fontWeight: "600" }}>
+                    All Time Profit
+                  </div>
+                  <div style={{ fontSize: "3.5rem", fontWeight: "700", marginBottom: "0.25rem" }}>
+                    ${monthly.reduce((sum, m) => sum + m.profit, 0).toFixed(2)}
+                  </div>
+                  <div style={{ fontSize: "0.9375rem", opacity: 0.85 }}>
+                    Total from {monthly.length} months
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div style={styles.card}>
+              <h2 style={styles.sectionTitle}>
+                <Calendar size={24} />
+                Monthly Breakdown
+              </h2>
+              
+              {monthly.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "3rem", color: isDark ? "#94a3b8" : "#6b7280" }}>
+                  <p style={{ fontSize: "1.125rem", marginBottom: "0.5rem" }}>No monthly data available</p>
+                  <p style={{ fontSize: "0.875rem" }}>Make sure your Google Sheet has a "Monthly" worksheet</p>
+                </div>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        <th style={styles.th}>Month</th>
+                        <th style={{ ...styles.th, textAlign: "right" }}>Profit</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {monthly.map((m, idx) => (
+                        <tr 
+                          key={m.id}
+                          style={{
+                            backgroundColor: idx % 2 === 0 ? (isDark ? "#1e293b" : "#ffffff") : (isDark ? "#0f172a" : "#f9fafb"),
+                          }}
+                        >
+                          <td style={{ ...styles.td, fontWeight: "600", fontSize: "1rem" }}>{m.month}</td>
+                          <td style={{ ...styles.td, textAlign: "right", color: "#16a34a", fontWeight: "700", fontSize: "1.125rem" }}>
+                            ${m.profit.toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr style={{ backgroundColor: isDark ? "#0f172a" : "#f9fafb", fontWeight: "700", borderTop: `2px solid ${isDark ? "#475569" : "#d1d5db"}` }}>
+                        <td style={{ ...styles.td, textAlign: "left", fontWeight: "700", fontSize: "1rem", color: isDark ? "#f1f5f9" : "#111827" }}>
+                          TOTAL
+                        </td>
+                        <td style={{ ...styles.td, textAlign: "right", fontWeight: "700", color: "#16a34a", fontSize: "1.25rem" }}>
+                          ${monthly.reduce((sum, m) => sum + m.profit, 0).toFixed(2)}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
