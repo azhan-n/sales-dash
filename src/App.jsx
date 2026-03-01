@@ -38,13 +38,14 @@ if (typeof document !== 'undefined') {
   document.head.appendChild(link);
 }
 
-const getStyles = (theme, font = "Roboto Condensed", fontSize = 16) => {
+const getStyles = (theme, font = "Roboto Condensed", fontSize = 16, viewStyle = "normal") => {
   const dark = theme === "dark" || (theme === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const isCompact = viewStyle === "compact";
   
   return {
     container: {
       minHeight: "100vh",
-      backgroundColor: dark ? "#0f172a" : "#f3f4f6",
+      backgroundColor: dark ? "#0f172a" : (isCompact ? "#f8fafc" : "#f3f4f6"),
       fontFamily: `"${font}", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
       fontSize: `${fontSize}px`,
       transition: "background-color 0.3s ease",
@@ -110,15 +111,15 @@ const getStyles = (theme, font = "Roboto Condensed", fontSize = 16) => {
     },
     statsGrid: {
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-      gap: "1.5rem",
-      marginBottom: "2rem",
+      gridTemplateColumns: isCompact ? "repeat(auto-fit, minmax(180px, 1fr))" : "repeat(auto-fit, minmax(280px, 1fr))",
+      gap: isCompact ? "0.75rem" : "1.5rem",
+      marginBottom: isCompact ? "1rem" : "2rem",
     },
     statCard: {
-      padding: "2rem",
-      borderRadius: "1rem",
+      padding: isCompact ? "0.875rem" : "2rem",
+      borderRadius: isCompact ? "0.375rem" : "1rem",
       color: "#ffffff",
-      boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)",
+      boxShadow: isCompact ? "0 1px 3px rgba(0,0,0,0.1)" : "0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)",
       transition: "transform 0.3s ease, box-shadow 0.3s ease",
       cursor: "pointer",
       animation: "slideUp 0.5s ease-out",
@@ -521,13 +522,14 @@ function App() {
   const [lastSync, setLastSync] = useState(null);
   const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "auto");
   const [viewMode, setViewMode] = useState("table"); // table or cards
+  const [viewStyle, setViewStyle] = useState(() => localStorage.getItem("viewStyle") || "normal"); // normal or compact
   const [hoveredCard, setHoveredCard] = useState(null);
   const [hoveredStat, setHoveredStat] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [selectedFont, setSelectedFont] = useState(() => localStorage.getItem("font") || "Poppins");
   const [fontSize, setFontSize] = useState(() => parseInt(localStorage.getItem("fontSize")) || 20);
 
-  const styles = getStyles(theme, selectedFont, fontSize);
+  const styles = getStyles(theme, selectedFont, fontSize, viewStyle);
   const isDark = theme === "dark" || (theme === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches);
 
   const getProfitMarginBadge = (margin) => {
@@ -550,6 +552,11 @@ function App() {
   useEffect(() => {
     localStorage.setItem("fontSize", fontSize.toString());
   }, [fontSize]);
+
+  // Save viewStyle to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("viewStyle", viewStyle);
+  }, [viewStyle]);
 
   const fetchFromGoogleSheets = async () => {
     setLoading(true);
@@ -772,16 +779,16 @@ function App() {
                     onMouseEnter={() => setHoveredStat(idx)}
                     onMouseLeave={() => setHoveredStat(null)}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                      <div style={{ fontSize: "1rem", opacity: 0.9, fontWeight: "600", color: stat.color === "Orange" || stat.color === "Purple" ? (stat.color === "Orange" ? "#78350f" : "#581c87") : undefined }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: viewStyle === "compact" ? "0.5rem" : "1rem" }}>
+                      <div style={{ fontSize: viewStyle === "compact" ? "0.75rem" : "1rem", opacity: 0.9, fontWeight: "600", color: stat.color === "Orange" || stat.color === "Purple" ? (stat.color === "Orange" ? "#78350f" : "#581c87") : undefined }}>
                         {stat.label}
                       </div>
-                      <Icon size={32} style={{ opacity: 0.7, color: stat.color === "Orange" || stat.color === "Purple" ? (stat.color === "Orange" ? "#78350f" : "#581c87") : undefined }} />
+                      <Icon size={viewStyle === "compact" ? 20 : 32} style={{ opacity: 0.7, color: stat.color === "Orange" || stat.color === "Purple" ? (stat.color === "Orange" ? "#78350f" : "#581c87") : undefined }} />
                     </div>
-                    <div style={{ fontSize: "2.7rem", fontWeight: "700", color: stat.color === "Orange" || stat.color === "Purple" ? (stat.color === "Orange" ? "#78350f" : "#581c87") : undefined }}>
+                    <div style={{ fontSize: viewStyle === "compact" ? "1.5rem" : "2.7rem", fontWeight: "700", color: stat.color === "Orange" || stat.color === "Purple" ? (stat.color === "Orange" ? "#78350f" : "#581c87") : undefined }}>
                       ${stat.value?.toFixed(2) || 0}
                     </div>
-                    <div style={{ fontSize: "0.875rem", opacity: 0.8, marginTop: "0.5rem", color: stat.color === "Orange" || stat.color === "Purple" ? (stat.color === "Orange" ? "#78350f" : "#581c87") : undefined }}>
+                    <div style={{ fontSize: viewStyle === "compact" ? "0.6875rem" : "0.875rem", opacity: 0.8, marginTop: "0.5rem", color: stat.color === "Orange" || stat.color === "Purple" ? (stat.color === "Orange" ? "#78350f" : "#581c87") : undefined }}>
                       {stat.count ? `${stat.count} transactions` : stat.sub}
                     </div>
                   </div>
@@ -1227,6 +1234,39 @@ function App() {
                 >
                   <Monitor size={24} />
                   <span>Auto</span>
+                </div>
+              </div>
+            </div>
+
+            {/* View Style Section */}
+            <div style={styles.settingsSection}>
+              <label style={styles.settingsLabel}>View Style</label>
+              <div style={styles.themeOptions}>
+                <div
+                  onClick={() => setViewStyle("normal")}
+                  style={{
+                    ...styles.themeOption,
+                    ...(viewStyle === "normal" ? styles.themeOptionActive : {}),
+                  }}
+                >
+                  <LayoutGrid size={24} />
+                  <span>Normal</span>
+                  <div style={{ fontSize: "0.6875rem", opacity: 0.7, marginTop: "0.25rem" }}>
+                    Large cards
+                  </div>
+                </div>
+                <div
+                  onClick={() => setViewStyle("compact")}
+                  style={{
+                    ...styles.themeOption,
+                    ...(viewStyle === "compact" ? styles.themeOptionActive : {}),
+                  }}
+                >
+                  <List size={24} />
+                  <span>Compact</span>
+                  <div style={{ fontSize: "0.6875rem", opacity: 0.7, marginTop: "0.25rem" }}>
+                    Dense layout
+                  </div>
                 </div>
               </div>
             </div>
