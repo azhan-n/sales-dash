@@ -22,27 +22,21 @@ const GOOGLE_SHEETS_URL =
 
 // Available fonts
 const FONTS = [
-  { name: "Roboto Condensed", value: "Roboto Condensed" },
   { name: "Inter", value: "Inter" },
-  { name: "Open Sans", value: "Open Sans" },
   { name: "Poppins", value: "Poppins" },
-  { name: "Montserrat", value: "Montserrat" },
-  { name: "Lato", value: "Lato" },
-  { name: "Outfit", value: "Outfit" },
-  { name: "Space Grotesk", value: "Space Grotesk" },
-  { name: "Plus Jakarta Sans", value: "Plus Jakarta Sans" },
   { name: "League Spartan", value: "League Spartan" },
+  { name: "Open Sans", value: "Open Sans" },
 ];
 
 // Load all fonts
 if (typeof document !== 'undefined') {
   const link = document.createElement('link');
-  link.href = 'https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700&family=Lato:wght@300;400;700&family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=League+Spartan:wght@300;400;500;600;700;800;900&display=swap';
+  link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=League+Spartan:wght@300;400;500;600;700;800;900&family=Open+Sans:wght@300;400;500;600;700&display=swap';
   link.rel = 'stylesheet';
   document.head.appendChild(link);
 }
 
-const getStyles = (theme, font = "Roboto Condensed", fontSize = 16, viewStyle = "normal") => {
+const getStyles = (theme, font = "Poppins", fontSize = 16, viewStyle = "normal") => {
   const dark = theme === "dark" || (theme === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   const isCompact = viewStyle === "compact";
   
@@ -1323,9 +1317,6 @@ function App() {
       )}
 
       <style>{`
-        /* Aptos Narrow is a Microsoft system font available on Windows 11+ */
-        /* If not available, falls back to Aptos, then system fonts */
-        
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
