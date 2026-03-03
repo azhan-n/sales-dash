@@ -31,14 +31,19 @@ const FONTS = [
 // Load all fonts
 if (typeof document !== 'undefined') {
   const link = document.createElement('link');
-  link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=League+Spartan:wght@300;400;500;600;700;800;900&family=Open+Sans:wght@300;400;500;600;700&display=swap';
+  link.href = 'https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=League+Spartan:wght@300;400;500;600;700;800;900&family=Open+Sans:wght@300;400;500;600;700&display=swap';
   link.rel = 'stylesheet';
   document.head.appendChild(link);
 }
 
-const getStyles = (theme, font = "Poppins", fontSize = 16, viewStyle = "normal") => {
+const getStyles = (theme, font = "Poppins", fontSize = 16, viewStyle = "normal", boldText = false) => {
   const dark = theme === "dark" || (theme === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   const isCompact = viewStyle === "compact";
+  const headingFont = '"Gabarito", sans-serif';
+  const bodyWeight = boldText ? "600" : "400";
+  const bodyWeightMedium = boldText ? "700" : "500";
+  const bodyWeightSemibold = boldText ? "800" : "600";
+  const bodyWeightBold = boldText ? "900" : "700";
   
   return {
     container: {
@@ -46,6 +51,7 @@ const getStyles = (theme, font = "Poppins", fontSize = 16, viewStyle = "normal")
       backgroundColor: dark ? "#0f172a" : (isCompact ? "#f8fafc" : "#f3f4f6"),
       fontFamily: `"${font}", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
       fontSize: `${fontSize}px`,
+      fontWeight: bodyWeight,
       transition: "background-color 0.3s ease",
     },
     header: {
@@ -59,7 +65,8 @@ const getStyles = (theme, font = "Poppins", fontSize = 16, viewStyle = "normal")
     headerFlex: { display: "flex", justifyContent: "space-between", alignItems: "center" },
     title: {
       fontSize: "2.5rem",
-      fontWeight: "700",
+      fontFamily: headingFont,
+      fontWeight: "800",
       background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
       WebkitBackgroundClip: "text",
       WebkitTextFillColor: "transparent",
@@ -90,7 +97,7 @@ const getStyles = (theme, font = "Poppins", fontSize = 16, viewStyle = "normal")
       borderBottom: "2px solid transparent",
       backgroundColor: "transparent",
       fontSize: "0.875rem",
-      fontWeight: "500",
+      fontWeight: bodyWeightMedium,
       cursor: "pointer",
       transition: "all 0.3s ease",
       color: dark ? "#94a3b8" : "#6b7280",
@@ -148,7 +155,7 @@ const getStyles = (theme, font = "Poppins", fontSize = 16, viewStyle = "normal")
       border: "none",
       cursor: "pointer",
       fontSize: "0.875rem",
-      fontWeight: "600",
+      fontWeight: bodyWeightSemibold,
       display: "inline-flex",
       alignItems: "center",
       gap: "0.5rem",
@@ -169,7 +176,7 @@ const getStyles = (theme, font = "Poppins", fontSize = 16, viewStyle = "normal")
       gap: "0.5rem",
       transition: "all 0.3s ease",
       fontSize: "0.875rem",
-      fontWeight: "500",
+      fontWeight: bodyWeightMedium,
     },
     viewToggleActive: {
       backgroundColor: "#2563eb",
@@ -182,7 +189,7 @@ const getStyles = (theme, font = "Poppins", fontSize = 16, viewStyle = "normal")
       border: "none",
       cursor: "pointer",
       fontSize: "0.875rem",
-      fontWeight: "600",
+      fontWeight: bodyWeightSemibold,
       display: "inline-flex",
       alignItems: "center",
       gap: "0.5rem",
@@ -195,7 +202,7 @@ const getStyles = (theme, font = "Poppins", fontSize = 16, viewStyle = "normal")
       padding: "0.75rem 1rem",
       textAlign: "left",
       fontSize: "0.75rem",
-      fontWeight: "600",
+      fontWeight: bodyWeightSemibold,
       color: dark ? "#94a3b8" : "#6b7280",
       backgroundColor: dark ? "#0f172a" : "#f9fafb",
       borderBottom: `1px solid ${dark ? "#334155" : "#e5e7eb"}`,
@@ -292,7 +299,7 @@ const getStyles = (theme, font = "Poppins", fontSize = 16, viewStyle = "normal")
       padding: "0.25rem 0.625rem",
       borderRadius: "9999px",
       fontSize: "0.75rem",
-      fontWeight: "600",
+      fontWeight: bodyWeightSemibold,
       transition: "all 0.3s ease",
     },
     badgeGreen: { backgroundColor: dark ? "#064e3b" : "#d1fae5", color: dark ? "#6ee7b7" : "#065f46" },
@@ -300,7 +307,8 @@ const getStyles = (theme, font = "Poppins", fontSize = 16, viewStyle = "normal")
     badgeRed: { backgroundColor: dark ? "#7f1d1d" : "#fee2e2", color: dark ? "#fca5a5" : "#991b1b" },
     sectionTitle: {
       fontSize: isCompact ? "1.125rem" : "1.5rem",
-      fontWeight: "700",
+      fontFamily: headingFont,
+      fontWeight: "800",
       marginBottom: isCompact ? "1rem" : "1.5rem",
       display: "flex",
       alignItems: "center",
@@ -309,7 +317,8 @@ const getStyles = (theme, font = "Poppins", fontSize = 16, viewStyle = "normal")
       transition: "color 0.3s ease",
     },
     ownerName: { 
-      fontWeight: "700", 
+      fontFamily: headingFont,
+      fontWeight: "800", 
       fontSize: isCompact ? "1rem" : "1.25rem", 
       color: dark ? "#f1f5f9" : "#111827", 
       transition: "color 0.3s ease" 
@@ -320,11 +329,12 @@ const getStyles = (theme, font = "Poppins", fontSize = 16, viewStyle = "normal")
       backgroundColor: dark ? "#1e293b" : "#ffffff",
       padding: isCompact ? "0.125rem 0.5rem" : "0.25rem 0.75rem",
       borderRadius: "0.5rem",
-      fontWeight: "600",
+      fontWeight: bodyWeightSemibold,
       transition: "all 0.3s ease",
     },
     cardTypeText: { 
-      fontWeight: "700", 
+      fontFamily: headingFont,
+      fontWeight: "800", 
       fontSize: isCompact ? "0.9375rem" : "1.125rem", 
       color: dark ? "#f1f5f9" : "#111827", 
       transition: "color 0.3s ease" 
@@ -378,7 +388,8 @@ const getStyles = (theme, font = "Poppins", fontSize = 16, viewStyle = "normal")
     },
     settingsTitle: {
       fontSize: "1.5rem",
-      fontWeight: "700",
+      fontFamily: headingFont,
+      fontWeight: "800",
       color: dark ? "#f1f5f9" : "#111827",
       margin: 0,
       display: "flex",
@@ -402,9 +413,50 @@ const getStyles = (theme, font = "Poppins", fontSize = 16, viewStyle = "normal")
     settingsLabel: {
       display: "block",
       fontSize: "0.875rem",
-      fontWeight: "600",
+      fontWeight: bodyWeightSemibold,
       marginBottom: "0.75rem",
       color: dark ? "#e2e8f0" : "#374151",
+    },
+    boldToggle: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: "1rem",
+      border: `2px solid ${dark ? "#475569" : "#e5e7eb"}`,
+      borderRadius: "0.75rem",
+      backgroundColor: dark ? "#334155" : "#f9fafb",
+      cursor: "pointer",
+      transition: "all 0.3s ease",
+    },
+    boldToggleActive: {
+      borderColor: "#2563eb",
+      backgroundColor: dark ? "#1e3a8a" : "#dbeafe",
+    },
+    toggleSwitch: {
+      width: "44px",
+      height: "24px",
+      borderRadius: "12px",
+      backgroundColor: dark ? "#475569" : "#d1d5db",
+      position: "relative",
+      transition: "background-color 0.3s ease",
+      flexShrink: 0,
+    },
+    toggleSwitchActive: {
+      backgroundColor: "#2563eb",
+    },
+    toggleKnob: {
+      width: "20px",
+      height: "20px",
+      borderRadius: "50%",
+      backgroundColor: "#ffffff",
+      position: "absolute",
+      top: "2px",
+      left: "2px",
+      transition: "transform 0.3s ease",
+      boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+    },
+    toggleKnobActive: {
+      transform: "translateX(20px)",
     },
     themeOptions: {
       display: "flex",
@@ -536,8 +588,9 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [selectedFont, setSelectedFont] = useState(() => localStorage.getItem("font") || "Poppins");
   const [fontSize, setFontSize] = useState(() => parseInt(localStorage.getItem("fontSize")) || 20);
+  const [boldText, setBoldText] = useState(() => localStorage.getItem("boldText") === "true");
 
-  const styles = getStyles(theme, selectedFont, fontSize, viewStyle);
+  const styles = getStyles(theme, selectedFont, fontSize, viewStyle, boldText);
   const isDark = theme === "dark" || (theme === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches);
 
   const getProfitMarginBadge = (margin) => {
@@ -565,6 +618,11 @@ function App() {
   useEffect(() => {
     localStorage.setItem("viewStyle", viewStyle);
   }, [viewStyle]);
+
+  // Save boldText to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("boldText", boldText.toString());
+  }, [boldText]);
 
   const fetchFromGoogleSheets = async () => {
     setLoading(true);
@@ -1312,11 +1370,42 @@ function App() {
                 <span>Large (20px)</span>
               </div>
             </div>
+
+            {/* Bold Text Toggle */}
+            <div style={styles.settingsSection}>
+              <label style={styles.settingsLabel}>Text Weight</label>
+              <div
+                onClick={() => setBoldText(!boldText)}
+                style={{
+                  ...styles.boldToggle,
+                  ...(boldText ? styles.boldToggleActive : {}),
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: boldText ? "700" : "600", fontSize: "0.9375rem", color: isDark ? "#f1f5f9" : "#111827" }}>
+                    Bold Text
+                  </div>
+                  <div style={{ fontSize: "0.75rem", opacity: 0.7, marginTop: "0.25rem", color: isDark ? "#94a3b8" : "#6b7280" }}>
+                    Increase font weight across the UI
+                  </div>
+                </div>
+                <div style={{
+                  ...styles.toggleSwitch,
+                  ...(boldText ? styles.toggleSwitchActive : {}),
+                }}>
+                  <div style={{
+                    ...styles.toggleKnob,
+                    ...(boldText ? styles.toggleKnobActive : {}),
+                  }}></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
       <style>{`
+        *, *::before, *::after { font-family: inherit; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
