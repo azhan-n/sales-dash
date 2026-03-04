@@ -952,7 +952,7 @@ function App() {
         <div style={styles.headerContent}>
           <div style={styles.headerFlex}>
             <div>
-              <h1 style={styles.title}>Sales Dashboard</h1>
+              <h1 key={theme} style={styles.title}>Sales Dashboard</h1>
               <p style={styles.subtitle}>
                 {lastSync ? `Last updated: ${lastSync.toLocaleTimeString()}` : "Real-time data from Google Sheets"}
                 <button onClick={() => setShowSettings(true)} style={styles.settingsButton} title="Settings">
