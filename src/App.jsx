@@ -307,8 +307,9 @@ const getStyles = (themeName, font = "Poppins", fontSize = 16, viewStyle = "norm
       WebkitTextFillColor: "transparent",
       backgroundClip: "text",
       color: "transparent",
+      display: "inline-block",
+      width: "fit-content",
       margin: 0,
-      transition: "all 0.3s ease",
     },
     subtitle: {
       fontSize: "0.875rem",
