@@ -41,6 +41,7 @@ const THEME_OPTIONS = [
   { key: "terminal", label: "Terminal", preview: ["#0a0a0a", "#00ff41", "#003b00", "#1a1a1a"] },
   { key: "brutalist", label: "Brutalist", preview: ["#f5f5f0", "#000000", "#ff3333", "#ffffff"] },
   { key: "midnight", label: "Midnight", preview: ["#0f0720", "#7c3aed", "#c084fc", "#1e1b4b"] },
+  { key: "liquid_glass", label: "Liquid Glass", preview: ["#f0f2f5", "#e8ecf4", "#ffffff80", "#d0d5e0"] },
 ];
 
 // --- Layout descriptors per theme ---
@@ -142,11 +143,32 @@ const themeLayouts = {
         radial-gradient(1.5px 1.5px at 40% 45%, rgba(255,255,255,0.25), transparent),
         radial-gradient(1px 1px at 15% 55%, rgba(255,255,255,0.2), transparent); }`,
   },
+  liquid_glass: {
+    statCardDir: "column",
+    statIconSize: 32,
+    statIconSizeSm: 22,
+    statIconBg: true,
+    statIconBgStyle: () => ({
+      width: "48px", height: "48px", borderRadius: "14px",
+      background: "rgba(255,255,255,0.45)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+      border: "1px solid rgba(255,255,255,0.6)",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.8)",
+      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+    }),
+    statGridMin: "280px",
+    statGridMinSm: "180px",
+    ownerLayout: "grid",
+    cardTypeLayout: "grid",
+    tableStyle: "default",
+    extraCss: `.lg-surface { backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%); }
+      .lg-specular { position: relative; overflow: hidden; }
+      .lg-specular::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%; background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, transparent 100%); border-radius: inherit; pointer-events: none; z-index: 1; }`,
+  },
 };
 
 const getThemeLayout = (name) => {
   const map = { light: "default", dark: "default", auto: "default", ocean: "default", sunset: "default", neon: "default", emerald: "default",
-    glass: "glass", terminal: "terminal", brutalist: "brutalist", midnight: "midnight" };
+    glass: "glass", terminal: "terminal", brutalist: "brutalist", midnight: "midnight", liquid_glass: "liquid_glass" };
   return themeLayouts[map[name] || "default"];
 };
 
@@ -351,6 +373,39 @@ const getThemeColors = (themeName) => {
       bgPattern: "radial-gradient(ellipse at 30% 20%, rgba(124,58,237,0.08) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(236,72,153,0.05) 0%, transparent 50%)",
       cardGlow: "0 0 0 1px rgba(139,92,246,0.1)",
     },
+    liquid_glass: {
+      ...base, isDark: false, radius: "1.5rem", radiusSm: "1.25rem", radiusCompact: "1rem", radiusCompactSm: "0.75rem",
+      bg: "#eef0f5", bgAlt: "#eef0f5",
+      surface: "rgba(255,255,255,0.55)", surfaceAlt: "rgba(255,255,255,0.35)", surfaceDeep: "rgba(255,255,255,0.25)",
+      text: "#1c1c1e", textSec: "#636366", textMuted: "#8e8e93", textLight: "#ffffff", textMid: "#48484a", textStrong: "#000000",
+      border: "rgba(255,255,255,0.6)", borderAlt: "rgba(255,255,255,0.4)", borderStrong: "rgba(0,0,0,0.08)", borderHover: "rgba(0,0,0,0.15)",
+      accent: "#007aff", accentBg: "rgba(0,122,255,0.12)", accentDark: "#0056b3",
+      inputBg: "rgba(255,255,255,0.5)", inputBorder: "rgba(0,0,0,0.06)",
+      titleGrad: "linear-gradient(135deg, #1c1c1e 0%, #3a3a3c 100%)",
+      btnGrad: "linear-gradient(135deg, rgba(0,122,255,0.85) 0%, rgba(0,100,220,0.9) 100%)", btnGlow: "rgba(0,122,255,0.25)",
+      statCards: {
+        Green: { bg: "rgba(52,199,89,0.18)", text: "#1c7a36", border: "1px solid rgba(52,199,89,0.25)" },
+        Teal: { bg: "rgba(0,122,255,0.15)", text: "#0055cc", border: "1px solid rgba(0,122,255,0.2)" },
+        Orange: { bg: "rgba(255,149,0,0.15)", text: "#995c00", border: "1px solid rgba(255,149,0,0.2)" },
+        Blue: { bg: "rgba(88,86,214,0.15)", text: "#3634a3", border: "1px solid rgba(88,86,214,0.2)" },
+        Pink: { bg: "rgba(255,45,85,0.12)", text: "#cc0033", border: "1px solid rgba(255,45,85,0.18)" },
+        Purple: { bg: "rgba(175,82,222,0.12)", text: "#7b3a9e", border: "1px solid rgba(175,82,222,0.18)" },
+      },
+      profitGrad: "rgba(52,199,89,0.2)",
+      errorBg: "rgba(255,59,48,0.1)", errorBorder: "rgba(255,59,48,0.3)", errorText: "#ff3b30",
+      badgeGreen: { bg: "rgba(52,199,89,0.15)", text: "#248a3d" },
+      badgeYellow: { bg: "rgba(255,204,0,0.18)", text: "#997a00" },
+      badgeRed: { bg: "rgba(255,59,48,0.12)", text: "#d70015" },
+      shadow: "0 2px 16px rgba(0,0,0,0.06)", shadowCompact: "0 1px 8px rgba(0,0,0,0.04)",
+      shadowLg: "0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)", shadowLgCompact: "0 4px 16px rgba(0,0,0,0.05)",
+      hoverShadow: "0 12px 40px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.06)",
+      cardHoverShadow: "0 8px 28px rgba(0,0,0,0.08)", modalShadow: "0 25px 60px rgba(0,0,0,0.15), 0 8px 20px rgba(0,0,0,0.08)",
+      toggleBg: "rgba(0,0,0,0.08)",
+      headerBorderBottom: "1px solid rgba(0,0,0,0.04)",
+      bgPattern: "radial-gradient(ellipse at 25% 0%, rgba(174,198,255,0.35) 0%, transparent 50%), radial-gradient(ellipse at 75% 100%, rgba(255,200,220,0.2) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(200,210,255,0.15) 0%, transparent 60%)",
+      cardBackdrop: "blur(40px) saturate(180%)",
+      cardGlow: "inset 0 1px 0 rgba(255,255,255,0.7), 0 1px 0 rgba(0,0,0,0.04)",
+    },
   };
 
   if (themeName === "auto") return palettes[autoIsDark ? "dark" : "light"];
@@ -359,7 +414,7 @@ const getThemeColors = (themeName) => {
 
 if (typeof document !== 'undefined') {
   const link = document.createElement('link');
-  link.href = 'https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=League+Spartan:wght@300;400;500;600;700;800;900&family=Open+Sans:wght@300;400;500;600;700&display=swap';
+  link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=League+Spartan:wght@300;400;500;600;700;800;900&family=Open+Sans:wght@300;400;500;600;700&display=swap';
   link.rel = 'stylesheet';
   document.head.appendChild(link);
 }
@@ -402,7 +457,7 @@ function App() {
   const c = getThemeColors(theme);
   const L = getThemeLayout(theme);
   const isCompact = viewStyle === "compact";
-  const headingFont = '"Gabarito", sans-serif';
+  const headingFont = `"${selectedFont}", sans-serif`;
   const bw = boldText ? "600" : "400";
   const bwm = boldText ? "700" : "500";
   const bws = boldText ? "800" : "600";
@@ -413,6 +468,7 @@ function App() {
   const isTerm = theme === "terminal";
   const isGlass = theme === "glass";
   const isMid = theme === "midnight";
+  const isLG = theme === "liquid_glass";
 
   const font = selectedFont;
 
@@ -495,16 +551,16 @@ function App() {
       {isMid && <div className="midnight-stars"></div>}
 
       {/* HEADER */}
-      <div style={{ backgroundColor: isGlass ? "rgba(255,255,255,0.04)" : c.surface, boxShadow: c.shadow, borderBottom: c.headerBorderBottom || `1px solid ${c.border}`, padding: "1.5rem 1rem", ...(isGlass ? { backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" } : {}), position: "relative", zIndex: 10 }}>
+      <div style={{ backgroundColor: (isGlass || isLG) ? (isLG ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.04)") : c.surface, boxShadow: isLG ? "0 1px 0 rgba(0,0,0,0.04)" : c.shadow, borderBottom: c.headerBorderBottom || `1px solid ${c.border}`, padding: "1.5rem 1rem", ...((isGlass || isLG) ? { backdropFilter: isLG ? "blur(50px) saturate(180%)" : "blur(20px)", WebkitBackdropFilter: isLG ? "blur(50px) saturate(180%)" : "blur(20px)" } : {}), position: "relative", zIndex: 10 }}>
         <div style={{ maxWidth: "80rem", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <h1 key={theme} style={{ fontSize: isBrut ? "3rem" : "2.5rem", fontFamily: headingFont, fontWeight: isBrut ? "900" : "800", background: c.titleGrad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", color: "transparent", display: "inline-block", width: "fit-content", margin: 0, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>Sales Dashboard</h1>
             <p style={{ fontSize: "0.875rem", color: c.textSec, marginTop: "0.25rem", display: "flex", alignItems: "center", gap: "0.75rem" }} className={isTerm ? "terminal-glow" : ""}>
               {isTerm ? "> " : ""}{lastSync ? `Last updated: ${lastSync.toLocaleTimeString()}` : "Real-time data from Google Sheets"}
-              <button onClick={() => setShowSettings(true)} style={{ padding: "0.5rem", borderRadius: isBrut ? "0" : "0.5rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", marginLeft: "0.5rem" }} title="Settings"><Settings size={16} /></button>
+              <button onClick={() => setShowSettings(true)} style={{ padding: "0.5rem", borderRadius: isBrut ? "0" : (isLG ? "12px" : "0.5rem"), border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", marginLeft: "0.5rem", ...(isLG ? { backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.5)" } : {}) }} title="Settings"><Settings size={16} /></button>
             </p>
           </div>
-          <button onClick={fetchFromGoogleSheets} style={{ padding: "0.625rem 1.25rem", borderRadius: isBrut ? "0" : "0.5rem", border: isBrut ? "3px solid #000" : "none", cursor: loading ? "not-allowed" : "pointer", fontSize: "0.875rem", fontWeight: bws, display: "inline-flex", alignItems: "center", gap: "0.5rem", background: c.btnGrad, color: isBrut ? "#fff" : "#ffffff", opacity: loading ? 0.7 : 1, boxShadow: isBrut ? "4px 4px 0 #000" : `0 4px 15px ${c.btnGlow}` }} disabled={loading}>
+          <button onClick={fetchFromGoogleSheets} style={{ padding: "0.625rem 1.25rem", borderRadius: isBrut ? "0" : (isLG ? "999px" : "0.5rem"), border: isBrut ? "3px solid #000" : (isLG ? "1px solid rgba(255,255,255,0.5)" : "none"), cursor: loading ? "not-allowed" : "pointer", fontSize: "0.875rem", fontWeight: bws, display: "inline-flex", alignItems: "center", gap: "0.5rem", background: c.btnGrad, color: isBrut ? "#fff" : "#ffffff", opacity: loading ? 0.7 : 1, boxShadow: isBrut ? "4px 4px 0 #000" : `0 4px 15px ${c.btnGlow}`, ...(isLG ? { backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" } : {}) }} disabled={loading}>
             <RefreshCw size={18} style={loading ? { animation: "spin 1s linear infinite" } : {}} />
             {loading ? "Refreshing..." : "Refresh"}
           </button>
@@ -512,7 +568,7 @@ function App() {
       </div>
 
       {/* TABS */}
-      <div style={{ backgroundColor: isGlass ? "rgba(255,255,255,0.02)" : c.surface, borderBottom: isBrut ? `3px solid ${c.border}` : `1px solid ${c.border}`, ...(isGlass ? { backdropFilter: "blur(12px)" } : {}), position: "relative", zIndex: 10 }}>
+      <div style={{ backgroundColor: (isGlass || isLG) ? (isLG ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.02)") : c.surface, borderBottom: isBrut ? `3px solid ${c.border}` : `1px solid ${c.border}`, ...((isGlass || isLG) ? { backdropFilter: isLG ? "blur(40px) saturate(180%)" : "blur(12px)", WebkitBackdropFilter: isLG ? "blur(40px) saturate(180%)" : "blur(12px)" } : {}), position: "relative", zIndex: 10 }}>
         <div style={{ maxWidth: "80rem", margin: "0 auto", padding: "0 1rem" }}>
           <nav style={{ display: "flex", gap: isBrut ? "0" : "2rem" }}>
             {["dashboard", "transactions", "monthly"].map((tab) => (
@@ -553,12 +609,12 @@ function App() {
                 const iconSz = isCompact ? L.statIconSizeSm : L.statIconSize;
                 const isRow = L.statCardDir === "row";
                 return (
-                  <div key={idx} style={{
+                  <div key={idx} className={isLG ? "lg-specular" : ""} style={{
                     padding: isCompact ? "0.875rem" : (isBrut ? "1.5rem" : "2rem"),
-                    borderRadius: isBrut ? "0" : r, color: txtColor || "#ffffff",
-                    background: sc.bg, border: sc.border || (isBrut ? "3px solid #000" : "none"),
-                    boxShadow: isBrut ? "4px 4px 0 #000" : (isCompact ? c.shadowLgCompact : c.shadowLg),
-                    ...(isGlass ? { backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" } : {}),
+                    borderRadius: isBrut ? "0" : r, color: txtColor || (isLG ? c.text : "#ffffff"),
+                    background: sc.bg, border: sc.border || (isBrut ? "3px solid #000" : (isLG ? "1px solid rgba(255,255,255,0.6)" : "none")),
+                    boxShadow: isBrut ? "4px 4px 0 #000" : (isLG ? "0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7)" : (isCompact ? c.shadowLgCompact : c.shadowLg)),
+                    ...((isGlass || isLG) ? { backdropFilter: isLG ? "blur(40px) saturate(180%)" : "blur(16px)", WebkitBackdropFilter: isLG ? "blur(40px) saturate(180%)" : "blur(16px)" } : {}),
                     cursor: "pointer", animation: "slideUp 0.5s ease-out", animationDelay: `${idx * 0.1}s`,
                     display: isRow ? "flex" : "block", alignItems: isRow ? "center" : undefined, gap: isRow ? "1.25rem" : undefined,
                     transform: hoveredStat === idx ? (isBrut ? "translate(-2px,-2px)" : "translateY(-8px)") : "none",
@@ -719,7 +775,7 @@ function App() {
                 {filteredTransactions.map((t, idx) => {
                   const cd = getCardById(t.cardId); const ow = getOwnerById(t.ownerId); const cc = getCardTypeColor(cd?.type); const mb = getProfitMarginBadge(t.profitMargin);
                   return (
-                    <div key={t.id} style={{ backgroundColor: c.surface, borderRadius: rSm, padding: "1.5rem", border: isBrut ? `3px solid ${c.border}` : `1px solid ${c.border}`, ...(isGlass ? { backdropFilter: "blur(16px)" } : {}), ...(isBrut ? { boxShadow: "4px 4px 0 #000" } : {}), cursor: "pointer", animation: "slideUp 0.4s ease-out", transform: hoveredCard === `tx-${idx}` ? "translateY(-4px)" : "none", boxShadow: hoveredCard === `tx-${idx}` ? c.cardHoverShadow : (c.cardGlow || "none"), transition: "all 0.3s ease" }}
+                    <div key={t.id} className={isLG ? "lg-specular" : ""} style={{ backgroundColor: c.surface, borderRadius: isLG ? r : rSm, padding: "1.5rem", border: isBrut ? `3px solid ${c.border}` : (isLG ? "1px solid rgba(255,255,255,0.6)" : `1px solid ${c.border}`), ...((isGlass || isLG) ? { backdropFilter: isLG ? "blur(40px) saturate(180%)" : "blur(16px)", WebkitBackdropFilter: isLG ? "blur(40px) saturate(180%)" : "blur(16px)" } : {}), ...(isBrut ? { boxShadow: "4px 4px 0 #000" } : {}), cursor: "pointer", animation: "slideUp 0.4s ease-out", transform: hoveredCard === `tx-${idx}` ? "translateY(-4px)" : "none", boxShadow: hoveredCard === `tx-${idx}` ? c.cardHoverShadow : (isLG ? "0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7)" : (c.cardGlow || "none")), transition: "all 0.3s ease" }}
                       onMouseEnter={() => setHoveredCard(`tx-${idx}`)} onMouseLeave={() => setHoveredCard(null)}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "1rem" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
@@ -751,7 +807,7 @@ function App() {
           <div>
             {monthly.length > 0 && (
               <div style={{ marginBottom: isCompact ? "1rem" : "2rem" }}>
-                <div style={{ padding: isCompact ? "1.5rem" : "2.5rem", borderRadius: isBrut ? "0" : r, background: c.profitGrad, color: "#ffffff", maxWidth: isCompact ? "400px" : "500px", margin: "0 auto", textAlign: "center", animation: "slideUp 0.5s ease-out", border: isBrut ? "3px solid #000" : "none", boxShadow: isBrut ? "6px 6px 0 #000" : c.shadowLg, ...(isGlass ? { backdropFilter: "blur(16px)" } : {}) }}>
+                <div className={isLG ? "lg-specular" : ""} style={{ padding: isCompact ? "1.5rem" : "2.5rem", borderRadius: isBrut ? "0" : r, background: c.profitGrad, color: isLG ? "#1c7a36" : "#ffffff", maxWidth: isCompact ? "400px" : "500px", margin: "0 auto", textAlign: "center", animation: "slideUp 0.5s ease-out", border: isBrut ? "3px solid #000" : (isLG ? "1px solid rgba(52,199,89,0.25)" : "none"), boxShadow: isBrut ? "6px 6px 0 #000" : (isLG ? "0 8px 32px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7)" : c.shadowLg), ...((isGlass || isLG) ? { backdropFilter: isLG ? "blur(40px) saturate(180%)" : "blur(16px)", WebkitBackdropFilter: isLG ? "blur(40px) saturate(180%)" : "blur(16px)" } : {}) }}>
                   <div style={{ fontSize: isCompact ? "0.9375rem" : "1.125rem", opacity: 0.9, fontWeight: bws }} className={isTerm ? "terminal-glow" : ""}>{isTerm ? "> ALL TIME PROFIT" : "All Time Profit"}</div>
                   <div style={{ fontSize: isCompact ? "2.5rem" : "3.5rem", fontWeight: "700", margin: "0.5rem 0" }} className={isTerm ? "terminal-glow" : ""}>${monthly.reduce((s, m) => s + m.profit, 0).toFixed(2)}</div>
                   <div style={{ fontSize: isCompact ? "0.8125rem" : "0.9375rem", opacity: 0.85 }}>Total from {monthly.length} months</div>
@@ -788,8 +844,8 @@ function App() {
 
       {/* ===== SETTINGS MODAL ===== */}
       {showSettings && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", zIndex: 200, animation: "fadeIn 0.2s ease-out" }} onClick={() => setShowSettings(false)}>
-          <div style={{ backgroundColor: isGlass ? "rgba(20,14,48,0.95)" : c.surface, borderRadius: isBrut ? "0" : "1rem", padding: "2rem", maxWidth: "560px", width: "100%", maxHeight: "90vh", overflowY: "auto", boxShadow: c.modalShadow, animation: "slideUp 0.3s ease-out", border: isBrut ? `3px solid ${c.border}` : `1px solid ${c.border}`, ...(isGlass ? { backdropFilter: "blur(24px)" } : {}) }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: isLG ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", zIndex: 200, animation: "fadeIn 0.2s ease-out" }} onClick={() => setShowSettings(false)}>
+          <div style={{ backgroundColor: isGlass ? "rgba(20,14,48,0.95)" : (isLG ? "rgba(255,255,255,0.65)" : c.surface), borderRadius: isBrut ? "0" : (isLG ? "1.5rem" : "1rem"), padding: "2rem", maxWidth: "560px", width: "100%", maxHeight: "90vh", overflowY: "auto", boxShadow: c.modalShadow, animation: "slideUp 0.3s ease-out", border: isBrut ? `3px solid ${c.border}` : (isLG ? "1px solid rgba(255,255,255,0.7)" : `1px solid ${c.border}`), ...((isGlass || isLG) ? { backdropFilter: isLG ? "blur(60px) saturate(200%)" : "blur(24px)", WebkitBackdropFilter: isLG ? "blur(60px) saturate(200%)" : "blur(24px)" } : {}) }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem", paddingBottom: "1rem", borderBottom: `1px solid ${c.border}` }}>
               <h2 style={{ fontSize: "1.5rem", fontFamily: headingFont, fontWeight: "800", color: c.textStrong, margin: 0, display: "flex", alignItems: "center", gap: "0.75rem" }}><Settings size={24} /> Settings</h2>
               <button onClick={() => setShowSettings(false)} style={{ padding: "0.5rem", border: "none", background: "none", cursor: "pointer", color: c.textSec, display: "flex", alignItems: "center" }}><X size={24} /></button>
