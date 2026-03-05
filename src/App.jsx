@@ -474,6 +474,10 @@ function App() {
   const tdStyle = { padding: "0.75rem 1rem", fontSize: "0.875rem", borderBottom: isBrut ? `2px solid ${c.border}` : isTerm ? `1px dashed ${c.border}` : `1px solid ${c.border}`, color: c.text, backgroundColor: c.surface };
   const sectionTitleStyle = { fontSize: isCompact ? "1.125rem" : "1.5rem", fontFamily: headingFont, fontWeight: "800", marginBottom: isCompact ? "1rem" : "1.5rem", display: "flex", alignItems: "center", gap: isCompact ? "0.5rem" : "0.75rem", color: c.textStrong, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" };
 
+  // Compute even grid columns for card type stats
+  const ctCount = Object.keys(stats.cardTypeStats || {}).length;
+  const ctCols = isCompact ? `repeat(${Math.min(ctCount || 2, 3)}, 1fr)` : `repeat(${Math.min(ctCount || 3, 5)}, 1fr)`;
+
   if (loading && transactions.length === 0) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", fontSize: "1.125rem", color: c.textSec, flexDirection: "column", gap: "1rem", backgroundColor: c.bg, fontFamily: `"${font}", sans-serif` }}>
@@ -535,7 +539,7 @@ function App() {
         {activeTab === "dashboard" && (
           <div>
             {/* STAT CARDS */}
-            <div style={{ display: "grid", gridTemplateColumns: isCompact ? `repeat(auto-fit, minmax(${L.statGridMinSm}, 1fr))` : `repeat(auto-fit, minmax(${L.statGridMin}, 1fr))`, gap: isCompact ? "0.75rem" : (isBrut ? "0" : "1.5rem"), marginBottom: isCompact ? "1rem" : "2rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: isBrut ? "1fr" : (isCompact ? "repeat(2, 1fr)" : (L.statCardDir === "row" ? "repeat(2, 1fr)" : "repeat(3, 1fr)")), gap: isCompact ? "0.75rem" : (isBrut ? "0.5rem" : "1.5rem"), marginBottom: isCompact ? "1rem" : "2rem" }}>
               {[
                 { label: "Net Profit", value: stats.totalNetProfit, icon: TrendingUp, color: "Green", sub: "After costs" },
                 { label: "Total USDT Sold", value: stats.totalUsdtSold, icon: DollarSign, color: "Teal", sub: "Total sell amount" },
@@ -602,7 +606,7 @@ function App() {
                             <span style={{ fontFamily: headingFont, fontWeight: "800", fontSize: isCompact ? "1rem" : "1.25rem", color: c.textStrong, textTransform: isBrut ? "uppercase" : "none" }} className={isTerm ? "terminal-glow" : ""}>{isTerm ? `> ${o.name}` : o.name}</span>
                             <span style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", color: c.textSec, backgroundColor: c.surface, padding: "0.25rem 0.75rem", borderRadius: isBrut ? "0" : "0.5rem", fontWeight: bws, border: isBrut ? "1px solid #000" : "none" }}>{os.count} transactions</span>
                           </div>
-                          <div style={{ display: L.ownerLayout === "horizontal" ? "flex" : "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: isCompact ? "0.625rem" : "1rem" }}>
+                          <div style={{ display: L.ownerLayout === "horizontal" ? "flex" : "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: isCompact ? "0.625rem" : "1rem" }}>
                             {[{ label: "COST", value: os.totalCost, color: "#3b82f6" }, { label: "GROSS", value: os.totalGrossProfit, color: "#f97316" }, { label: "NET PROFIT", value: os.totalNetProfit, color: "#16a34a" }].map((s) => (
                               <div key={s.label} style={{ textAlign: "center", padding: isCompact ? "0.625rem" : "1rem", backgroundColor: c.surface, borderRadius: isBrut ? "0" : rSm, flex: L.ownerLayout === "horizontal" ? 1 : undefined, border: isBrut ? "1px solid #000" : "none" }}>
                                 <div style={{ fontSize: isCompact ? "0.6875rem" : "0.75rem", color: c.textSec, marginBottom: "0.25rem", fontWeight: bws, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>{s.label}</div>
@@ -619,7 +623,7 @@ function App() {
                 {/* CARD TYPE STATS */}
                 <div style={cardBase}>
                   <h2 style={{ ...sectionTitleStyle, marginBottom: isCompact ? "1rem" : "1.5rem" }}>Card Type Statistics</h2>
-                  <div style={{ display: L.cardTypeLayout === "list" ? "flex" : "grid", flexDirection: L.cardTypeLayout === "list" ? "column" : undefined, gridTemplateColumns: isCompact ? "repeat(auto-fit, minmax(180px, 1fr))" : "repeat(auto-fit, minmax(240px, 1fr))", gap: L.cardTypeLayout === "list" ? "0.5rem" : (isCompact ? "0.75rem" : "1.5rem") }}>
+                  <div style={{ display: L.cardTypeLayout === "list" ? "flex" : "grid", flexDirection: L.cardTypeLayout === "list" ? "column" : undefined, gridTemplateColumns: L.cardTypeLayout === "list" ? undefined : ctCols, gap: L.cardTypeLayout === "list" ? "0.5rem" : (isCompact ? "0.75rem" : "1.5rem") }}>
                     {Object.entries(stats.cardTypeStats || {}).map(([type, data], idx) => (
                       <div key={type} style={{
                         padding: L.cardTypeLayout === "list" ? "1rem" : (isCompact ? "1rem" : "1.5rem"),
@@ -711,7 +715,7 @@ function App() {
                 </div>
               </div>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))", gap: "1rem" }}>
+              <div style={{ display: "grid", gridTemplateColumns: isBrut ? "1fr" : "repeat(2, 1fr)", gap: "1rem" }}>
                 {filteredTransactions.map((t, idx) => {
                   const cd = getCardById(t.cardId); const ow = getOwnerById(t.ownerId); const cc = getCardTypeColor(cd?.type); const mb = getProfitMarginBadge(t.profitMargin);
                   return (
