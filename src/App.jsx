@@ -30,8 +30,6 @@ const FONTS = [
 ];
 
 const THEME_OPTIONS = [
-  { key: "light", label: "Light", preview: ["#ffffff", "#667eea", "#84fab0", "#f3f4f6"] },
-  { key: "dark", label: "Dark", preview: ["#1e293b", "#667eea", "#84fab0", "#0f172a"] },
   { key: "auto", label: "Auto", preview: ["#94a3b8", "#667eea", "#84fab0", "#64748b"] },
   { key: "ocean", label: "Ocean", preview: ["#0c1929", "#06b6d4", "#0ea5e9", "#155e75"] },
   { key: "sunset", label: "Sunset", preview: ["#fff7ed", "#f97316", "#e11d48", "#fbbf24"] },
@@ -167,7 +165,7 @@ const themeLayouts = {
 };
 
 const getThemeLayout = (name) => {
-  const map = { light: "default", dark: "default", auto: "default", ocean: "default", sunset: "default", neon: "default", emerald: "default",
+  const map = { auto: "default", ocean: "default", sunset: "default", neon: "default", emerald: "default",
     glass: "glass", terminal: "terminal", brutalist: "brutalist", midnight: "midnight", liquid_glass: "liquid_glass" };
   return themeLayouts[map[name] || "default"];
 };
@@ -180,42 +178,6 @@ const getThemeColors = (themeName) => {
   };
 
   const palettes = {
-    light: {
-      ...base, isDark: false,
-      bg: "#f3f4f6", bgAlt: "#f8fafc", surface: "#ffffff", surfaceAlt: "#f9fafb", surfaceDeep: "#f9fafb",
-      text: "#111827", textSec: "#6b7280", textMuted: "#94a3b8", textLight: "#f1f5f9", textMid: "#cbd5e1", textStrong: "#374151",
-      border: "#e5e7eb", borderAlt: "#e2e8f0", borderStrong: "#d1d5db", borderHover: "#475569",
-      accent: "#2563eb", accentBg: "#dbeafe", accentDark: "#1e3a8a",
-      inputBg: "#ffffff", inputBorder: "#e5e7eb",
-      titleGrad: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-      btnGrad: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", btnGlow: "rgba(102, 126, 234, 0.4)",
-      statCards: { Green: { bg: "linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)" }, Teal: { bg: "linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%)" }, Orange: { bg: "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)", text: "#78350f" }, Blue: { bg: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }, Pink: { bg: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" }, Purple: { bg: "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)", text: "#581c87" } },
-      profitGrad: "linear-gradient(135deg, #16a34a 0%, #059669 100%)",
-      errorBg: "#fee2e2", errorBorder: "#ef4444", errorText: "#991b1b",
-      badgeGreen: { bg: "#d1fae5", text: "#065f46" }, badgeYellow: { bg: "#fef3c7", text: "#92400e" }, badgeRed: { bg: "#fee2e2", text: "#991b1b" },
-      shadow: "0 1px 3px rgba(0,0,0,0.1)", shadowCompact: "0 1px 2px rgba(0,0,0,0.05)",
-      shadowLg: "0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)", shadowLgCompact: "0 1px 3px rgba(0,0,0,0.1)",
-      hoverShadow: "0 25px 35px -5px rgba(0,0,0,0.2)",
-      cardHoverShadow: "0 8px 16px rgba(0,0,0,0.1)", modalShadow: "0 20px 25px -5px rgba(0,0,0,0.2)", toggleBg: "#d1d5db",
-    },
-    dark: {
-      ...base, isDark: true,
-      bg: "#0f172a", bgAlt: "#0f172a", surface: "#1e293b", surfaceAlt: "#0f172a", surfaceDeep: "#0f172a",
-      text: "#e2e8f0", textSec: "#94a3b8", textMuted: "#94a3b8", textLight: "#f1f5f9", textMid: "#cbd5e1", textStrong: "#f1f5f9",
-      border: "#334155", borderAlt: "#334155", borderStrong: "#475569", borderHover: "#475569",
-      accent: "#2563eb", accentBg: "#1e3a8a", accentDark: "#1e3a8a",
-      inputBg: "#334155", inputBorder: "#475569",
-      titleGrad: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-      btnGrad: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", btnGlow: "rgba(102, 126, 234, 0.4)",
-      statCards: { Green: { bg: "linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)" }, Teal: { bg: "linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%)" }, Orange: { bg: "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)", text: "#78350f" }, Blue: { bg: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }, Pink: { bg: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" }, Purple: { bg: "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)", text: "#581c87" } },
-      profitGrad: "linear-gradient(135deg, #16a34a 0%, #059669 100%)",
-      errorBg: "#450a0a", errorBorder: "#991b1b", errorText: "#fca5a5",
-      badgeGreen: { bg: "#064e3b", text: "#6ee7b7" }, badgeYellow: { bg: "#78350f", text: "#fcd34d" }, badgeRed: { bg: "#7f1d1d", text: "#fca5a5" },
-      shadow: "0 1px 3px rgba(0,0,0,0.3)", shadowCompact: "0 1px 2px rgba(0,0,0,0.2)",
-      shadowLg: "0 20px 25px -5px rgba(0,0,0,0.3)", shadowLgCompact: "0 1px 3px rgba(0,0,0,0.2)",
-      hoverShadow: "0 25px 35px -5px rgba(0,0,0,0.4)",
-      cardHoverShadow: "0 8px 16px rgba(0,0,0,0.3)", modalShadow: "0 20px 25px -5px rgba(0,0,0,0.5)", toggleBg: "#475569",
-    },
     ocean: {
       ...base, isDark: true, radius: "1.25rem", radiusSm: "1rem", radiusCompact: "0.625rem", radiusCompactSm: "0.375rem",
       bg: "#0a1628", bgAlt: "#0a1628", surface: "#0f2035", surfaceAlt: "#0a1628", surfaceDeep: "#071320",
@@ -408,8 +370,8 @@ const getThemeColors = (themeName) => {
     },
   };
 
-  if (themeName === "auto") return palettes[autoIsDark ? "dark" : "light"];
-  return palettes[themeName] || palettes.light;
+  if (themeName === "auto") return palettes[autoIsDark ? "ocean" : "sunset"];
+  return palettes[themeName] || palettes.ocean;
 };
 
 if (typeof document !== 'undefined') {
@@ -444,7 +406,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastSync, setLastSync] = useState(null);
-  const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "dark");
+  const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "ocean");
   const [viewMode, setViewMode] = useState("table");
   const [viewStyle, setViewStyle] = useState(() => localStorage.getItem("viewStyle") || "normal");
   const [hoveredCard, setHoveredCard] = useState(null);
@@ -761,7 +723,8 @@ function App() {
                         <td colSpan="2" style={{ ...tdStyle, textAlign: "center", fontSize: "0.8125rem", color: c.textMid }}><div>Sell Amt:</div><div style={{ fontWeight: "700", color: c.textStrong }}>${filteredTransactions.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0).toFixed(2)}</div></td>
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: "0.8125rem", color: c.textMid }}><div>Avg Sell:</div><div style={{ fontWeight: "700", color: c.textStrong }}>{filteredTransactions.length > 0 ? (filteredTransactions.reduce((s, t) => s + (parseFloat(t.sellRate) || 0), 0) / filteredTransactions.length).toFixed(2) : "0.00"}</div></td>
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: "0.8125rem", color: c.textMid }}><div>Avg Buy:</div><div style={{ fontWeight: "700", color: c.textStrong }}>{(() => { const tc2 = filteredTransactions.reduce((s, t) => s + (parseFloat(t.cost) || 0), 0); const ts2 = filteredTransactions.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0); return (ts2 > 0 ? tc2 / ts2 : 0).toFixed(2); })()}</div></td>
-                        <td colSpan="2" style={tdStyle}></td>
+                        <td style={{ ...tdStyle, textAlign: "center", fontSize: "0.8125rem", color: c.textMid }}><div>Buy Amt:</div><div style={{ fontWeight: "700", color: c.textStrong }}>${filteredTransactions.reduce((s, t) => s + (parseFloat(t.buyAmount) || 0), 0).toFixed(2)}</div></td>
+                        <td style={tdStyle}></td>
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: "0.8125rem" }}><div>Gross:</div><div style={{ color: isTerm ? c.text : "#f97316", fontWeight: "700" }}>${filteredTransactions.reduce((s, t) => s + t.grossProfit, 0).toFixed(2)}</div></td>
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: "0.8125rem" }}><div>Net:</div><div style={{ color: isTerm ? c.text : "#16a34a", fontWeight: "700" }} className={isTerm ? "terminal-glow" : ""}>${filteredTransactions.reduce((s, t) => s + t.netProfit, 0).toFixed(2)}</div></td>
                         <td style={tdStyle}></td>
