@@ -432,6 +432,16 @@ function App() {
   const isMid = theme === "midnight";
   const isLG = theme === "liquid_glass";
 
+  // Responsive breakpoints
+  const [winW, setWinW] = useState(() => typeof window !== 'undefined' ? window.innerWidth : 1200);
+  useEffect(() => {
+    const onResize = () => setWinW(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  const isMobile = winW < 640;
+  const isTablet = winW >= 640 && winW < 1024;
+
   const font = selectedFont;
 
   useEffect(() => { localStorage.setItem("theme", theme); }, [theme]);
@@ -490,11 +500,11 @@ function App() {
   const cardBase = { backgroundColor: c.surface, borderRadius: r, padding: isCompact ? "1rem" : "2rem", boxShadow: c.cardGlow ? `${c.shadow}, ${c.cardGlow}` : c.shadow, marginBottom: isCompact ? "1rem" : "2rem", border: isBrut ? `3px solid ${c.border}` : `1px solid ${c.border}`, ...(c.cardBackdrop ? { backdropFilter: c.cardBackdrop, WebkitBackdropFilter: c.cardBackdrop } : {}), transition: "all 0.3s ease", animation: "fadeIn 0.5s ease-out" };
   const thStyle = { padding: isCompact ? "0.5rem 0.625rem" : "0.75rem 1rem", textAlign: "left", fontSize: isCompact ? "0.6875rem" : "0.75rem", fontWeight: bws, color: c.textSec, backgroundColor: c.surfaceAlt, borderBottom: isBrut ? `3px solid ${c.border}` : `1px solid ${c.border}`, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.1em" : "normal" };
   const tdStyle = { padding: isCompact ? "0.375rem 0.625rem" : "0.75rem 1rem", fontSize: isCompact ? "0.75rem" : "0.875rem", borderBottom: isBrut ? `2px solid ${c.border}` : isTerm ? `1px dashed ${c.border}` : `1px solid ${c.border}`, color: c.text, backgroundColor: c.surface };
-  const sectionTitleStyle = { fontSize: isCompact ? "1.125rem" : "1.5rem", fontFamily: headingFont, fontWeight: "800", marginBottom: isCompact ? "1rem" : "1.5rem", display: "flex", alignItems: "center", gap: isCompact ? "0.5rem" : "0.75rem", color: c.textStrong, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" };
+  const sectionTitleStyle = { fontSize: isMobile ? "1rem" : (isCompact ? "1.125rem" : "1.5rem"), fontFamily: headingFont, fontWeight: "800", marginBottom: isCompact ? "1rem" : "1.5rem", display: "flex", alignItems: "center", gap: isCompact ? "0.5rem" : "0.75rem", color: c.textStrong, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" };
 
   // Compute even grid columns for card type stats
   const ctCount = Object.keys(stats.cardTypeStats || {}).length;
-  const ctCols = isCompact ? `repeat(${Math.min(ctCount || 2, 3)}, 1fr)` : `repeat(${Math.min(ctCount || 3, 5)}, 1fr)`;
+  const ctCols = isMobile ? "1fr" : (isCompact || isTablet ? `repeat(${Math.min(ctCount || 2, 3)}, 1fr)` : `repeat(${Math.min(ctCount || 3, 5)}, 1fr)`);
 
   if (loading && transactions.length === 0) {
     return (
@@ -507,24 +517,24 @@ function App() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: c.bg, backgroundImage: c.bgPattern || "none", fontFamily: `"${font}", sans-serif`, fontSize: `${fontSize}px`, fontWeight: bw, position: "relative", transition: "background-color 0.3s ease" }}>
+    <div style={{ minHeight: "100vh", backgroundColor: c.bg, backgroundImage: c.bgPattern || "none", fontFamily: `"${font}", sans-serif`, fontSize: `${fontSize}px`, fontWeight: bw, position: "relative", transition: "background-color 0.3s ease", overflowX: "hidden" }}>
 
       {isTerm && <div className="terminal-scanline"></div>}
       {isMid && <div className="midnight-stars"></div>}
 
       {/* HEADER */}
-      <div style={{ backgroundColor: (isGlass || isLG) ? (isLG ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.04)") : c.surface, boxShadow: isLG ? "0 1px 0 rgba(0,0,0,0.04)" : c.shadow, borderBottom: c.headerBorderBottom || `1px solid ${c.border}`, padding: isCompact ? "0.875rem 1rem" : "1.5rem 1rem", ...((isGlass || isLG) ? { backdropFilter: isLG ? "blur(50px) saturate(180%)" : "blur(20px)", WebkitBackdropFilter: isLG ? "blur(50px) saturate(180%)" : "blur(20px)" } : {}), position: "relative", zIndex: 10 }}>
-        <div style={{ maxWidth: "80rem", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ backgroundColor: (isGlass || isLG) ? (isLG ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.04)") : c.surface, boxShadow: isLG ? "0 1px 0 rgba(0,0,0,0.04)" : c.shadow, borderBottom: c.headerBorderBottom || `1px solid ${c.border}`, padding: isMobile ? "0.75rem 0.625rem" : (isCompact ? "0.875rem 1rem" : "1.5rem 1rem"), ...((isGlass || isLG) ? { backdropFilter: isLG ? "blur(50px) saturate(180%)" : "blur(20px)", WebkitBackdropFilter: isLG ? "blur(50px) saturate(180%)" : "blur(20px)" } : {}), position: "relative", zIndex: 10 }}>
+        <div style={{ maxWidth: "80rem", margin: "0 auto", display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? "0.75rem" : "0" }}>
           <div>
-            <h1 key={theme} style={{ fontSize: isBrut ? "3rem" : (isCompact ? "1.75rem" : "2.5rem"), fontFamily: headingFont, fontWeight: isBrut ? "900" : "800", background: c.titleGrad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", color: "transparent", display: "inline-block", width: "fit-content", margin: 0, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>Sales Dashboard</h1>
+            <h1 key={theme} style={{ fontSize: isBrut ? "3rem" : (isMobile ? "1.5rem" : (isCompact ? "1.75rem" : "2.5rem")), fontFamily: headingFont, fontWeight: isBrut ? "900" : "800", background: c.titleGrad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", color: "transparent", display: "inline-block", width: "fit-content", margin: 0, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>Sales Dashboard</h1>
             <p style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", color: c.textSec, marginTop: "0.25rem", display: "flex", alignItems: "center", gap: "0.75rem" }} className={isTerm ? "terminal-glow" : ""}>
               {isTerm ? "> " : ""}{lastSync ? `Last updated: ${lastSync.toLocaleTimeString()}` : "Real-time data from Google Sheets"}
               <button onClick={() => setShowSettings(true)} style={{ padding: "0.5rem", borderRadius: isBrut ? "0" : (isLG ? "12px" : "0.5rem"), border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", marginLeft: "0.5rem", ...(isLG ? { backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.5)" } : {}) }} title="Settings"><Settings size={16} /></button>
             </p>
           </div>
           <button onClick={fetchFromGoogleSheets} style={{ padding: isCompact ? "0.5rem 0.875rem" : "0.625rem 1.25rem", borderRadius: isBrut ? "0" : (isLG ? "999px" : "0.5rem"), border: isBrut ? "3px solid #000" : (isLG ? "1px solid rgba(255,255,255,0.5)" : "none"), cursor: loading ? "not-allowed" : "pointer", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bws, display: "inline-flex", alignItems: "center", gap: "0.5rem", background: c.btnGrad, color: isBrut ? "#fff" : "#ffffff", opacity: loading ? 0.7 : 1, boxShadow: isBrut ? "4px 4px 0 #000" : `0 4px 15px ${c.btnGlow}`, ...(isLG ? { backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" } : {}) }} disabled={loading}>
-            <RefreshCw size={isCompact ? 14 : 18} style={loading ? { animation: "spin 1s linear infinite" } : {}} />
-            {loading ? "Refreshing..." : "Refresh"}
+            <RefreshCw size={isMobile ? 16 : (isCompact ? 14 : 18)} style={loading ? { animation: "spin 1s linear infinite" } : {}} />
+            {isMobile ? "" : (loading ? "Refreshing..." : "Refresh")}
           </button>
         </div>
       </div>
@@ -532,7 +542,7 @@ function App() {
       {/* TABS */}
       <div style={{ backgroundColor: (isGlass || isLG) ? (isLG ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.02)") : c.surface, borderBottom: isBrut ? `3px solid ${c.border}` : `1px solid ${c.border}`, ...((isGlass || isLG) ? { backdropFilter: isLG ? "blur(40px) saturate(180%)" : "blur(12px)", WebkitBackdropFilter: isLG ? "blur(40px) saturate(180%)" : "blur(12px)" } : {}), position: "relative", zIndex: 10 }}>
         <div style={{ maxWidth: "80rem", margin: "0 auto", padding: "0 1rem" }}>
-          <nav style={{ display: "flex", gap: isBrut ? "0" : "2rem" }}>
+          <nav style={{ display: "flex", gap: isBrut ? "0" : (isMobile ? "1rem" : "2rem") }}>
             {["dashboard", "transactions", "monthly"].map((tab) => (
               <button key={tab} onClick={() => setActiveTab(tab)} style={{
                 padding: isBrut ? "1rem 1.5rem" : (isCompact ? "0.625rem 0.25rem" : "1rem 0.25rem"), border: "none",
@@ -550,14 +560,14 @@ function App() {
       </div>
 
       {/* MAIN CONTENT */}
-      <div style={{ maxWidth: "80rem", margin: "0 auto", padding: isCompact ? "1rem" : "2rem 1rem", animation: "fadeIn 0.4s ease-in", position: "relative", zIndex: 5 }}>
+      <div style={{ maxWidth: "80rem", margin: "0 auto", padding: isMobile ? "0.75rem 0.5rem" : (isCompact ? "1rem" : "2rem 1rem"), animation: "fadeIn 0.4s ease-in", position: "relative", zIndex: 5 }}>
         {error && <div style={{ padding: isCompact ? "0.625rem" : "1rem", backgroundColor: c.errorBg, border: `1px solid ${c.errorBorder}`, borderRadius: r, color: c.errorText, marginBottom: isCompact ? "1rem" : "2rem", textAlign: "center", fontSize: isCompact ? "0.8125rem" : "inherit", animation: "shake 0.5s ease-in-out" }}><strong>Error:</strong> {error}</div>}
 
         {/* ===== DASHBOARD TAB ===== */}
         {activeTab === "dashboard" && (
           <div>
             {/* STAT CARDS */}
-            <div style={{ display: "grid", gridTemplateColumns: isBrut ? "1fr" : (isCompact ? "repeat(2, 1fr)" : (L.statCardDir === "row" ? "repeat(2, 1fr)" : "repeat(3, 1fr)")), gap: isCompact ? "0.75rem" : (isBrut ? "0.5rem" : "1.5rem"), marginBottom: isCompact ? "1rem" : "2rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: isBrut ? "1fr" : (isMobile ? "1fr" : (isCompact || isTablet ? "repeat(2, 1fr)" : (L.statCardDir === "row" ? "repeat(2, 1fr)" : "repeat(3, 1fr)"))), gap: isMobile ? "0.625rem" : (isCompact ? "0.75rem" : (isBrut ? "0.5rem" : "1.5rem")), marginBottom: isCompact ? "1rem" : "2rem" }}>
               {[
                 { label: "Net Profit", value: stats.totalNetProfit, icon: TrendingUp, color: "Green", sub: "After costs" },
                 { label: "Total USDT Sold", value: stats.totalUsdtSold, icon: DollarSign, color: "Teal", sub: "Total sell amount" },
@@ -572,7 +582,7 @@ function App() {
                 const isRow = L.statCardDir === "row";
                 return (
                   <div key={idx} className={isLG ? "lg-specular" : ""} style={{
-                    padding: isCompact ? "0.875rem" : (isBrut ? "1.5rem" : "2rem"),
+                    padding: isMobile ? "1rem" : (isCompact ? "0.875rem" : (isBrut ? "1.5rem" : "2rem")),
                     borderRadius: isBrut ? "0" : r, color: txtColor || (isLG ? c.text : "#ffffff"),
                     background: sc.bg, border: sc.border || (isBrut ? "3px solid #000" : (isLG ? "1px solid rgba(255,255,255,0.6)" : "none")),
                     boxShadow: isBrut ? "4px 4px 0 #000" : (isLG ? "0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7)" : (isCompact ? c.shadowLgCompact : c.shadowLg)),
@@ -601,7 +611,7 @@ function App() {
                           <div style={{ fontSize: isCompact ? "0.75rem" : "1rem", opacity: 0.9, fontWeight: bws, color: txtColor || undefined, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>{stat.label}</div>
                           {!isMid && <StatIcon Icon={stat.icon} size={iconSz} layout={L} c={c} />}
                         </div>
-                        <div style={{ fontSize: isCompact ? "1.5rem" : "2.7rem", fontWeight: "700", color: txtColor || undefined, textAlign: isMid ? "center" : undefined }} className={isTerm ? "terminal-glow" : ""}>${stat.value?.toFixed(2) || 0}</div>
+                        <div style={{ fontSize: isMobile ? "1.75rem" : (isCompact ? "1.5rem" : "2.7rem"), fontWeight: "700", color: txtColor || undefined, textAlign: isMid ? "center" : undefined }} className={isTerm ? "terminal-glow" : ""}>${stat.value?.toFixed(2) || 0}</div>
                         <div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", opacity: 0.8, marginTop: "0.5rem", color: txtColor || undefined, textAlign: isMid ? "center" : undefined }}>{stat.count ? `${stat.count} transactions` : stat.sub}</div>
                       </>
                     )}
@@ -615,16 +625,16 @@ function App() {
               <>
                 <div style={cardBase}>
                   <h2 style={sectionTitleStyle}><User size={isCompact ? 20 : 24} /> Owner Performance</h2>
-                  <div style={{ display: L.ownerLayout === "horizontal" ? "flex" : "grid", flexDirection: L.ownerLayout === "horizontal" ? "column" : undefined, gap: isCompact ? "1rem" : "1.5rem" }}>
+                  <div style={{ display: (L.ownerLayout === "horizontal" && !isMobile) ? "flex" : "grid", flexDirection: L.ownerLayout === "horizontal" ? "column" : undefined, gap: isCompact ? "1rem" : "1.5rem" }}>
                     {owners.map((o) => {
                       const os = stats.ownerStats?.[o.id] || { count: 0, totalCost: 0, totalGrossProfit: 0, totalNetProfit: 0 };
                       return (
                         <div key={o.id} style={{ padding: isCompact ? "1rem" : "1.5rem", backgroundColor: c.surfaceAlt, borderRadius: rSm, border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, ...(isBrut ? { boxShadow: "3px 3px 0 #000" } : {}), ...(isGlass ? { backdropFilter: "blur(12px)" } : {}) }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isCompact ? "0.625rem" : "1rem" }}>
-                            <span style={{ fontFamily: headingFont, fontWeight: "800", fontSize: isCompact ? "1rem" : "1.25rem", color: c.textStrong, textTransform: isBrut ? "uppercase" : "none" }} className={isTerm ? "terminal-glow" : ""}>{isTerm ? `> ${o.name}` : o.name}</span>
+                          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", marginBottom: isCompact ? "0.625rem" : "1rem", gap: "0.5rem" }}>
+                            <span style={{ fontFamily: headingFont, fontWeight: "800", fontSize: isMobile ? "0.9375rem" : (isCompact ? "1rem" : "1.25rem"), color: c.textStrong, textTransform: isBrut ? "uppercase" : "none" }} className={isTerm ? "terminal-glow" : ""}>{isTerm ? `> ${o.name}` : o.name}</span>
                             <span style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", color: c.textSec, backgroundColor: c.surface, padding: "0.25rem 0.75rem", borderRadius: isBrut ? "0" : "0.5rem", fontWeight: bws, border: isBrut ? "1px solid #000" : "none" }}>{os.count} transactions</span>
                           </div>
-                          <div style={{ display: L.ownerLayout === "horizontal" ? "flex" : "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: isCompact ? "0.625rem" : "1rem" }}>
+                          <div style={{ display: (L.ownerLayout === "horizontal" && !isMobile) ? "flex" : "grid", flexDirection: L.ownerLayout === "horizontal" ? "column" : undefined, gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: isCompact ? "0.625rem" : "1rem" }}>
                             {[{ label: "COST", value: os.totalCost, color: "#3b82f6" }, { label: "GROSS", value: os.totalGrossProfit, color: "#f97316" }, { label: "NET PROFIT", value: os.totalNetProfit, color: "#16a34a" }].map((s) => (
                               <div key={s.label} style={{ textAlign: "center", padding: isCompact ? "0.625rem" : "1rem", backgroundColor: c.surface, borderRadius: isBrut ? "0" : rSm, flex: L.ownerLayout === "horizontal" ? 1 : undefined, border: isBrut ? "1px solid #000" : "none" }}>
                                 <div style={{ fontSize: isCompact ? "0.6875rem" : "0.75rem", color: c.textSec, marginBottom: "0.25rem", fontWeight: bws, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>{s.label}</div>
@@ -672,18 +682,18 @@ function App() {
         {activeTab === "transactions" && (
           <div>
             <div style={{ ...cardBase, marginBottom: isCompact ? "0.625rem" : "1rem" }}>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: isCompact ? "0.5rem" : "1rem", alignItems: "center", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: isCompact ? "0.5rem" : "1rem", alignItems: "center" }}>
+              <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", flexWrap: "wrap", gap: isCompact ? "0.5rem" : "1rem", alignItems: isMobile ? "stretch" : "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", flexWrap: "wrap", gap: isCompact ? "0.5rem" : "1rem", alignItems: isMobile ? "stretch" : "center", flex: isMobile ? "1" : undefined }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><Filter size={isCompact ? 14 : 16} style={{ color: c.textSec }} /><span style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, color: c.text, textTransform: isBrut ? "uppercase" : "none" }}>{isTerm ? "> Filters:" : "Filters:"}</span></div>
                   {[{ val: filterCardType, set: setFilterCardType, opts: [{ v: "all", l: "All Card Types" }, ...cardTypes.map((t) => ({ v: t, l: t }))] }, { val: filterOwner, set: setFilterOwner, opts: [{ v: "all", l: "All Owners" }, ...owners.map((o) => ({ v: o.id, l: o.name }))] }].map((f, i) => (
-                    <select key={i} style={{ padding: isCompact ? "0.375rem 0.5rem" : "0.5rem 0.75rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : "0.25rem", fontSize: isCompact ? "0.75rem" : "0.875rem", minWidth: isCompact ? "120px" : "150px", backgroundColor: c.inputBg, color: c.text }} value={f.val} onChange={(e) => f.set(e.target.value)}>
+                    <select key={i} style={{ padding: isCompact ? "0.375rem 0.5rem" : "0.5rem 0.75rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : "0.25rem", fontSize: isCompact ? "0.75rem" : "0.875rem", minWidth: isMobile ? "0" : (isCompact ? "120px" : "150px"), width: isMobile ? "100%" : "auto", backgroundColor: c.inputBg, color: c.text }} value={f.val} onChange={(e) => f.set(e.target.value)}>
                       {f.opts.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
                     </select>
                   ))}
                 </div>
-                <div style={{ display: "flex", gap: "0.5rem" }}>
+                <div style={{ display: "flex", gap: "0.5rem", width: isMobile ? "100%" : "auto" }}>
                   {[{ m: "table", icon: List, label: "Table" }, { m: "cards", icon: LayoutGrid, label: "Cards" }].map(({ m, icon: Ic, label }) => (
-                    <button key={m} onClick={() => setViewMode(m)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : "0.5rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, backgroundColor: viewMode === m ? c.accent : c.inputBg, color: viewMode === m ? "#fff" : c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, ...(isBrut && viewMode === m ? { boxShadow: "3px 3px 0 #000" } : {}) }}><Ic size={isCompact ? 14 : 16} /> {label}</button>
+                    <button key={m} onClick={() => setViewMode(m)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : "0.5rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, backgroundColor: viewMode === m ? c.accent : c.inputBg, color: viewMode === m ? "#fff" : c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, flex: isMobile ? 1 : undefined, ...(isBrut && viewMode === m ? { boxShadow: "3px 3px 0 #000" } : {}) }}><Ic size={isCompact ? 14 : 16} /> {label}</button>
                   ))}
                 </div>
               </div>
@@ -734,7 +744,7 @@ function App() {
                 </div>
               </div>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: isBrut ? "1fr" : "repeat(2, 1fr)", gap: isCompact ? "0.625rem" : "1rem" }}>
+              <div style={{ display: "grid", gridTemplateColumns: (isBrut || isMobile) ? "1fr" : "repeat(2, 1fr)", gap: isCompact ? "0.625rem" : "1rem" }}>
                 {filteredTransactions.map((t, idx) => {
                   const cd = getCardById(t.cardId); const ow = getOwnerById(t.ownerId); const cc = getCardTypeColor(cd?.type); const mb = getProfitMarginBadge(t.profitMargin);
                   return (
@@ -770,10 +780,10 @@ function App() {
           <div>
             {monthly.length > 0 && (
               <div style={{ marginBottom: isCompact ? "1rem" : "2rem" }}>
-                <div className={isLG ? "lg-specular" : ""} style={{ padding: isCompact ? "1.5rem" : "2.5rem", borderRadius: isBrut ? "0" : r, background: c.profitGrad, color: isLG ? "#1c7a36" : "#ffffff", maxWidth: isCompact ? "400px" : "500px", margin: "0 auto", textAlign: "center", animation: "slideUp 0.5s ease-out", border: isBrut ? "3px solid #000" : (isLG ? "1px solid rgba(52,199,89,0.25)" : "none"), boxShadow: isBrut ? "6px 6px 0 #000" : (isLG ? "0 8px 32px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7)" : c.shadowLg), ...((isGlass || isLG) ? { backdropFilter: isLG ? "blur(40px) saturate(180%)" : "blur(16px)", WebkitBackdropFilter: isLG ? "blur(40px) saturate(180%)" : "blur(16px)" } : {}) }}>
-                  <div style={{ fontSize: isCompact ? "0.9375rem" : "1.125rem", opacity: 0.9, fontWeight: bws }} className={isTerm ? "terminal-glow" : ""}>{isTerm ? "> ALL TIME PROFIT" : "All Time Profit"}</div>
-                  <div style={{ fontSize: isCompact ? "2.5rem" : "3.5rem", fontWeight: "700", margin: "0.5rem 0" }} className={isTerm ? "terminal-glow" : ""}>${monthly.reduce((s, m) => s + m.profit, 0).toFixed(2)}</div>
-                  <div style={{ fontSize: isCompact ? "0.8125rem" : "0.9375rem", opacity: 0.85 }}>Total from {monthly.length} months</div>
+                <div className={isLG ? "lg-specular" : ""} style={{ padding: isMobile ? "1.25rem" : (isCompact ? "1.5rem" : "2.5rem"), borderRadius: isBrut ? "0" : r, background: c.profitGrad, color: isLG ? "#1c7a36" : "#ffffff", maxWidth: isMobile ? "100%" : (isCompact ? "400px" : "500px"), margin: "0 auto", textAlign: "center", animation: "slideUp 0.5s ease-out", border: isBrut ? "3px solid #000" : (isLG ? "1px solid rgba(52,199,89,0.25)" : "none"), boxShadow: isBrut ? "6px 6px 0 #000" : (isLG ? "0 8px 32px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7)" : c.shadowLg), ...((isGlass || isLG) ? { backdropFilter: isLG ? "blur(40px) saturate(180%)" : "blur(16px)", WebkitBackdropFilter: isLG ? "blur(40px) saturate(180%)" : "blur(16px)" } : {}) }}>
+                  <div style={{ fontSize: isMobile ? "0.8125rem" : (isCompact ? "0.9375rem" : "1.125rem"), opacity: 0.9, fontWeight: bws }} className={isTerm ? "terminal-glow" : ""}>{isTerm ? "> ALL TIME PROFIT" : "All Time Profit"}</div>
+                  <div style={{ fontSize: isMobile ? "2rem" : (isCompact ? "2.5rem" : "3.5rem"), fontWeight: "700", margin: "0.5rem 0" }} className={isTerm ? "terminal-glow" : ""}>${monthly.reduce((s, m) => s + m.profit, 0).toFixed(2)}</div>
+                  <div style={{ fontSize: isMobile ? "0.6875rem" : (isCompact ? "0.8125rem" : "0.9375rem"), opacity: 0.85 }}>Total from {monthly.length} months</div>
                 </div>
               </div>
             )}
@@ -808,7 +818,7 @@ function App() {
       {/* ===== SETTINGS MODAL ===== */}
       {showSettings && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: isLG ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", zIndex: 200, animation: "fadeIn 0.2s ease-out" }} onClick={() => setShowSettings(false)}>
-          <div style={{ backgroundColor: isGlass ? "rgba(20,14,48,0.95)" : (isLG ? "rgba(255,255,255,0.65)" : c.surface), borderRadius: isBrut ? "0" : (isLG ? "1.5rem" : "1rem"), padding: "2rem", maxWidth: "560px", width: "100%", maxHeight: "90vh", overflowY: "auto", boxShadow: c.modalShadow, animation: "slideUp 0.3s ease-out", border: isBrut ? `3px solid ${c.border}` : (isLG ? "1px solid rgba(255,255,255,0.7)" : `1px solid ${c.border}`), ...((isGlass || isLG) ? { backdropFilter: isLG ? "blur(60px) saturate(200%)" : "blur(24px)", WebkitBackdropFilter: isLG ? "blur(60px) saturate(200%)" : "blur(24px)" } : {}) }} onClick={(e) => e.stopPropagation()}>
+          <div style={{ backgroundColor: isGlass ? "rgba(20,14,48,0.95)" : (isLG ? "rgba(255,255,255,0.65)" : c.surface), borderRadius: isBrut ? "0" : (isMobile ? "0.75rem" : (isLG ? "1.5rem" : "1rem")), padding: isMobile ? "1.25rem" : "2rem", maxWidth: isMobile ? "100%" : "560px", width: "100%", maxHeight: "90vh", overflowY: "auto", boxShadow: c.modalShadow, animation: "slideUp 0.3s ease-out", border: isBrut ? `3px solid ${c.border}` : (isLG ? "1px solid rgba(255,255,255,0.7)" : `1px solid ${c.border}`), ...((isGlass || isLG) ? { backdropFilter: isLG ? "blur(60px) saturate(200%)" : "blur(24px)", WebkitBackdropFilter: isLG ? "blur(60px) saturate(200%)" : "blur(24px)" } : {}), margin: isMobile ? "0.5rem" : "0" }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem", paddingBottom: "1rem", borderBottom: `1px solid ${c.border}` }}>
               <h2 style={{ fontSize: "1.5rem", fontFamily: headingFont, fontWeight: "800", color: c.textStrong, margin: 0, display: "flex", alignItems: "center", gap: "0.75rem" }}><Settings size={24} /> Settings</h2>
               <button onClick={() => setShowSettings(false)} style={{ padding: "0.5rem", border: "none", background: "none", cursor: "pointer", color: c.textSec, display: "flex", alignItems: "center" }}><X size={24} /></button>
@@ -817,7 +827,7 @@ function App() {
             {/* Theme */}
             <div style={{ marginBottom: "2rem" }}>
               <label style={{ display: "block", fontSize: "0.875rem", fontWeight: bws, marginBottom: "0.75rem", color: c.text }}>Theme</label>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: "0.5rem" }}>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(3, 1fr)" : "repeat(auto-fill, minmax(90px, 1fr))", gap: "0.5rem" }}>
                 {THEME_OPTIONS.map((opt) => (
                   <div key={opt.key} onClick={() => setTheme(opt.key)} style={{ padding: "0.5rem", border: theme === opt.key ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : "0.625rem", backgroundColor: theme === opt.key ? c.accentBg : c.surfaceAlt, cursor: "pointer", textAlign: "center", transition: "all 0.2s ease" }}>
                     <div style={{ display: "flex", height: "24px", borderRadius: isBrut ? "0" : "4px", overflow: "hidden", marginBottom: "0.375rem", border: `1px solid ${c.border}` }}>
