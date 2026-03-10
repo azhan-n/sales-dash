@@ -17,7 +17,13 @@ import {
   Gem,
   Layers,
   Star,
+  ChevronLeft,
+  ChevronRight,
+  ArrowUpDown,
+  Target,
+  Timer,
 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 const GOOGLE_SHEETS_URL =
   "https://script.google.com/macros/s/AKfycbxVwc0buJoICP6sIzK6GxmZNtdvdYA4lw7MhmMxxYjI2weRxDReGIK4sbKyKESUPhEUHQ/exec";
@@ -416,6 +422,21 @@ function App() {
   const [fontSize, setFontSize] = useState(() => parseInt(localStorage.getItem("fontSize")) || 20);
   const [boldText, setBoldText] = useState(() => localStorage.getItem("boldText") === "true");
 
+  // Sort
+  const [sortCol, setSortCol] = useState(null);
+  const [sortDir, setSortDir] = useState("asc");
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(() => parseInt(localStorage.getItem("rowsPerPage")) || 10);
+  // Date range filter
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  // Auto-refresh
+  const [autoRefresh, setAutoRefresh] = useState(() => parseInt(localStorage.getItem("autoRefresh")) || 0);
+  // Profit goal
+  const [profitGoal, setProfitGoal] = useState(() => parseFloat(localStorage.getItem("profitGoal")) || 0);
+  const [showGoalInput, setShowGoalInput] = useState(false);
+
   const c = getThemeColors(theme);
   const L = getThemeLayout(theme);
   const isCompact = viewStyle === "compact";
@@ -449,6 +470,20 @@ function App() {
   useEffect(() => { localStorage.setItem("fontSize", fontSize.toString()); }, [fontSize]);
   useEffect(() => { localStorage.setItem("viewStyle", viewStyle); }, [viewStyle]);
   useEffect(() => { localStorage.setItem("boldText", boldText.toString()); }, [boldText]);
+  useEffect(() => { localStorage.setItem("rowsPerPage", rowsPerPage.toString()); }, [rowsPerPage]);
+  useEffect(() => { localStorage.setItem("autoRefresh", autoRefresh.toString()); }, [autoRefresh]);
+  useEffect(() => { localStorage.setItem("profitGoal", profitGoal.toString()); }, [profitGoal]);
+
+  // Auto-refresh timer
+  useEffect(() => {
+    if (autoRefresh > 0) {
+      const interval = setInterval(() => fetchFromGoogleSheets(), autoRefresh * 1000);
+      return () => clearInterval(interval);
+    }
+  }, [autoRefresh]);
+
+  // Reset page when filters change
+  useEffect(() => { setPage(1); }, [filterCardType, filterOwner, dateFrom, dateTo, sortCol, sortDir]);
 
   const getProfitMarginBadge = (margin) => {
     const mkBadge = (bg, text) => ({ style: { display: "inline-flex", alignItems: "center", padding: isBrut ? "0.25rem 0.5rem" : "0.25rem 0.625rem", borderRadius: isBrut ? "0" : "9999px", fontSize: "0.75rem", fontWeight: bws, backgroundColor: bg, color: text, border: isBrut ? "2px solid #000" : "none" } });
@@ -493,7 +528,39 @@ function App() {
   };
   const getCardById = (id) => cards.find((x) => x.id === id);
   const getOwnerById = (id) => owners.find((o) => o.id === id);
-  const filteredTransactions = transactions.filter((t) => { const cd = getCardById(t.cardId); if (filterCardType !== "all" && cd?.type !== filterCardType) return false; if (filterOwner !== "all" && t.ownerId !== parseInt(filterOwner)) return false; return true; });
+
+  // Filter + date range
+  const filteredTransactions = transactions.filter((t) => {
+    const cd = getCardById(t.cardId);
+    if (filterCardType !== "all" && cd?.type !== filterCardType) return false;
+    if (filterOwner !== "all" && t.ownerId !== parseInt(filterOwner)) return false;
+    if (dateFrom && t.date && t.date < dateFrom) return false;
+    if (dateTo && t.date && t.date > dateTo) return false;
+    return true;
+  });
+
+  // Sort
+  const sortedTransactions = [...filteredTransactions].sort((a, b) => {
+    if (!sortCol) return 0;
+    let va, vb;
+    const colMap = { cardType: (t) => getCardById(t.cardId)?.type || "", cardNumber: (t) => getCardById(t.cardId)?.number || "", owner: (t) => getOwnerById(t.ownerId)?.name || "",
+      buyRate: (t) => parseFloat(t.buyRate) || 0, buyAmount: (t) => parseFloat(t.buyAmount) || 0, sellRate: (t) => parseFloat(t.sellRate) || 0, sellAmount: (t) => parseFloat(t.sellAmount) || 0,
+      cost: (t) => t.cost, grossProfit: (t) => t.grossProfit, netProfit: (t) => t.netProfit, profitMargin: (t) => t.profitMargin };
+    const fn = colMap[sortCol];
+    if (!fn) return 0;
+    va = fn(a); vb = fn(b);
+    if (typeof va === "string") return sortDir === "asc" ? va.localeCompare(vb) : vb.localeCompare(va);
+    return sortDir === "asc" ? va - vb : vb - va;
+  });
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(sortedTransactions.length / rowsPerPage));
+  const paginatedTransactions = sortedTransactions.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+
+  const handleSort = (col) => {
+    if (sortCol === col) setSortDir(sortDir === "asc" ? "desc" : "asc");
+    else { setSortCol(col); setSortDir("asc"); }
+  };
   const cardTypes = ["VISA DEBIT", "VISA CREDIT", "AMEX", "SELLER", "MASTERCARD"];
 
   // -- Shared styles --
@@ -529,6 +596,7 @@ function App() {
             <h1 key={theme} style={{ fontSize: isBrut ? "3rem" : (isMobile ? "1.5rem" : (isCompact ? "1.75rem" : "2.5rem")), fontFamily: headingFont, fontWeight: isBrut ? "900" : "800", background: c.titleGrad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", color: "transparent", display: "inline-block", width: "fit-content", margin: 0, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>Sales Dashboard</h1>
             <p style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", color: c.textSec, marginTop: "0.25rem", display: "flex", alignItems: "center", gap: "0.75rem" }} className={isTerm ? "terminal-glow" : ""}>
               {isTerm ? "> " : ""}{lastSync ? `Last updated: ${lastSync.toLocaleTimeString()}` : "Real-time data from Google Sheets"}
+              {autoRefresh > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "0.6875rem", color: c.accent, backgroundColor: c.accentBg, padding: "0.125rem 0.5rem", borderRadius: "999px" }}><Timer size={10} />{autoRefresh}s</span>}
               <button onClick={() => setShowSettings(true)} style={{ padding: "0.5rem", borderRadius: isBrut ? "0" : (isLG ? "12px" : "0.5rem"), border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", marginLeft: "0.5rem", ...(isLG ? { backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.5)" } : {}) }} title="Settings"><Settings size={16} /></button>
             </p>
           </div>
@@ -620,6 +688,46 @@ function App() {
               })}
             </div>
 
+            {/* PROFIT GOAL TRACKER */}
+            {profitGoal > 0 && monthly.length > 0 && (() => {
+              const currentProfit = monthly.reduce((s, m) => s + m.profit, 0);
+              const pct = Math.min((currentProfit / profitGoal) * 100, 100);
+              const isHit = currentProfit >= profitGoal;
+              return (
+                <div style={{ ...cardBase, marginBottom: isCompact ? "1rem" : "1.5rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+                    <h2 style={{ ...sectionTitleStyle, marginBottom: 0 }}><Target size={isCompact ? 18 : 22} /> Profit Goal</h2>
+                    <span style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", color: c.textSec }}>${currentProfit.toFixed(0)} / ${profitGoal.toFixed(0)}</span>
+                  </div>
+                  <div style={{ width: "100%", height: isCompact ? "12px" : "18px", backgroundColor: c.surfaceAlt, borderRadius: "999px", overflow: "hidden", border: `1px solid ${c.border}` }}>
+                    <div style={{ width: `${pct}%`, height: "100%", background: isHit ? (isTerm ? c.accent : "linear-gradient(90deg, #16a34a, #22c55e)") : c.btnGrad, borderRadius: "999px", transition: "width 0.8s ease" }}></div>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.5rem", fontSize: isCompact ? "0.6875rem" : "0.8125rem", color: c.textSec }}>
+                    <span>{pct.toFixed(1)}% reached</span>
+                    <span>{isHit ? "Goal reached!" : `$${(profitGoal - currentProfit).toFixed(0)} remaining`}</span>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* PROFIT TREND CHART */}
+            {!loading && monthly.length > 0 && (
+              <div style={cardBase}>
+                <h2 style={sectionTitleStyle}><TrendingUp size={isCompact ? 18 : 22} /> Profit Trend</h2>
+                <div style={{ width: "100%", height: isMobile ? 200 : (isCompact ? 240 : 320) }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={monthly} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={c.border} />
+                      <XAxis dataKey="month" tick={{ fill: c.textSec, fontSize: isCompact ? 10 : 12 }} axisLine={{ stroke: c.border }} tickLine={false} />
+                      <YAxis tick={{ fill: c.textSec, fontSize: isCompact ? 10 : 12 }} axisLine={{ stroke: c.border }} tickLine={false} tickFormatter={(v) => `$${v}`} />
+                      <Tooltip contentStyle={{ backgroundColor: c.surface, border: `1px solid ${c.border}`, borderRadius: "8px", color: c.text, fontSize: "0.8125rem" }} formatter={(v) => [`$${v.toFixed(2)}`, "Profit"]} />
+                      <Bar dataKey="profit" fill={c.accent} radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
             {/* OWNER PERFORMANCE */}
             {!loading && (
               <>
@@ -690,6 +798,13 @@ function App() {
                       {f.opts.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
                     </select>
                   ))}
+                  {/* Date range */}
+                  <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", width: isMobile ? "100%" : "auto" }}>
+                    <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} style={{ padding: isCompact ? "0.375rem 0.5rem" : "0.5rem 0.75rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : "0.25rem", fontSize: isCompact ? "0.75rem" : "0.875rem", backgroundColor: c.inputBg, color: c.text, flex: isMobile ? 1 : undefined }} />
+                    <span style={{ fontSize: isCompact ? "0.6875rem" : "0.75rem", color: c.textSec }}>to</span>
+                    <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} style={{ padding: isCompact ? "0.375rem 0.5rem" : "0.5rem 0.75rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : "0.25rem", fontSize: isCompact ? "0.75rem" : "0.875rem", backgroundColor: c.inputBg, color: c.text, flex: isMobile ? 1 : undefined }} />
+                    {(dateFrom || dateTo) && <button onClick={() => { setDateFrom(""); setDateTo(""); }} style={{ padding: "0.25rem 0.5rem", border: "none", backgroundColor: "transparent", color: c.accent, cursor: "pointer", fontSize: isCompact ? "0.6875rem" : "0.75rem", fontWeight: bws }}>Clear</button>}
+                  </div>
                 </div>
                 <div style={{ display: "flex", gap: "0.5rem", width: isMobile ? "100%" : "auto" }}>
                   {[{ m: "table", icon: List, label: "Table" }, { m: "cards", icon: LayoutGrid, label: "Cards" }].map(({ m, icon: Ic, label }) => (
@@ -704,11 +819,19 @@ function App() {
                 <div style={{ overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: isBrut ? "separate" : "collapse", borderSpacing: isBrut ? "0 2px" : "0" }}>
                     <thead><tr>
-                      {["Card Type", "Card No.", "Owner"].map((h) => <th key={h} style={thStyle}>{h}</th>)}
-                      {["Buy Rate", "Buy Amount", "Sell Rate", "Sell Amount", "Cost", "Gross Profit", "Net Profit", "Margin"].map((h) => <th key={h} style={{ ...thStyle, textAlign: "right" }}>{h}</th>)}
+                      {[{ label: "Card Type", col: "cardType" }, { label: "Card No.", col: "cardNumber" }, { label: "Owner", col: "owner" }].map(({ label, col }) => (
+                        <th key={col} style={{ ...thStyle, cursor: "pointer", userSelect: "none" }} onClick={() => handleSort(col)}>
+                          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>{label} {sortCol === col && <span style={{ fontSize: "0.625rem" }}>{sortDir === "asc" ? "▲" : "▼"}</span>}</div>
+                        </th>
+                      ))}
+                      {[{ label: "Buy Rate", col: "buyRate" }, { label: "Buy Amount", col: "buyAmount" }, { label: "Sell Rate", col: "sellRate" }, { label: "Sell Amount", col: "sellAmount" }, { label: "Cost", col: "cost" }, { label: "Gross Profit", col: "grossProfit" }, { label: "Net Profit", col: "netProfit" }, { label: "Margin", col: "profitMargin" }].map(({ label, col }) => (
+                        <th key={col} style={{ ...thStyle, textAlign: "right", cursor: "pointer", userSelect: "none" }} onClick={() => handleSort(col)}>
+                          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", justifyContent: "flex-end" }}>{label} {sortCol === col && <span style={{ fontSize: "0.625rem" }}>{sortDir === "asc" ? "▲" : "▼"}</span>}</div>
+                        </th>
+                      ))}
                     </tr></thead>
                     <tbody>
-                      {filteredTransactions.map((t) => {
+                      {paginatedTransactions.map((t) => {
                         const cd = getCardById(t.cardId); const ow = getOwnerById(t.ownerId); const cc = getCardTypeColor(cd?.type); const mb = getProfitMarginBadge(t.profitMargin);
                         return (
                           <tr key={t.id}>
@@ -745,7 +868,7 @@ function App() {
               </div>
             ) : (
               <div style={{ display: "grid", gridTemplateColumns: (isBrut || isMobile) ? "1fr" : "repeat(2, 1fr)", gap: isCompact ? "0.625rem" : "1rem" }}>
-                {filteredTransactions.map((t, idx) => {
+                {paginatedTransactions.map((t, idx) => {
                   const cd = getCardById(t.cardId); const ow = getOwnerById(t.ownerId); const cc = getCardTypeColor(cd?.type); const mb = getProfitMarginBadge(t.profitMargin);
                   return (
                     <div key={t.id} className={isLG ? "lg-specular" : ""} style={{ backgroundColor: c.surface, borderRadius: isLG ? r : rSm, padding: isCompact ? "0.875rem" : "1.5rem", border: isBrut ? `3px solid ${c.border}` : (isLG ? "1px solid rgba(255,255,255,0.6)" : `1px solid ${c.border}`), ...((isGlass || isLG) ? { backdropFilter: isLG ? "blur(40px) saturate(180%)" : "blur(16px)", WebkitBackdropFilter: isLG ? "blur(40px) saturate(180%)" : "blur(16px)" } : {}), ...(isBrut ? { boxShadow: "4px 4px 0 #000" } : {}), cursor: "pointer", animation: "slideUp 0.4s ease-out", transform: hoveredCard === `tx-${idx}` ? "translateY(-4px)" : "none", boxShadow: hoveredCard === `tx-${idx}` ? c.cardHoverShadow : (isLG ? "0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7)" : (c.cardGlow || "none")), transition: "all 0.3s ease" }}
@@ -772,6 +895,21 @@ function App() {
                 })}
               </div>
             )}
+
+            {/* PAGINATION */}
+            <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: "center", justifyContent: "space-between", gap: "0.75rem", marginTop: isCompact ? "0.625rem" : "1rem", padding: isCompact ? "0.625rem 0.75rem" : "0.75rem 1rem", backgroundColor: c.surface, borderRadius: rSm, border: `1px solid ${c.border}`, ...(c.cardBackdrop ? { backdropFilter: c.cardBackdrop, WebkitBackdropFilter: c.cardBackdrop } : {}) }}>
+              <div style={{ fontSize: isCompact ? "0.6875rem" : "0.8125rem", color: c.textSec }}>
+                Showing {sortedTransactions.length === 0 ? 0 : ((page - 1) * rowsPerPage + 1)}–{Math.min(page * rowsPerPage, sortedTransactions.length)} of {sortedTransactions.length}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <select value={rowsPerPage} onChange={(e) => { setRowsPerPage(parseInt(e.target.value)); setPage(1); }} style={{ padding: isCompact ? "0.25rem 0.375rem" : "0.375rem 0.5rem", border: `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : "0.25rem", fontSize: isCompact ? "0.6875rem" : "0.8125rem", backgroundColor: c.inputBg, color: c.text }}>
+                  {[10, 25, 50, 100].map((n) => <option key={n} value={n}>{n} rows</option>)}
+                </select>
+                <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1} style={{ padding: isCompact ? "0.25rem" : "0.375rem", border: `1px solid ${c.border}`, borderRadius: isBrut ? "0" : "0.25rem", backgroundColor: page <= 1 ? c.surfaceAlt : c.inputBg, color: page <= 1 ? c.textMuted : c.text, cursor: page <= 1 ? "not-allowed" : "pointer", display: "flex", alignItems: "center" }}><ChevronLeft size={isCompact ? 14 : 16} /></button>
+                <span style={{ fontSize: isCompact ? "0.6875rem" : "0.8125rem", color: c.text, fontWeight: bws, minWidth: "3rem", textAlign: "center" }}>{page} / {totalPages}</span>
+                <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages} style={{ padding: isCompact ? "0.25rem" : "0.375rem", border: `1px solid ${c.border}`, borderRadius: isBrut ? "0" : "0.25rem", backgroundColor: page >= totalPages ? c.surfaceAlt : c.inputBg, color: page >= totalPages ? c.textMuted : c.text, cursor: page >= totalPages ? "not-allowed" : "pointer", display: "flex", alignItems: "center" }}><ChevronRight size={isCompact ? 14 : 16} /></button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -880,6 +1018,30 @@ function App() {
                   <div style={{ width: "20px", height: "20px", borderRadius: "50%", backgroundColor: "#ffffff", position: "absolute", top: "2px", left: boldText ? "22px" : "2px", transition: "left 0.3s ease", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }}></div>
                 </div>
               </div>
+            </div>
+
+            {/* Auto-Refresh */}
+            <div style={{ marginBottom: "2rem" }}>
+              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: bws, marginBottom: "0.75rem", color: c.text }}>Auto-Refresh</label>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.5rem" }}>
+                {[{ v: 0, l: "Off" }, { v: 30, l: "30s" }, { v: 60, l: "1m" }, { v: 300, l: "5m" }].map((opt) => (
+                  <button key={opt.v} onClick={() => setAutoRefresh(opt.v)} style={{ padding: "0.625rem", border: autoRefresh === opt.v ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : "0.5rem", backgroundColor: autoRefresh === opt.v ? c.accentBg : c.surfaceAlt, color: autoRefresh === opt.v ? c.accent : c.text, cursor: "pointer", fontSize: "0.8125rem", fontWeight: bws, textAlign: "center" }}>
+                    {opt.l}
+                  </button>
+                ))}
+              </div>
+              {autoRefresh > 0 && <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", marginTop: "0.5rem", fontSize: "0.75rem", color: c.accent }}><Timer size={12} /> Refreshing every {autoRefresh}s</div>}
+            </div>
+
+            {/* Profit Goal */}
+            <div style={{ marginBottom: "2rem" }}>
+              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: bws, marginBottom: "0.75rem", color: c.text }}>Profit Goal</label>
+              <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                <span style={{ fontSize: "1.125rem", fontWeight: "700", color: c.textStrong }}>$</span>
+                <input type="number" value={profitGoal || ""} onChange={(e) => setProfitGoal(parseFloat(e.target.value) || 0)} placeholder="Enter target..." style={{ padding: "0.625rem 0.75rem", border: `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : "0.5rem", fontSize: "0.9375rem", width: "100%", backgroundColor: c.inputBg, color: c.text }} />
+                {profitGoal > 0 && <button onClick={() => setProfitGoal(0)} style={{ padding: "0.5rem 0.75rem", border: "none", backgroundColor: "transparent", color: c.accent, cursor: "pointer", fontSize: "0.75rem", fontWeight: bws, whiteSpace: "nowrap" }}>Clear</button>}
+              </div>
+              {profitGoal > 0 && <div style={{ fontSize: "0.75rem", color: c.textSec, marginTop: "0.375rem" }}>Progress bar will show on Dashboard tab</div>}
             </div>
           </div>
         </div>
