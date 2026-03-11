@@ -5,25 +5,16 @@ import {
   Filter,
   User,
   RefreshCw,
-  Moon,
-  Sun,
-  Monitor,
   LayoutGrid,
   List,
   Settings,
   X,
   Calendar,
-  Terminal as TerminalIcon,
-  Gem,
-  Layers,
-  Star,
   ChevronLeft,
   ChevronRight,
-  ArrowUpDown,
   Target,
   Timer,
 } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 const GOOGLE_SHEETS_URL =
   "https://script.google.com/macros/s/AKfycbxVwc0buJoICP6sIzK6GxmZNtdvdYA4lw7MhmMxxYjI2weRxDReGIK4sbKyKESUPhEUHQ/exec";
@@ -436,6 +427,7 @@ function App() {
   // Profit goal
   const [profitGoal, setProfitGoal] = useState(() => parseFloat(localStorage.getItem("profitGoal")) || 0);
   const [showGoalInput, setShowGoalInput] = useState(false);
+  const [hoveredBar, setHoveredBar] = useState(null);
 
   const c = getThemeColors(theme);
   const L = getThemeLayout(theme);
@@ -711,22 +703,53 @@ function App() {
             })()}
 
             {/* PROFIT TREND CHART */}
-            {!loading && monthly.length > 0 && (
-              <div style={cardBase}>
-                <h2 style={sectionTitleStyle}><TrendingUp size={isCompact ? 18 : 22} /> Profit Trend</h2>
-                <div style={{ width: "100%", height: isMobile ? 200 : (isCompact ? 240 : 320) }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={monthly} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke={c.border} />
-                      <XAxis dataKey="month" tick={{ fill: c.textSec, fontSize: isCompact ? 10 : 12 }} axisLine={{ stroke: c.border }} tickLine={false} />
-                      <YAxis tick={{ fill: c.textSec, fontSize: isCompact ? 10 : 12 }} axisLine={{ stroke: c.border }} tickLine={false} tickFormatter={(v) => `$${v}`} />
-                      <Tooltip contentStyle={{ backgroundColor: c.surface, border: `1px solid ${c.border}`, borderRadius: "8px", color: c.text, fontSize: "0.8125rem" }} formatter={(v) => [`$${v.toFixed(2)}`, "Profit"]} />
-                      <Bar dataKey="profit" fill={c.accent} radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+            {!loading && monthly.length > 0 && (() => {
+              const maxProfit = Math.max(...monthly.map((m) => m.profit), 1);
+              const chartH = isMobile ? 180 : (isCompact ? 220 : 300);
+              return (
+                <div style={cardBase}>
+                  <h2 style={sectionTitleStyle}><TrendingUp size={isCompact ? 18 : 22} /> Profit Trend</h2>
+                  <div style={{ position: "relative", height: `${chartH}px`, display: "flex", alignItems: "flex-end", gap: isMobile ? "4px" : "8px", paddingBottom: "2rem", paddingLeft: "3rem" }}>
+                    {/* Y-axis labels */}
+                    {[0, 0.25, 0.5, 0.75, 1].map((pct) => (
+                      <div key={pct} style={{ position: "absolute", left: 0, bottom: `${2 + pct * (chartH - 32) / chartH * 100}%`, fontSize: isCompact ? "0.5625rem" : "0.625rem", color: c.textMuted, width: "2.75rem", textAlign: "right", paddingRight: "0.5rem", transform: "translateY(50%)" }}>
+                        ${Math.round(maxProfit * pct)}
+                      </div>
+                    ))}
+                    {/* Grid lines */}
+                    {[0, 0.25, 0.5, 0.75, 1].map((pct) => (
+                      <div key={`g${pct}`} style={{ position: "absolute", left: "3rem", right: 0, bottom: `${2 + pct * (chartH - 32) / chartH * 100}%`, height: "1px", backgroundColor: c.border, opacity: 0.5 }}></div>
+                    ))}
+                    {/* Bars */}
+                    {monthly.map((m, i) => {
+                      const barH = (m.profit / maxProfit) * (chartH - 32);
+                      return (
+                        <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative", zIndex: 2 }}
+                          onMouseEnter={() => setHoveredBar(i)} onMouseLeave={() => setHoveredBar(null)}>
+                          {/* Tooltip */}
+                          {hoveredBar === i && (
+                            <div style={{ position: "absolute", bottom: `${barH + 8}px`, backgroundColor: c.surface, border: `1px solid ${c.border}`, borderRadius: rSm, padding: "0.375rem 0.625rem", fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.text, fontWeight: "600", whiteSpace: "nowrap", boxShadow: c.shadow, zIndex: 10 }}>
+                              {m.month}: ${m.profit.toFixed(2)}
+                            </div>
+                          )}
+                          <div style={{
+                            width: "100%", maxWidth: isMobile ? "28px" : "48px", height: `${barH}px`, minHeight: "4px",
+                            background: c.accent, borderRadius: `${isBrut ? "0" : "4px"} ${isBrut ? "0" : "4px"} 0 0`,
+                            transition: "height 0.6s ease, opacity 0.2s ease",
+                            opacity: hoveredBar === null || hoveredBar === i ? 1 : 0.5,
+                            transform: hoveredBar === i ? "scaleY(1.03)" : "scaleY(1)",
+                            transformOrigin: "bottom",
+                          }}></div>
+                          <div style={{ fontSize: isMobile ? "0.5rem" : (isCompact ? "0.5625rem" : "0.6875rem"), color: c.textMuted, marginTop: "0.375rem", textAlign: "center", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>
+                            {isMobile ? m.month.slice(0, 3) : m.month}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* OWNER PERFORMANCE */}
             {!loading && (
