@@ -10,9 +10,6 @@ import {
   Settings,
   X,
   Calendar,
-  ChevronLeft,
-  ChevronRight,
-  Target,
   Timer,
 } from "lucide-react";
 
@@ -416,17 +413,8 @@ function App() {
   // Sort
   const [sortCol, setSortCol] = useState(null);
   const [sortDir, setSortDir] = useState("asc");
-  // Pagination
-  const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(() => parseInt(localStorage.getItem("rowsPerPage")) || 10);
-  // Date range filter
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
   // Auto-refresh
   const [autoRefresh, setAutoRefresh] = useState(() => parseInt(localStorage.getItem("autoRefresh")) || 0);
-  // Profit goal
-  const [profitGoal, setProfitGoal] = useState(() => parseFloat(localStorage.getItem("profitGoal")) || 0);
-  const [showGoalInput, setShowGoalInput] = useState(false);
   const [hoveredBar, setHoveredBar] = useState(null);
 
   const c = getThemeColors(theme);
@@ -462,9 +450,7 @@ function App() {
   useEffect(() => { localStorage.setItem("fontSize", fontSize.toString()); }, [fontSize]);
   useEffect(() => { localStorage.setItem("viewStyle", viewStyle); }, [viewStyle]);
   useEffect(() => { localStorage.setItem("boldText", boldText.toString()); }, [boldText]);
-  useEffect(() => { localStorage.setItem("rowsPerPage", rowsPerPage.toString()); }, [rowsPerPage]);
   useEffect(() => { localStorage.setItem("autoRefresh", autoRefresh.toString()); }, [autoRefresh]);
-  useEffect(() => { localStorage.setItem("profitGoal", profitGoal.toString()); }, [profitGoal]);
 
   // Auto-refresh timer
   useEffect(() => {
@@ -473,9 +459,6 @@ function App() {
       return () => clearInterval(interval);
     }
   }, [autoRefresh]);
-
-  // Reset page when filters change
-  useEffect(() => { setPage(1); }, [filterCardType, filterOwner, dateFrom, dateTo, sortCol, sortDir]);
 
   const getProfitMarginBadge = (margin) => {
     const mkBadge = (bg, text) => ({ style: { display: "inline-flex", alignItems: "center", padding: isBrut ? "0.25rem 0.5rem" : "0.25rem 0.625rem", borderRadius: isBrut ? "0" : "9999px", fontSize: "0.75rem", fontWeight: bws, backgroundColor: bg, color: text, border: isBrut ? "2px solid #000" : "none" } });
@@ -516,18 +499,16 @@ function App() {
     const tus = txns.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0); const tdu = txns.reduce((s, t) => s + (parseFloat(t.buyAmount) || 0), 0);
     const os = {}; ownrs.forEach((o) => { const ot = txns.filter((t) => t.ownerId === o.id); os[o.id] = { count: ot.length, totalCost: ot.reduce((s, t) => s + t.cost, 0), totalGrossProfit: ot.reduce((s, t) => s + t.grossProfit, 0), totalNetProfit: ot.reduce((s, t) => s + t.netProfit, 0) }; });
     const cts = {}; crds.forEach((x) => { if (!cts[x.type]) cts[x.type] = { count: 0, netProfit: 0 }; const ct = txns.filter((t) => t.cardId === x.id); cts[x.type].count += ct.length; cts[x.type].netProfit += ct.reduce((s, t) => s + t.netProfit, 0); });
-    setStats({ totalCost: tc, totalGrossProfit: tgp, totalNetProfit: tnp, totalUsdtSold: tus, totalDollarUsed: tdu, avgNetProfit: txns.length > 0 ? tnp / txns.length : 0, ownerStats: os, cardTypeStats: cts });
+    setStats({ totalCost: tc, totalGrossProfit: tgp, totalNetProfit: tnp, totalUsdtSold: tus, totalDollarUsed: tdu, avgNetProfit: txns.length > 0 ? tnp / txns.length : 0, avgBuyRate: txns.length > 0 ? txns.reduce((s, t) => s + (parseFloat(t.buyRate) || 0), 0) / txns.length : 0, avgSellRate: txns.length > 0 ? txns.reduce((s, t) => s + (parseFloat(t.sellRate) || 0), 0) / txns.length : 0, ownerStats: os, cardTypeStats: cts });
   };
   const getCardById = (id) => cards.find((x) => x.id === id);
   const getOwnerById = (id) => owners.find((o) => o.id === id);
 
-  // Filter + date range
+  // Filter
   const filteredTransactions = transactions.filter((t) => {
     const cd = getCardById(t.cardId);
     if (filterCardType !== "all" && cd?.type !== filterCardType) return false;
     if (filterOwner !== "all" && t.ownerId !== parseInt(filterOwner)) return false;
-    if (dateFrom && t.date && t.date < dateFrom) return false;
-    if (dateTo && t.date && t.date > dateTo) return false;
     return true;
   });
 
@@ -544,10 +525,6 @@ function App() {
     if (typeof va === "string") return sortDir === "asc" ? va.localeCompare(vb) : vb.localeCompare(va);
     return sortDir === "asc" ? va - vb : vb - va;
   });
-
-  // Pagination
-  const totalPages = Math.max(1, Math.ceil(sortedTransactions.length / rowsPerPage));
-  const paginatedTransactions = sortedTransactions.slice((page - 1) * rowsPerPage, page * rowsPerPage);
 
   const handleSort = (col) => {
     if (sortCol === col) setSortDir(sortDir === "asc" ? "desc" : "asc");
@@ -627,7 +604,7 @@ function App() {
         {activeTab === "dashboard" && (
           <div>
             {/* STAT CARDS */}
-            <div style={{ display: "grid", gridTemplateColumns: isBrut ? "1fr" : (isMobile ? "1fr" : (isCompact || isTablet ? "repeat(2, 1fr)" : (L.statCardDir === "row" ? "repeat(2, 1fr)" : "repeat(3, 1fr)"))), gap: isMobile ? "0.625rem" : (isCompact ? "0.75rem" : (isBrut ? "0.5rem" : "1.5rem")), marginBottom: isCompact ? "1rem" : "2rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: isBrut ? "1fr" : (isMobile ? "1fr" : (isCompact || isTablet ? "repeat(2, 1fr)" : (L.statCardDir === "row" ? "repeat(2, 1fr)" : "repeat(4, 1fr)"))), gap: isMobile ? "0.625rem" : (isCompact ? "0.75rem" : (isBrut ? "0.5rem" : "1.5rem")), marginBottom: isCompact ? "1rem" : "2rem" }}>
               {[
                 { label: "Net Profit", value: stats.totalNetProfit, icon: TrendingUp, color: "Green", sub: "After costs" },
                 { label: "Total USDT Sold", value: stats.totalUsdtSold, icon: DollarSign, color: "Teal", sub: "Total sell amount" },
@@ -635,6 +612,8 @@ function App() {
                 { label: "Total Cost", value: stats.totalCost, icon: DollarSign, color: "Blue", count: transactions.length },
                 { label: "Dollar Used", value: stats.totalDollarUsed, icon: DollarSign, color: "Pink", sub: "Total buy amount" },
                 { label: "Average Profit", value: stats.avgNetProfit, icon: TrendingUp, color: "Purple", sub: "Per transaction" },
+                { label: "Avg Buy Rate", value: stats.avgBuyRate, icon: DollarSign, color: "Teal", sub: "Average buy rate", noPrefix: true },
+                { label: "Avg Sell Rate", value: stats.avgSellRate, icon: DollarSign, color: "Green", sub: "Average sell rate", noPrefix: true },
               ].map((stat, idx) => {
                 const sc = c.statCards[stat.color] || {};
                 const txtColor = sc.text || null;
@@ -660,7 +639,7 @@ function App() {
                         <StatIcon Icon={stat.icon} size={iconSz} layout={L} c={c} />
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", opacity: 0.9, fontWeight: bws, color: txtColor || undefined, marginBottom: "0.25rem" }}>{isTerm ? `> ${stat.label}` : stat.label}</div>
-                          <div style={{ fontSize: isCompact ? "1.5rem" : "2rem", fontWeight: "700", color: txtColor || undefined }} className={isTerm ? "terminal-glow" : ""}>${stat.value?.toFixed(2) || 0}</div>
+                          <div style={{ fontSize: isCompact ? "1.5rem" : "2rem", fontWeight: "700", color: txtColor || undefined }} className={isTerm ? "terminal-glow" : ""}>{stat.noPrefix ? "" : "$"}{stat.value?.toFixed(2) || 0}</div>
                           <div style={{ fontSize: "0.75rem", opacity: 0.7, color: txtColor || undefined }}>{stat.count ? `${stat.count} transactions` : stat.sub}</div>
                         </div>
                       </>
@@ -671,7 +650,7 @@ function App() {
                           <div style={{ fontSize: isCompact ? "0.75rem" : "1rem", opacity: 0.9, fontWeight: bws, color: txtColor || undefined, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>{stat.label}</div>
                           {!isMid && <StatIcon Icon={stat.icon} size={iconSz} layout={L} c={c} />}
                         </div>
-                        <div style={{ fontSize: isMobile ? "1.75rem" : (isCompact ? "1.5rem" : "2.7rem"), fontWeight: "700", color: txtColor || undefined, textAlign: isMid ? "center" : undefined }} className={isTerm ? "terminal-glow" : ""}>${stat.value?.toFixed(2) || 0}</div>
+                        <div style={{ fontSize: isMobile ? "1.75rem" : (isCompact ? "1.5rem" : "2.7rem"), fontWeight: "700", color: txtColor || undefined, textAlign: isMid ? "center" : undefined }} className={isTerm ? "terminal-glow" : ""}>{stat.noPrefix ? "" : "$"}{stat.value?.toFixed(2) || 0}</div>
                         <div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", opacity: 0.8, marginTop: "0.5rem", color: txtColor || undefined, textAlign: isMid ? "center" : undefined }}>{stat.count ? `${stat.count} transactions` : stat.sub}</div>
                       </>
                     )}
@@ -679,28 +658,6 @@ function App() {
                 );
               })}
             </div>
-
-            {/* PROFIT GOAL TRACKER */}
-            {profitGoal > 0 && monthly.length > 0 && (() => {
-              const currentProfit = monthly.reduce((s, m) => s + m.profit, 0);
-              const pct = Math.min((currentProfit / profitGoal) * 100, 100);
-              const isHit = currentProfit >= profitGoal;
-              return (
-                <div style={{ ...cardBase, marginBottom: isCompact ? "1rem" : "1.5rem" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
-                    <h2 style={{ ...sectionTitleStyle, marginBottom: 0 }}><Target size={isCompact ? 18 : 22} /> Profit Goal</h2>
-                    <span style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", color: c.textSec }}>${currentProfit.toFixed(0)} / ${profitGoal.toFixed(0)}</span>
-                  </div>
-                  <div style={{ width: "100%", height: isCompact ? "12px" : "18px", backgroundColor: c.surfaceAlt, borderRadius: "999px", overflow: "hidden", border: `1px solid ${c.border}` }}>
-                    <div style={{ width: `${pct}%`, height: "100%", background: isHit ? (isTerm ? c.accent : "linear-gradient(90deg, #16a34a, #22c55e)") : c.btnGrad, borderRadius: "999px", transition: "width 0.8s ease" }}></div>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.5rem", fontSize: isCompact ? "0.6875rem" : "0.8125rem", color: c.textSec }}>
-                    <span>{pct.toFixed(1)}% reached</span>
-                    <span>{isHit ? "Goal reached!" : `$${(profitGoal - currentProfit).toFixed(0)} remaining`}</span>
-                  </div>
-                </div>
-              );
-            })()}
 
             {/* PROFIT TREND CHART */}
             {!loading && monthly.length > 0 && (() => {
@@ -821,13 +778,6 @@ function App() {
                       {f.opts.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
                     </select>
                   ))}
-                  {/* Date range */}
-                  <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", width: isMobile ? "100%" : "auto" }}>
-                    <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} style={{ padding: isCompact ? "0.375rem 0.5rem" : "0.5rem 0.75rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : "0.25rem", fontSize: isCompact ? "0.75rem" : "0.875rem", backgroundColor: c.inputBg, color: c.text, flex: isMobile ? 1 : undefined }} />
-                    <span style={{ fontSize: isCompact ? "0.6875rem" : "0.75rem", color: c.textSec }}>to</span>
-                    <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} style={{ padding: isCompact ? "0.375rem 0.5rem" : "0.5rem 0.75rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : "0.25rem", fontSize: isCompact ? "0.75rem" : "0.875rem", backgroundColor: c.inputBg, color: c.text, flex: isMobile ? 1 : undefined }} />
-                    {(dateFrom || dateTo) && <button onClick={() => { setDateFrom(""); setDateTo(""); }} style={{ padding: "0.25rem 0.5rem", border: "none", backgroundColor: "transparent", color: c.accent, cursor: "pointer", fontSize: isCompact ? "0.6875rem" : "0.75rem", fontWeight: bws }}>Clear</button>}
-                  </div>
                 </div>
                 <div style={{ display: "flex", gap: "0.5rem", width: isMobile ? "100%" : "auto" }}>
                   {[{ m: "table", icon: List, label: "Table" }, { m: "cards", icon: LayoutGrid, label: "Cards" }].map(({ m, icon: Ic, label }) => (
@@ -854,7 +804,7 @@ function App() {
                       ))}
                     </tr></thead>
                     <tbody>
-                      {paginatedTransactions.map((t) => {
+                      {sortedTransactions.map((t) => {
                         const cd = getCardById(t.cardId); const ow = getOwnerById(t.ownerId); const cc = getCardTypeColor(cd?.type); const mb = getProfitMarginBadge(t.profitMargin);
                         return (
                           <tr key={t.id}>
@@ -891,7 +841,7 @@ function App() {
               </div>
             ) : (
               <div style={{ display: "grid", gridTemplateColumns: (isBrut || isMobile) ? "1fr" : "repeat(2, 1fr)", gap: isCompact ? "0.625rem" : "1rem" }}>
-                {paginatedTransactions.map((t, idx) => {
+                {sortedTransactions.map((t, idx) => {
                   const cd = getCardById(t.cardId); const ow = getOwnerById(t.ownerId); const cc = getCardTypeColor(cd?.type); const mb = getProfitMarginBadge(t.profitMargin);
                   return (
                     <div key={t.id} className={isLG ? "lg-specular" : ""} style={{ backgroundColor: c.surface, borderRadius: isLG ? r : rSm, padding: isCompact ? "0.875rem" : "1.5rem", border: isBrut ? `3px solid ${c.border}` : (isLG ? "1px solid rgba(255,255,255,0.6)" : `1px solid ${c.border}`), ...((isGlass || isLG) ? { backdropFilter: isLG ? "blur(40px) saturate(180%)" : "blur(16px)", WebkitBackdropFilter: isLG ? "blur(40px) saturate(180%)" : "blur(16px)" } : {}), ...(isBrut ? { boxShadow: "4px 4px 0 #000" } : {}), cursor: "pointer", animation: "slideUp 0.4s ease-out", transform: hoveredCard === `tx-${idx}` ? "translateY(-4px)" : "none", boxShadow: hoveredCard === `tx-${idx}` ? c.cardHoverShadow : (isLG ? "0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7)" : (c.cardGlow || "none")), transition: "all 0.3s ease" }}
@@ -918,21 +868,6 @@ function App() {
                 })}
               </div>
             )}
-
-            {/* PAGINATION */}
-            <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: "center", justifyContent: "space-between", gap: "0.75rem", marginTop: isCompact ? "0.625rem" : "1rem", padding: isCompact ? "0.625rem 0.75rem" : "0.75rem 1rem", backgroundColor: c.surface, borderRadius: rSm, border: `1px solid ${c.border}`, ...(c.cardBackdrop ? { backdropFilter: c.cardBackdrop, WebkitBackdropFilter: c.cardBackdrop } : {}) }}>
-              <div style={{ fontSize: isCompact ? "0.6875rem" : "0.8125rem", color: c.textSec }}>
-                Showing {sortedTransactions.length === 0 ? 0 : ((page - 1) * rowsPerPage + 1)}–{Math.min(page * rowsPerPage, sortedTransactions.length)} of {sortedTransactions.length}
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <select value={rowsPerPage} onChange={(e) => { setRowsPerPage(parseInt(e.target.value)); setPage(1); }} style={{ padding: isCompact ? "0.25rem 0.375rem" : "0.375rem 0.5rem", border: `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : "0.25rem", fontSize: isCompact ? "0.6875rem" : "0.8125rem", backgroundColor: c.inputBg, color: c.text }}>
-                  {[10, 25, 50, 100].map((n) => <option key={n} value={n}>{n} rows</option>)}
-                </select>
-                <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1} style={{ padding: isCompact ? "0.25rem" : "0.375rem", border: `1px solid ${c.border}`, borderRadius: isBrut ? "0" : "0.25rem", backgroundColor: page <= 1 ? c.surfaceAlt : c.inputBg, color: page <= 1 ? c.textMuted : c.text, cursor: page <= 1 ? "not-allowed" : "pointer", display: "flex", alignItems: "center" }}><ChevronLeft size={isCompact ? 14 : 16} /></button>
-                <span style={{ fontSize: isCompact ? "0.6875rem" : "0.8125rem", color: c.text, fontWeight: bws, minWidth: "3rem", textAlign: "center" }}>{page} / {totalPages}</span>
-                <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages} style={{ padding: isCompact ? "0.25rem" : "0.375rem", border: `1px solid ${c.border}`, borderRadius: isBrut ? "0" : "0.25rem", backgroundColor: page >= totalPages ? c.surfaceAlt : c.inputBg, color: page >= totalPages ? c.textMuted : c.text, cursor: page >= totalPages ? "not-allowed" : "pointer", display: "flex", alignItems: "center" }}><ChevronRight size={isCompact ? 14 : 16} /></button>
-              </div>
-            </div>
           </div>
         )}
 
@@ -1056,16 +991,6 @@ function App() {
               {autoRefresh > 0 && <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", marginTop: "0.5rem", fontSize: "0.75rem", color: c.accent }}><Timer size={12} /> Refreshing every {autoRefresh}s</div>}
             </div>
 
-            {/* Profit Goal */}
-            <div style={{ marginBottom: "2rem" }}>
-              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: bws, marginBottom: "0.75rem", color: c.text }}>Profit Goal</label>
-              <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                <span style={{ fontSize: "1.125rem", fontWeight: "700", color: c.textStrong }}>$</span>
-                <input type="number" value={profitGoal || ""} onChange={(e) => setProfitGoal(parseFloat(e.target.value) || 0)} placeholder="Enter target..." style={{ padding: "0.625rem 0.75rem", border: `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : "0.5rem", fontSize: "0.9375rem", width: "100%", backgroundColor: c.inputBg, color: c.text }} />
-                {profitGoal > 0 && <button onClick={() => setProfitGoal(0)} style={{ padding: "0.5rem 0.75rem", border: "none", backgroundColor: "transparent", color: c.accent, cursor: "pointer", fontSize: "0.75rem", fontWeight: bws, whiteSpace: "nowrap" }}>Clear</button>}
-              </div>
-              {profitGoal > 0 && <div style={{ fontSize: "0.75rem", color: c.textSec, marginTop: "0.375rem" }}>Progress bar will show on Dashboard tab</div>}
-            </div>
           </div>
         </div>
       )}
