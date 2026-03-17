@@ -13,8 +13,7 @@ import {
   Timer,
 } from "lucide-react";
 
-const GOOGLE_SHEETS_URL =
-  "https://script.google.com/macros/s/AKfycbxVwc0buJoICP6sIzK6GxmZNtdvdYA4lw7MhmMxxYjI2weRxDReGIK4sbKyKESUPhEUHQ/exec";
+const GOOGLE_SHEETS_URL ="https://script.google.com/macros/s/AKfycbxVwc0buJoICP6sIzK6GxmZNtdvdYA4lw7MhmMxxYjI2weRxDReGIK4sbKyKESUPhEUHQ/exec";
 
 const FONTS = [
   { name: "Inter", value: "Inter" },
@@ -495,6 +494,12 @@ function App() {
   useEffect(() => { localStorage.setItem("theme", theme); }, [theme]);
   useEffect(() => { localStorage.setItem("font", selectedFont); }, [selectedFont]);
   useEffect(() => { localStorage.setItem("fontSize", fontSize.toString()); }, [fontSize]);
+
+  // Apply font size to root HTML element so all rem units scale
+  useEffect(() => {
+    document.documentElement.style.fontSize = `${fontSize}px`;
+    return () => { document.documentElement.style.fontSize = ""; };
+  }, [fontSize]);
   useEffect(() => { localStorage.setItem("viewStyle", viewStyle); }, [viewStyle]);
   useEffect(() => { localStorage.setItem("boldText", boldText.toString()); }, [boldText]);
   useEffect(() => { localStorage.setItem("autoRefresh", autoRefresh.toString()); }, [autoRefresh]);
@@ -610,7 +615,7 @@ function App() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: c.bg, backgroundImage: c.bgPattern || "none", fontFamily: `"${font}", sans-serif`, fontSize: `${fontSize}px`, fontWeight: bw, position: "relative", transition: "background-color 0.3s ease", overflowX: "hidden" }}>
+    <div style={{ minHeight: "100vh", backgroundColor: c.bg, backgroundImage: c.bgPattern || "none", fontFamily: `"${font}", sans-serif`, fontWeight: bw, position: "relative", transition: "background-color 0.3s ease", overflowX: "hidden" }}>
 
       {isTerm && <div className="terminal-scanline"></div>}
       {isMid && <div className="midnight-stars"></div>}
