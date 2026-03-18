@@ -21,6 +21,11 @@ const FONTS = [
   { name: "Poppins", value: "Poppins" },
   { name: "League Spartan", value: "League Spartan" },
   { name: "Open Sans", value: "Open Sans" },
+  { name: "Lexend", value: "Lexend" },
+  { name: "Public Sans", value: "Public Sans" },
+  { name: "Rethink Sans", value: "Rethink Sans" },
+  { name: "Noto Sans", value: "Noto Sans" },
+  { name: "Noto Serif", value: "Noto Serif" },
 ];
 
 const THEME_OPTIONS = [
@@ -358,7 +363,7 @@ const getThemeColors = (themeName) => {
 
 if (typeof document !== 'undefined') {
   const link = document.createElement('link');
-  link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=League+Spartan:wght@300;400;500;600;700;800;900&family=Open+Sans:wght@300;400;500;600;700&display=swap';
+  link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&family=League+Spartan:wght@300;400;500;600;700;800;900&family=Open+Sans:wght@300;400;500;600;700;800&family=Lexend:wght@300;400;500;600;700;800;900&family=Public+Sans:wght@300;400;500;600;700;800;900&family=Rethink+Sans:wght@400;500;600;700;800&family=Noto+Sans:wght@300;400;500;600;700;800;900&family=Noto+Serif:wght@300;400;500;600;700;800;900&display=swap';
   link.rel = 'stylesheet';
   document.head.appendChild(link);
 }
@@ -404,7 +409,7 @@ const SimplePieChart = ({ data, colors, size = 200, c }) => {
 };
 
 // -- Chart toggle button pair --
-const ChartToggle = ({ mode, setMode, opt1, opt2, c, isBrut, isCompact }) => (
+const ChartToggle = ({ mode, setMode, opt1, opt2, c, isBrut, isCompact, bws }) => (
   <div style={{ display: "flex", gap: "0.375rem" }}>
     {[opt1, opt2].map(({ key, label }) => (
       <button key={key} onClick={() => setMode(key)} style={{
@@ -412,7 +417,7 @@ const ChartToggle = ({ mode, setMode, opt1, opt2, c, isBrut, isCompact }) => (
         borderRadius: isBrut ? "0" : "999px", border: `1px solid ${mode === key ? c.accent : c.border}`,
         backgroundColor: mode === key ? c.accentBg : "transparent",
         color: mode === key ? c.accent : c.textSec, cursor: "pointer",
-        fontSize: isCompact ? "0.625rem" : "0.75rem", fontWeight: "600",
+        fontSize: isCompact ? "0.625rem" : "0.75rem", fontWeight: bws || "600",
       }}>{label}</button>
     ))}
   </div>
@@ -446,6 +451,7 @@ function App() {
   const [hoveredStat, setHoveredStat] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [selectedFont, setSelectedFont] = useState(() => localStorage.getItem("font") || "Poppins");
+  const [titleFont, setTitleFont] = useState(() => localStorage.getItem("titleFont") || "Poppins");
   const [fontSize, setFontSize] = useState(() => parseInt(localStorage.getItem("fontSize")) || 20);
   const [boldText, setBoldText] = useState(() => localStorage.getItem("boldText") === "true");
 
@@ -460,9 +466,12 @@ function App() {
   const L = getThemeLayout(theme);
   const isCompact = viewStyle === "compact";
   const headingFont = `"${selectedFont}", sans-serif`;
+  const titleFontFamily = `"${titleFont}", sans-serif`;
   const bw = boldText ? "600" : "400";
   const bwm = boldText ? "700" : "500";
   const bws = boldText ? "800" : "600";
+  const bwx = boldText ? "900" : "700";
+  const bwh = boldText ? "900" : "800";
   const r = isCompact ? c.radiusCompact : c.radius;
   const rSm = isCompact ? c.radiusCompactSm : c.radiusSm;
 
@@ -494,6 +503,7 @@ function App() {
 
   useEffect(() => { localStorage.setItem("theme", theme); }, [theme]);
   useEffect(() => { localStorage.setItem("font", selectedFont); }, [selectedFont]);
+  useEffect(() => { localStorage.setItem("titleFont", titleFont); }, [titleFont]);
   useEffect(() => { localStorage.setItem("fontSize", fontSize.toString()); }, [fontSize]);
 
   // Apply font size to root HTML element so all rem units scale
@@ -596,10 +606,10 @@ function App() {
   const cardTypes = ["VISA DEBIT", "VISA CREDIT", "AMEX", "SELLER", "MASTERCARD"];
 
   // -- Shared styles --
-  const cardBase = { backgroundColor: c.surface, borderRadius: isCirc ? "2rem" : r, padding: isCompact ? "1rem" : "2rem", boxShadow: c.cardGlow ? `${c.shadow}, ${c.cardGlow}` : c.shadow, marginBottom: isCompact ? "1rem" : "2rem", border: isBrut ? `3px solid ${c.border}` : `1px solid ${c.border}`, ...(c.cardBackdrop ? { backdropFilter: c.cardBackdrop, WebkitBackdropFilter: c.cardBackdrop } : {}) };
+  const cardBase = { backgroundColor: c.surface, borderRadius: isCirc ? "2rem" : r, padding: isCompact ? "1rem" : "2rem", boxShadow: c.cardGlow ? `${c.shadow}, ${c.cardGlow}` : c.shadow, marginBottom: isCompact ? "1rem" : "2rem", border: isBrut ? `3px solid ${c.border}` : `1px solid ${c.border}`, ...(c.cardBackdrop ? { backdropFilter: c.cardBackdrop, WebkitBackdropFilter: c.cardBackdrop } : {}), animation: "fadeIn 0.35s cubic-bezier(.16,1,.3,1) both" };
   const thStyle = { padding: isCompact ? "0.5rem 0.625rem" : "0.75rem 1rem", textAlign: "left", fontSize: isCompact ? "0.6875rem" : "0.75rem", fontWeight: bws, color: c.textSec, backgroundColor: c.surfaceAlt, borderBottom: isBrut ? `3px solid ${c.border}` : `1px solid ${c.border}`, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.1em" : "normal" };
   const tdStyle = { padding: isCompact ? "0.375rem 0.625rem" : "0.75rem 1rem", fontSize: isCompact ? "0.75rem" : "0.875rem", borderBottom: isBrut ? `2px solid ${c.border}` : isTerm ? `1px dashed ${c.border}` : `1px solid ${c.border}`, color: c.text, backgroundColor: c.surface };
-  const sectionTitleStyle = { fontSize: isMobile ? "1rem" : (isCompact ? "1.125rem" : "1.5rem"), fontFamily: headingFont, fontWeight: "800", marginBottom: isCompact ? "1rem" : "1.5rem", display: "flex", alignItems: "center", gap: isCompact ? "0.5rem" : "0.75rem", color: c.textStrong, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" };
+  const sectionTitleStyle = { fontSize: isMobile ? "1rem" : (isCompact ? "1.125rem" : "1.5rem"), fontFamily: headingFont, fontWeight: bwh, marginBottom: isCompact ? "1rem" : "1.5rem", display: "flex", alignItems: "center", gap: isCompact ? "0.5rem" : "0.75rem", color: c.textStrong, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" };
 
   // Compute even grid columns for card type stats
   const ctCount = Object.keys(stats.cardTypeStats || {}).length;
@@ -630,7 +640,7 @@ function App() {
       <div style={{ backgroundColor: (isGlass || isLG) ? (isLG ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.04)") : c.surface, boxShadow: isLG ? "0 1px 0 rgba(0,0,0,0.04)" : c.shadow, borderBottom: c.headerBorderBottom || `1px solid ${c.border}`, padding: isMobile ? "0.75rem 0.625rem" : (isCompact ? "0.875rem 1rem" : "1.5rem 1rem"), ...((isGlass || isLG) ? { backdropFilter: "blur(20px) saturate(150%)", WebkitBackdropFilter: "blur(20px) saturate(150%)" } : {}), position: "relative", zIndex: 10 }}>
         <div style={{ maxWidth: "80rem", margin: "0 auto", display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? "0.75rem" : "0" }}>
           <div>
-            <h1 key={theme} style={{ fontSize: isBrut ? "3rem" : (isMobile ? "1.5rem" : (isCompact ? "1.75rem" : "2.5rem")), fontFamily: headingFont, fontWeight: isBrut ? "900" : "800", background: c.titleGrad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", color: "transparent", display: "inline-block", width: "fit-content", margin: 0, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>Sales Dashboard</h1>
+            <h1 key={theme} style={{ fontSize: isBrut ? "3rem" : (isMobile ? "1.5rem" : (isCompact ? "1.75rem" : "2.5rem")), fontFamily: titleFontFamily, fontWeight: isBrut ? "900" : bwh, background: c.titleGrad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", color: "transparent", display: "inline-block", width: "fit-content", margin: 0, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>Sales Dashboard</h1>
             <p style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", color: c.textSec, marginTop: "0.25rem", display: "flex", alignItems: "center", gap: "0.75rem" }} className={isTerm ? "terminal-glow" : ""}>
               {isTerm ? "> " : ""}{lastSync ? `Last updated: ${lastSync.toLocaleTimeString()}` : "Real-time data from Google Sheets"}
               {autoRefresh > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "0.6875rem", color: c.accent, backgroundColor: c.accentBg, padding: "0.125rem 0.5rem", borderRadius: "999px" }}><Timer size={10} />{autoRefresh}s</span>}
@@ -656,6 +666,7 @@ function App() {
                 fontSize: isCompact ? "0.8125rem" : "0.875rem", fontWeight: bwm, cursor: "pointer", color: activeTab === tab ? c.accent : c.textSec,
                 textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.1em" : "normal",
                 transform: activeTab === tab && !isBrut ? "translateY(-2px)" : "none",
+                transition: "color 0.15s cubic-bezier(.4,0,.2,1), border-color 0.15s cubic-bezier(.4,0,.2,1), transform 0.15s cubic-bezier(.4,0,.2,1)",
               }} className={isTerm && activeTab === tab ? "terminal-glow" : ""}>
                 {isTerm ? `[${tab.toUpperCase()}]` : tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
@@ -665,7 +676,7 @@ function App() {
       </div>
 
       {/* MAIN CONTENT */}
-      <div style={{ maxWidth: "80rem", margin: "0 auto", padding: isMobile ? "0.75rem 0.5rem" : (isCompact ? "1rem" : "2rem 1rem"), position: "relative", zIndex: 5 }}>
+      <div style={{ maxWidth: "80rem", margin: "0 auto", padding: isMobile ? "0.75rem 0.5rem" : (isCompact ? "1rem" : "2rem 1rem"), position: "relative", zIndex: 5, animation: "fadeIn 0.3s cubic-bezier(.16,1,.3,1) both" }}>
         {error && <div style={{ padding: isCompact ? "0.625rem" : "1rem", backgroundColor: c.errorBg, border: `1px solid ${c.errorBorder}`, borderRadius: r, color: c.errorText, marginBottom: isCompact ? "1rem" : "2rem", textAlign: "center", fontSize: isCompact ? "0.8125rem" : "inherit", animation: "shake 0.5s ease-in-out" }}><strong>Error:</strong> {error}</div>}
 
         {/* ===== DASHBOARD TAB ===== */}
@@ -694,10 +705,11 @@ function App() {
                     background: sc.bg, border: sc.border || (isBrut ? "3px solid #000" : (isLG ? "1px solid rgba(255,255,255,0.6)" : (isCirc ? `2px solid ${c.border}` : "none"))),
                     boxShadow: isBrut ? "4px 4px 0 #000" : (isLG ? "0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7)" : (isCompact ? c.shadowLgCompact : c.shadowLg)),
                     ...((isGlass || isLG) ? { backdropFilter: "blur(16px) saturate(150%)", WebkitBackdropFilter: "blur(16px) saturate(150%)" } : {}),
-                    cursor: "pointer", willChange: "transform, box-shadow",
+                    cursor: "pointer", willChange: "transform, box-shadow, opacity",
                     display: isRow ? "flex" : "block", alignItems: isRow ? "center" : undefined, gap: isRow ? "1.25rem" : undefined,
                     transform: hoveredStat === idx ? (isBrut ? "translate(-2px,-2px)" : "translateY(-6px)") : "translateY(0)",
-                    transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                    transition: "transform 0.2s cubic-bezier(.4,0,.2,1), box-shadow 0.2s cubic-bezier(.4,0,.2,1)",
+                    animation: `slideUp 0.4s cubic-bezier(.16,1,.3,1) ${idx * 0.06}s both`,
                     ...(isBrut && hoveredStat === idx ? { boxShadow: "8px 8px 0 #000" } : {}),
                     ...(isBrut ? { marginBottom: "0.5rem" } : {}),
                   }}
@@ -707,7 +719,7 @@ function App() {
                         <StatIcon Icon={stat.icon} size={iconSz} layout={L} c={c} />
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", opacity: 0.9, fontWeight: bws, color: txtColor || undefined, marginBottom: "0.25rem" }}>{isTerm ? `> ${stat.label}` : stat.label}</div>
-                          <div style={{ fontSize: isCompact ? "1.5rem" : "2rem", fontWeight: "700", color: txtColor || undefined }} className={isTerm ? "terminal-glow" : ""}>{stat.noPrefix ? "" : "$"}{stat.value?.toFixed(2) || 0}</div>
+                          <div style={{ fontSize: isCompact ? "1.5rem" : "2rem", fontWeight: bwx, color: txtColor || undefined }} className={isTerm ? "terminal-glow" : ""}>{stat.noPrefix ? "" : "$"}{stat.value?.toFixed(2) || 0}</div>
                           <div style={{ fontSize: "0.75rem", opacity: 0.7, color: txtColor || undefined }}>{stat.count ? `${stat.count} transactions` : stat.sub}</div>
                         </div>
                       </>
@@ -718,7 +730,7 @@ function App() {
                           <div style={{ fontSize: isCompact ? "0.75rem" : "1rem", opacity: 0.9, fontWeight: bws, color: txtColor || undefined, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>{stat.label}</div>
                           {!isMid && !isCirc && <StatIcon Icon={stat.icon} size={iconSz} layout={L} c={c} />}
                         </div>
-                        <div style={{ fontSize: isMobile ? "1.75rem" : (isCompact ? "1.5rem" : "2.7rem"), fontWeight: "700", color: txtColor || undefined, textAlign: (isMid || isCirc) ? "center" : undefined }} className={isTerm ? "terminal-glow" : ""}>{stat.noPrefix ? "" : "$"}{stat.value?.toFixed(2) || 0}</div>
+                        <div style={{ fontSize: isMobile ? "1.75rem" : (isCompact ? "1.5rem" : "2.7rem"), fontWeight: bwx, color: txtColor || undefined, textAlign: (isMid || isCirc) ? "center" : undefined }} className={isTerm ? "terminal-glow" : ""}>{stat.noPrefix ? "" : "$"}{stat.value?.toFixed(2) || 0}</div>
                         <div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", opacity: 0.8, marginTop: "0.5rem", color: txtColor || undefined, textAlign: (isMid || isCirc) ? "center" : undefined }}>{stat.count ? `${stat.count} transactions` : stat.sub}</div>
                       </>
                     )}
@@ -736,7 +748,7 @@ function App() {
                 <div style={cardBase}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isCompact ? "1rem" : "1.5rem" }}>
                     <h2 style={{ ...sectionTitleStyle, marginBottom: 0 }}><TrendingUp size={isCompact ? 18 : 22} /> Profit Trend</h2>
-                    <ChartToggle mode={profitChartMode} setMode={setProfitChartMode} opt1={{ key: "bar", label: "Bar" }} opt2={{ key: "line", label: "Line" }} c={c} isBrut={isBrut} isCompact={isCompact} />
+                    <ChartToggle mode={profitChartMode} setMode={setProfitChartMode} opt1={{ key: "bar", label: "Bar" }} opt2={{ key: "line", label: "Line" }} c={c} isBrut={isBrut} isCompact={isCompact} bws={bws} />
                   </div>
                   <div style={{ position: "relative", height: `${chartH}px`, display: "flex", alignItems: "flex-end", gap: isMobile ? "4px" : "8px", paddingBottom: "2rem", paddingLeft: "3rem" }}>
                     {[0, 0.25, 0.5, 0.75, 1].map((pct) => (
@@ -752,14 +764,14 @@ function App() {
                           <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative", zIndex: 2 }}
                             onMouseEnter={() => setHoveredBar(i)} onMouseLeave={() => setHoveredBar(null)}>
                             {hoveredBar === i && (
-                              <div style={{ position: "absolute", bottom: `${barH + 8}px`, backgroundColor: c.surface, border: `1px solid ${c.border}`, borderRadius: isCirc ? "999px" : rSm, padding: "0.375rem 0.625rem", fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.text, fontWeight: "600", whiteSpace: "nowrap", boxShadow: c.shadow, zIndex: 10 }}>
+                              <div style={{ position: "absolute", bottom: `${barH + 8}px`, backgroundColor: c.surface, border: `1px solid ${c.border}`, borderRadius: isCirc ? "999px" : rSm, padding: "0.375rem 0.625rem", fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.text, fontWeight: bws, whiteSpace: "nowrap", boxShadow: c.shadow, zIndex: 10 }}>
                                 {m.month}: ${m.profit.toFixed(2)}
                               </div>
                             )}
                             <div style={{
                               width: "100%", maxWidth: isMobile ? "28px" : "48px", height: `${barH}px`, minHeight: "4px",
                               background: c.accent, borderRadius: isCirc ? "999px" : (isBrut ? "0" : "4px 4px 0 0"),
-                              transition: "height 0.6s ease, opacity 0.2s ease",
+                              transition: "height 0.5s cubic-bezier(.16,1,.3,1), opacity 0.15s cubic-bezier(.4,0,.2,1), transform 0.15s cubic-bezier(.4,0,.2,1)",
                               opacity: hoveredBar === null || hoveredBar === i ? 1 : 0.5,
                               transform: hoveredBar === i ? "scaleY(1.03)" : "scaleY(1)", transformOrigin: "bottom",
                             }}></div>
@@ -795,7 +807,7 @@ function App() {
                       </div>
                     )}
                     {profitChartMode === "line" && hoveredBar !== null && monthly[hoveredBar] && (
-                      <div style={{ position: "absolute", top: "0.5rem", right: "0.5rem", backgroundColor: c.surface, border: `1px solid ${c.border}`, borderRadius: isCirc ? "999px" : rSm, padding: "0.375rem 0.75rem", fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.text, fontWeight: "600", boxShadow: c.shadow, zIndex: 10 }}>
+                      <div style={{ position: "absolute", top: "0.5rem", right: "0.5rem", backgroundColor: c.surface, border: `1px solid ${c.border}`, borderRadius: isCirc ? "999px" : rSm, padding: "0.375rem 0.75rem", fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.text, fontWeight: bws, boxShadow: c.shadow, zIndex: 10 }}>
                         {monthly[hoveredBar].month}: ${monthly[hoveredBar].profit.toFixed(2)}
                       </div>
                     )}
@@ -810,7 +822,7 @@ function App() {
                 <div style={cardBase}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isCompact ? "1rem" : "1.5rem" }}>
                     <h2 style={{ ...sectionTitleStyle, marginBottom: 0 }}><User size={isCompact ? 20 : 24} /> Owner Performance</h2>
-                    <ChartToggle mode={ownerChartMode} setMode={setOwnerChartMode} opt1={{ key: "stats", label: "Stats" }} opt2={{ key: "pie", label: "Pie" }} c={c} isBrut={isBrut} isCompact={isCompact} />
+                    <ChartToggle mode={ownerChartMode} setMode={setOwnerChartMode} opt1={{ key: "stats", label: "Stats" }} opt2={{ key: "pie", label: "Pie" }} c={c} isBrut={isBrut} isCompact={isCompact} bws={bws} />
                   </div>
                   {ownerChartMode === "pie" ? (
                     <SimplePieChart data={owners.map((o) => ({ label: o.name, value: stats.ownerStats?.[o.id]?.totalNetProfit || 0 }))} colors={["#3b82f6", "#f97316", "#16a34a", "#8b5cf6", "#ec4899", "#06b6d4"]} size={isMobile ? 180 : 240} c={c} />
@@ -821,14 +833,14 @@ function App() {
                       return (
                         <div key={o.id} style={{ padding: isCompact ? "1rem" : "1.5rem", backgroundColor: c.surfaceAlt, borderRadius: isBrut ? "0" : (isCirc ? "1.5rem" : rSm), border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, ...(isBrut ? { boxShadow: "3px 3px 0 #000" } : {}), ...((isGlass || isLG) ? { backdropFilter: "blur(16px) saturate(150%)", WebkitBackdropFilter: "blur(16px) saturate(150%)" } : {}) }}>
                           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", marginBottom: isCompact ? "0.625rem" : "1rem", gap: "0.5rem" }}>
-                            <span style={{ fontFamily: headingFont, fontWeight: "800", fontSize: isMobile ? "0.9375rem" : (isCompact ? "1rem" : "1.25rem"), color: c.textStrong, textTransform: isBrut ? "uppercase" : "none" }} className={isTerm ? "terminal-glow" : ""}>{isTerm ? `> ${o.name}` : o.name}</span>
+                            <span style={{ fontFamily: headingFont, fontWeight: bwh, fontSize: isMobile ? "0.9375rem" : (isCompact ? "1rem" : "1.25rem"), color: c.textStrong, textTransform: isBrut ? "uppercase" : "none" }} className={isTerm ? "terminal-glow" : ""}>{isTerm ? `> ${o.name}` : o.name}</span>
                             <span style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", color: c.textSec, backgroundColor: c.surface, padding: "0.25rem 0.75rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), fontWeight: bws, border: isBrut ? "1px solid #000" : "none" }}>{os.count} transactions</span>
                           </div>
                           <div style={{ display: (L.ownerLayout === "horizontal" && !isMobile) ? "flex" : "grid", flexDirection: L.ownerLayout === "horizontal" ? "column" : undefined, gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: isCompact ? "0.625rem" : "1rem" }}>
                             {[{ label: "COST", value: os.totalCost, color: "#3b82f6" }, { label: "GROSS", value: os.totalGrossProfit, color: "#f97316" }, { label: "NET PROFIT", value: os.totalNetProfit, color: "#16a34a" }].map((s) => (
                               <div key={s.label} style={{ textAlign: "center", padding: isCompact ? "0.625rem" : "1rem", backgroundColor: c.surface, borderRadius: isBrut ? "0" : (isCirc ? "1.5rem" : rSm), flex: L.ownerLayout === "horizontal" ? 1 : undefined, border: isBrut ? "1px solid #000" : "none" }}>
                                 <div style={{ fontSize: isCompact ? "0.6875rem" : "0.75rem", color: c.textSec, marginBottom: "0.25rem", fontWeight: bws, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>{s.label}</div>
-                                <div style={{ fontSize: isCompact ? "1.125rem" : "1.5rem", fontWeight: "700", color: isTerm ? c.text : s.color }} className={isTerm ? "terminal-glow" : ""}>${s.value.toFixed(2)}</div>
+                                <div style={{ fontSize: isCompact ? "1.125rem" : "1.5rem", fontWeight: bwx, color: isTerm ? c.text : s.color }} className={isTerm ? "terminal-glow" : ""}>${s.value.toFixed(2)}</div>
                               </div>
                             ))}
                           </div>
@@ -843,7 +855,7 @@ function App() {
                 <div style={cardBase}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isCompact ? "1rem" : "1.5rem" }}>
                     <h2 style={{ ...sectionTitleStyle, marginBottom: 0 }}>Card Type Statistics</h2>
-                    <ChartToggle mode={cardTypeChartMode} setMode={setCardTypeChartMode} opt1={{ key: "stats", label: "Stats" }} opt2={{ key: "pie", label: "Pie" }} c={c} isBrut={isBrut} isCompact={isCompact} />
+                    <ChartToggle mode={cardTypeChartMode} setMode={setCardTypeChartMode} opt1={{ key: "stats", label: "Stats" }} opt2={{ key: "pie", label: "Pie" }} c={c} isBrut={isBrut} isCompact={isCompact} bws={bws} />
                   </div>
                   {cardTypeChartMode === "pie" ? (
                     <SimplePieChart data={Object.entries(stats.cardTypeStats || {}).map(([type, data]) => ({ label: type, value: data.netProfit }))} colors={["#3b82f6", "#10b981", "#8b5cf6", "#64748b", "#f59e0b", "#ec4899"]} size={isMobile ? 180 : 240} c={c} />
@@ -857,15 +869,15 @@ function App() {
                         display: L.cardTypeLayout === "list" ? "flex" : "block", alignItems: "center", justifyContent: "space-between",
                         ...(isBrut ? { boxShadow: "3px 3px 0 #000" } : {}),
                         ...(hoveredCard === idx ? { borderColor: c.accent, transform: L.cardTypeLayout === "list" ? "none" : "scale(1.03)" } : {}),
-                        transition: "transform 0.2s ease, border-color 0.2s ease",
+                        transition: "transform 0.2s cubic-bezier(.4,0,.2,1), border-color 0.2s cubic-bezier(.4,0,.2,1)",
                       }} onMouseEnter={() => setHoveredCard(idx)} onMouseLeave={() => setHoveredCard(null)}>
                         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: L.cardTypeLayout === "list" ? "0" : (isCompact ? "0.625rem" : "1rem") }}>
                           <div style={{ width: isBrut ? "16px" : "14px", height: isBrut ? "16px" : "14px", borderRadius: isBrut ? "0" : "50%", backgroundColor: getCardTypeColor(type), flexShrink: 0, border: isBrut ? "2px solid #000" : "none" }}></div>
-                          <span style={{ fontFamily: headingFont, fontWeight: "800", fontSize: isCompact ? "0.9375rem" : "1.125rem", color: c.textStrong, textTransform: isBrut ? "uppercase" : "none" }} className={isTerm ? "terminal-glow" : ""}>{type}</span>
+                          <span style={{ fontFamily: headingFont, fontWeight: bwh, fontSize: isCompact ? "0.9375rem" : "1.125rem", color: c.textStrong, textTransform: isBrut ? "uppercase" : "none" }} className={isTerm ? "terminal-glow" : ""}>{type}</span>
                           {L.cardTypeLayout === "list" && <span style={{ fontSize: "0.8125rem", color: c.textSec, marginLeft: "0.5rem" }}>({data.count})</span>}
                         </div>
                         {L.cardTypeLayout !== "list" && <div style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", color: c.textSec, marginBottom: "0.5rem" }}>{data.count} transactions</div>}
-                        <div style={{ fontSize: L.cardTypeLayout === "list" ? "1.25rem" : (isCompact ? "1.25rem" : "1.75rem"), fontWeight: "700", color: isTerm ? c.text : "#16a34a" }} className={isTerm ? "terminal-glow" : ""}>${data.netProfit.toFixed(2)}</div>
+                        <div style={{ fontSize: L.cardTypeLayout === "list" ? "1.25rem" : (isCompact ? "1.25rem" : "1.75rem"), fontWeight: bwx, color: isTerm ? c.text : "#16a34a" }} className={isTerm ? "terminal-glow" : ""}>${data.netProfit.toFixed(2)}</div>
                       </div>
                     ))}
                   </div>
@@ -935,15 +947,15 @@ function App() {
                       })}
                     </tbody>
                     <tfoot>
-                      <tr style={{ backgroundColor: c.surfaceAlt, fontWeight: "700", borderTop: `2px solid ${c.borderStrong}` }}>
-                        <td colSpan="3" style={{ ...tdStyle, fontWeight: "700", fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textStrong, textTransform: isBrut ? "uppercase" : "none" }}>TOTALS</td>
-                        <td colSpan="2" style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Sell Amt:</div><div style={{ fontWeight: "700", fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>${filteredTransactions.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0).toFixed(2)}</div></td>
-                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Avg Sell:</div><div style={{ fontWeight: "700", fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>{filteredTransactions.length > 0 ? (filteredTransactions.reduce((s, t) => s + (parseFloat(t.sellRate) || 0), 0) / filteredTransactions.length).toFixed(2) : "0.00"}</div></td>
-                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Avg Buy:</div><div style={{ fontWeight: "700", fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>{(() => { const tc2 = filteredTransactions.reduce((s, t) => s + (parseFloat(t.cost) || 0), 0); const ts2 = filteredTransactions.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0); return (ts2 > 0 ? tc2 / ts2 : 0).toFixed(2); })()}</div></td>
-                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Buy Amt:</div><div style={{ fontWeight: "700", fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>${filteredTransactions.reduce((s, t) => s + (parseFloat(t.buyAmount) || 0), 0).toFixed(2)}</div></td>
+                      <tr style={{ backgroundColor: c.surfaceAlt, fontWeight: bwx, borderTop: `2px solid ${c.borderStrong}` }}>
+                        <td colSpan="3" style={{ ...tdStyle, fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textStrong, textTransform: isBrut ? "uppercase" : "none" }}>TOTALS</td>
+                        <td colSpan="2" style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Sell Amt:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>${filteredTransactions.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0).toFixed(2)}</div></td>
+                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Avg Sell:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>{filteredTransactions.length > 0 ? (filteredTransactions.reduce((s, t) => s + (parseFloat(t.sellRate) || 0), 0) / filteredTransactions.length).toFixed(2) : "0.00"}</div></td>
+                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Avg Buy:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>{(() => { const tc2 = filteredTransactions.reduce((s, t) => s + (parseFloat(t.cost) || 0), 0); const ts2 = filteredTransactions.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0); return (ts2 > 0 ? tc2 / ts2 : 0).toFixed(2); })()}</div></td>
+                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Buy Amt:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>${filteredTransactions.reduce((s, t) => s + (parseFloat(t.buyAmount) || 0), 0).toFixed(2)}</div></td>
                         <td style={tdStyle}></td>
-                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Gross:</div><div style={{ color: isTerm ? c.text : "#f97316", fontWeight: "700", fontSize: isCompact ? "0.6875rem" : "0.9375rem" }}>${filteredTransactions.reduce((s, t) => s + t.grossProfit, 0).toFixed(2)}</div></td>
-                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Net:</div><div style={{ color: isTerm ? c.text : "#16a34a", fontWeight: "700", fontSize: isCompact ? "0.6875rem" : "0.9375rem" }} className={isTerm ? "terminal-glow" : ""}>${filteredTransactions.reduce((s, t) => s + t.netProfit, 0).toFixed(2)}</div></td>
+                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Gross:</div><div style={{ color: isTerm ? c.text : "#f97316", fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem" }}>${filteredTransactions.reduce((s, t) => s + t.grossProfit, 0).toFixed(2)}</div></td>
+                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Net:</div><div style={{ color: isTerm ? c.text : "#16a34a", fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem" }} className={isTerm ? "terminal-glow" : ""}>${filteredTransactions.reduce((s, t) => s + t.netProfit, 0).toFixed(2)}</div></td>
                         <td style={tdStyle}></td>
                       </tr>
                     </tfoot>
@@ -955,12 +967,12 @@ function App() {
                 {sortedTransactions.map((t, idx) => {
                   const cd = getCardById(t.cardId); const ow = getOwnerById(t.ownerId); const cc = getCardTypeColor(cd?.type); const mb = getProfitMarginBadge(t.profitMargin);
                   return (
-                    <div key={t.id} className={isLG ? "lg-specular" : ""} style={{ backgroundColor: c.surface, borderRadius: isLG ? r : (isCirc ? "2rem" : rSm), padding: isCompact ? "0.875rem" : "1.5rem", border: isBrut ? `3px solid ${c.border}` : (isLG ? "1px solid rgba(255,255,255,0.6)" : `1px solid ${c.border}`), ...((isGlass || isLG) ? { backdropFilter: "blur(16px) saturate(150%)", WebkitBackdropFilter: "blur(16px) saturate(150%)" } : {}), ...(isBrut ? { boxShadow: "4px 4px 0 #000" } : {}), cursor: "pointer", willChange: "transform, box-shadow", transform: hoveredCard === `tx-${idx}` ? "translateY(-4px)" : "translateY(0)", boxShadow: hoveredCard === `tx-${idx}` ? c.cardHoverShadow : (isLG ? "0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7)" : (c.cardGlow || "none")), transition: "transform 0.2s ease, box-shadow 0.2s ease" }}
+                    <div key={t.id} className={isLG ? "lg-specular" : ""} style={{ backgroundColor: c.surface, borderRadius: isLG ? r : (isCirc ? "2rem" : rSm), padding: isCompact ? "0.875rem" : "1.5rem", border: isBrut ? `3px solid ${c.border}` : (isLG ? "1px solid rgba(255,255,255,0.6)" : `1px solid ${c.border}`), ...((isGlass || isLG) ? { backdropFilter: "blur(16px) saturate(150%)", WebkitBackdropFilter: "blur(16px) saturate(150%)" } : {}), ...(isBrut ? { boxShadow: "4px 4px 0 #000" } : {}), cursor: "pointer", animation: `slideUp 0.35s cubic-bezier(.16,1,.3,1) ${Math.min(idx, 10) * 0.04}s both`, transform: hoveredCard === `tx-${idx}` ? "translateY(-4px)" : "translateY(0)", boxShadow: hoveredCard === `tx-${idx}` ? c.cardHoverShadow : (isLG ? "0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7)" : (c.cardGlow || "none")), transition: "transform 0.2s cubic-bezier(.4,0,.2,1), box-shadow 0.2s cubic-bezier(.4,0,.2,1)" }}
                       onMouseEnter={() => setHoveredCard(`tx-${idx}`)} onMouseLeave={() => setHoveredCard(null)}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: isCompact ? "0.5rem" : "1rem" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: isCompact ? "0.5rem" : "0.75rem" }}>
                           <div style={{ width: isCompact ? "12px" : "16px", height: isCompact ? "12px" : "16px", borderRadius: isBrut ? "0" : "50%", backgroundColor: cc, flexShrink: 0 }}></div>
-                          <div><div style={{ fontWeight: "700", fontSize: isCompact ? "0.9375rem" : "1.125rem", color: c.textStrong }}>{cd?.type || "UNKNOWN"}</div><div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textSec }}>Card #{cd?.number || "-"}</div></div>
+                          <div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.9375rem" : "1.125rem", color: c.textStrong }}>{cd?.type || "UNKNOWN"}</div><div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textSec }}>Card #{cd?.number || "-"}</div></div>
                         </div>
                         <span style={mb.style}>{t.profitMargin.toFixed(1)}%</span>
                       </div>
@@ -974,7 +986,7 @@ function App() {
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: isCompact ? "0.5rem" : "1rem", paddingTop: isCompact ? "0.5rem" : "1rem", borderTop: `1px solid ${c.border}` }}>
                         {[{ l: "Cost", v: t.cost, cl: "#3b82f6" }, { l: "Gross", v: t.grossProfit, cl: "#f97316" }, { l: "Net", v: t.netProfit, cl: "#16a34a" }].map((x) => (
-                          <div key={x.l}><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>{x.l}</div><div style={{ fontWeight: "700", fontSize: isCompact ? "0.875rem" : "inherit", color: isTerm ? c.text : x.cl }}>${x.v.toFixed(0)}</div></div>
+                          <div key={x.l}><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>{x.l}</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.875rem" : "inherit", color: isTerm ? c.text : x.cl }}>${x.v.toFixed(0)}</div></div>
                         ))}
                       </div>
                     </div>
@@ -990,9 +1002,9 @@ function App() {
           <div>
             {monthly.length > 0 && (
               <div style={{ marginBottom: isCompact ? "1rem" : "2rem" }}>
-                <div className={isLG ? "lg-specular" : ""} style={{ padding: isMobile ? "1.25rem" : (isCompact ? "1.5rem" : "2.5rem"), borderRadius: isBrut ? "0" : (isCirc ? "2rem" : r), background: c.profitGrad, color: isLG ? "#1c7a36" : "#ffffff", maxWidth: isMobile ? "100%" : (isCompact ? "400px" : "500px"), margin: "0 auto", textAlign: "center", border: isBrut ? "3px solid #000" : (isLG ? "1px solid rgba(52,199,89,0.25)" : (isCirc ? `2px solid ${c.border}` : "none")), boxShadow: isBrut ? "6px 6px 0 #000" : (isLG ? "0 8px 32px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7)" : c.shadowLg), ...((isGlass || isLG) ? { backdropFilter: "blur(16px) saturate(150%)", WebkitBackdropFilter: "blur(16px) saturate(150%)" } : {}) }}>
+                <div className={isLG ? "lg-specular" : ""} style={{ padding: isMobile ? "1.25rem" : (isCompact ? "1.5rem" : "2.5rem"), borderRadius: isBrut ? "0" : (isCirc ? "2rem" : r), background: c.profitGrad, color: isLG ? "#1c7a36" : "#ffffff", maxWidth: isMobile ? "100%" : (isCompact ? "400px" : "500px"), margin: "0 auto", textAlign: "center", animation: "slideUp 0.4s cubic-bezier(.16,1,.3,1) both", border: isBrut ? "3px solid #000" : (isLG ? "1px solid rgba(52,199,89,0.25)" : (isCirc ? `2px solid ${c.border}` : "none")), boxShadow: isBrut ? "6px 6px 0 #000" : (isLG ? "0 8px 32px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7)" : c.shadowLg), ...((isGlass || isLG) ? { backdropFilter: "blur(16px) saturate(150%)", WebkitBackdropFilter: "blur(16px) saturate(150%)" } : {}) }}>
                   <div style={{ fontSize: isMobile ? "0.8125rem" : (isCompact ? "0.9375rem" : "1.125rem"), opacity: 0.9, fontWeight: bws }} className={isTerm ? "terminal-glow" : ""}>{isTerm ? "> ALL TIME PROFIT" : "All Time Profit"}</div>
-                  <div style={{ fontSize: isMobile ? "2rem" : (isCompact ? "2.5rem" : "3.5rem"), fontWeight: "700", margin: "0.5rem 0" }} className={isTerm ? "terminal-glow" : ""}>${monthly.reduce((s, m) => s + m.profit, 0).toFixed(2)}</div>
+                  <div style={{ fontSize: isMobile ? "2rem" : (isCompact ? "2.5rem" : "3.5rem"), fontWeight: bwx, margin: "0.5rem 0" }} className={isTerm ? "terminal-glow" : ""}>${monthly.reduce((s, m) => s + m.profit, 0).toFixed(2)}</div>
                   <div style={{ fontSize: isMobile ? "0.6875rem" : (isCompact ? "0.8125rem" : "0.9375rem"), opacity: 0.85 }}>Total from {monthly.length} months</div>
                 </div>
               </div>
@@ -1009,13 +1021,13 @@ function App() {
                       {monthly.map((m, idx) => (
                         <tr key={m.id} style={{ backgroundColor: idx % 2 === 0 ? c.surface : c.surfaceAlt }}>
                           <td style={{ ...tdStyle, fontWeight: bws, fontSize: isCompact ? "0.8125rem" : "1rem" }} className={isTerm ? "terminal-glow" : ""}>{isTerm ? `> ${m.month}` : m.month}</td>
-                          <td style={{ ...tdStyle, textAlign: "right", color: isTerm ? c.text : "#16a34a", fontWeight: "700", fontSize: isCompact ? "0.875rem" : "1.125rem" }} className={isTerm ? "terminal-glow" : ""}>${m.profit.toFixed(2)}</td>
+                          <td style={{ ...tdStyle, textAlign: "right", color: isTerm ? c.text : "#16a34a", fontWeight: bwx, fontSize: isCompact ? "0.875rem" : "1.125rem" }} className={isTerm ? "terminal-glow" : ""}>${m.profit.toFixed(2)}</td>
                         </tr>
                       ))}
                     </tbody>
-                    <tfoot><tr style={{ backgroundColor: c.surfaceAlt, fontWeight: "700", borderTop: `2px solid ${c.borderStrong}` }}>
-                      <td style={{ ...tdStyle, fontWeight: "700", fontSize: isCompact ? "0.8125rem" : "1rem", color: c.textStrong }}>TOTAL</td>
-                      <td style={{ ...tdStyle, textAlign: "right", fontWeight: "700", color: isTerm ? c.text : "#16a34a", fontSize: isCompact ? "1rem" : "1.25rem" }} className={isTerm ? "terminal-glow" : ""}>${monthly.reduce((s, m) => s + m.profit, 0).toFixed(2)}</td>
+                    <tfoot><tr style={{ backgroundColor: c.surfaceAlt, fontWeight: bwx, borderTop: `2px solid ${c.borderStrong}` }}>
+                      <td style={{ ...tdStyle, fontWeight: bwx, fontSize: isCompact ? "0.8125rem" : "1rem", color: c.textStrong }}>TOTAL</td>
+                      <td style={{ ...tdStyle, textAlign: "right", fontWeight: bwx, color: isTerm ? c.text : "#16a34a", fontSize: isCompact ? "1rem" : "1.25rem" }} className={isTerm ? "terminal-glow" : ""}>${monthly.reduce((s, m) => s + m.profit, 0).toFixed(2)}</td>
                     </tr></tfoot>
                   </table>
                 </div>
@@ -1027,10 +1039,10 @@ function App() {
 
       {/* ===== SETTINGS MODAL ===== */}
       {showSettings && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: isLG ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", zIndex: 200, animation: "fadeIn 0.2s ease-out" }} onClick={() => setShowSettings(false)}>
-          <div style={{ backgroundColor: isGlass ? "rgba(20,14,48,0.95)" : (isLG ? "rgba(255,255,255,0.65)" : c.surface), borderRadius: isBrut ? "0" : (isCirc ? "2.5rem" : (isMobile ? "0.75rem" : (isLG ? "1.5rem" : "1rem"))), padding: isMobile ? "1.25rem" : "2rem", maxWidth: isMobile ? "100%" : "560px", width: "100%", maxHeight: "90vh", overflowY: "auto", boxShadow: c.modalShadow, animation: "slideUp 0.25s ease-out", border: isBrut ? `3px solid ${c.border}` : (isLG ? "1px solid rgba(255,255,255,0.7)" : `1px solid ${c.border}`), ...((isGlass || isLG) ? { backdropFilter: "blur(20px) saturate(150%)", WebkitBackdropFilter: "blur(20px) saturate(150%)" } : {}), margin: isMobile ? "0.5rem" : "0" }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: isLG ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", zIndex: 200, animation: "fadeIn 0.2s cubic-bezier(.16,1,.3,1) both" }} onClick={() => setShowSettings(false)}>
+          <div style={{ backgroundColor: isGlass ? "rgba(20,14,48,0.95)" : (isLG ? "rgba(255,255,255,0.65)" : c.surface), borderRadius: isBrut ? "0" : (isCirc ? "2.5rem" : (isMobile ? "0.75rem" : (isLG ? "1.5rem" : "1rem"))), padding: isMobile ? "1.25rem" : "2rem", maxWidth: isMobile ? "100%" : "560px", width: "100%", maxHeight: "90vh", overflowY: "auto", boxShadow: c.modalShadow, animation: "slideUp 0.3s cubic-bezier(.16,1,.3,1) both", border: isBrut ? `3px solid ${c.border}` : (isLG ? "1px solid rgba(255,255,255,0.7)" : `1px solid ${c.border}`), ...((isGlass || isLG) ? { backdropFilter: "blur(20px) saturate(150%)", WebkitBackdropFilter: "blur(20px) saturate(150%)" } : {}), margin: isMobile ? "0.5rem" : "0" }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem", paddingBottom: "1rem", borderBottom: `1px solid ${c.border}` }}>
-              <h2 style={{ fontSize: "1.5rem", fontFamily: headingFont, fontWeight: "800", color: c.textStrong, margin: 0, display: "flex", alignItems: "center", gap: "0.75rem" }}><Settings size={24} /> Settings</h2>
+              <h2 style={{ fontSize: "1.5rem", fontFamily: headingFont, fontWeight: bwh, color: c.textStrong, margin: 0, display: "flex", alignItems: "center", gap: "0.75rem" }}><Settings size={24} /> Settings</h2>
               <button onClick={() => setShowSettings(false)} style={{ padding: "0.5rem", border: "none", background: "none", cursor: "pointer", color: c.textSec, display: "flex", alignItems: "center" }}><X size={24} /></button>
             </div>
 
@@ -1039,11 +1051,11 @@ function App() {
               <label style={{ display: "block", fontSize: "0.875rem", fontWeight: bws, marginBottom: "0.75rem", color: c.text }}>Theme</label>
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(3, 1fr)" : "repeat(auto-fill, minmax(90px, 1fr))", gap: "0.5rem" }}>
                 {THEME_OPTIONS.map((opt) => (
-                  <div key={opt.key} onClick={() => setTheme(opt.key)} style={{ padding: "0.5rem", border: theme === opt.key ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "1.5rem" : "0.625rem"), backgroundColor: theme === opt.key ? c.accentBg : c.surfaceAlt, cursor: "pointer", textAlign: "center", transition: "border-color 0.15s ease, background-color 0.15s ease" }}>
+                  <div key={opt.key} onClick={() => setTheme(opt.key)} style={{ padding: "0.5rem", border: theme === opt.key ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "1.5rem" : "0.625rem"), backgroundColor: theme === opt.key ? c.accentBg : c.surfaceAlt, cursor: "pointer", textAlign: "center", transition: "border-color 0.15s cubic-bezier(.4,0,.2,1), background-color 0.15s cubic-bezier(.4,0,.2,1)" }}>
                     <div style={{ display: "flex", height: "24px", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "4px"), overflow: "hidden", marginBottom: "0.375rem", border: `1px solid ${c.border}` }}>
                       {opt.preview.map((color, i) => <div key={i} style={{ flex: 1, background: color }}></div>)}
                     </div>
-                    <div style={{ fontSize: "0.6875rem", fontWeight: "600", color: theme === opt.key ? c.accent : c.text }}>{opt.label}</div>
+                    <div style={{ fontSize: "0.6875rem", fontWeight: bws, color: theme === opt.key ? c.accent : c.text }}>{opt.label}</div>
                   </div>
                 ))}
               </div>
@@ -1063,18 +1075,27 @@ function App() {
 
             {/* Font */}
             <div style={{ marginBottom: "2rem" }}>
-              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: bws, marginBottom: "0.75rem", color: c.text }}>Font Style</label>
+              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: bws, marginBottom: "0.75rem", color: c.text }}>Body Font</label>
               <select value={selectedFont} onChange={(e) => setSelectedFont(e.target.value)} style={{ padding: "0.75rem", border: `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), fontSize: "0.9375rem", width: "100%", backgroundColor: c.inputBg, color: c.text, cursor: "pointer" }}>
                 {FONTS.map((f) => <option key={f.value} value={f.value}>{f.name}</option>)}
               </select>
             </div>
 
+            {/* Title Font */}
+            <div style={{ marginBottom: "2rem" }}>
+              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: bws, marginBottom: "0.75rem", color: c.text }}>Title Font</label>
+              <select value={titleFont} onChange={(e) => setTitleFont(e.target.value)} style={{ padding: "0.75rem", border: `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), fontSize: "0.9375rem", width: "100%", backgroundColor: c.inputBg, color: c.text, cursor: "pointer" }}>
+                {FONTS.map((f) => <option key={f.value} value={f.value}>{f.name}</option>)}
+              </select>
+              <div style={{ marginTop: "0.5rem", fontFamily: `"${titleFont}", sans-serif`, fontSize: "1.25rem", fontWeight: bwh, background: c.titleGrad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Sales Dashboard</div>
+            </div>
+
             {/* Font Size */}
             <div style={{ marginBottom: "2rem" }}>
               <label style={{ display: "block", fontSize: "0.875rem", fontWeight: bws, marginBottom: "0.75rem", color: c.text }}>Font Size</label>
-              <input type="range" min="12" max="20" value={fontSize} onChange={(e) => setFontSize(parseInt(e.target.value))} style={{ width: "100%", height: "8px", borderRadius: "4px", background: c.toggleBg, outline: "none" }} />
+              <input type="range" min="12" max="40" value={fontSize} onChange={(e) => setFontSize(parseInt(e.target.value))} style={{ width: "100%", height: "8px", borderRadius: "4px", background: c.toggleBg, outline: "none" }} />
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.5rem", fontSize: "0.875rem", color: c.textSec }}>
-                <span>Small (12px)</span><span style={{ fontSize: "1.125rem", fontWeight: "700", color: c.textStrong }}>{fontSize}px</span><span>Large (20px)</span>
+                <span>Small (12px)</span><span style={{ fontSize: "1.125rem", fontWeight: bwx, color: c.textStrong }}>{fontSize}px</span><span>Large (40px)</span>
               </div>
             </div>
 
@@ -1083,11 +1104,11 @@ function App() {
               <label style={{ display: "block", fontSize: "0.875rem", fontWeight: bws, marginBottom: "0.75rem", color: c.text }}>Text Weight</label>
               <div onClick={() => setBoldText(!boldText)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem", border: boldText ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "2rem" : "0.75rem"), backgroundColor: boldText ? c.accentBg : c.surfaceAlt, cursor: "pointer" }}>
                 <div>
-                  <div style={{ fontWeight: boldText ? "700" : "600", fontSize: "0.9375rem", color: c.textStrong }}>Bold Text</div>
+                  <div style={{ fontWeight: boldText ? bwx : bws, fontSize: "0.9375rem", color: c.textStrong }}>Bold Text</div>
                   <div style={{ fontSize: "0.75rem", opacity: 0.7, marginTop: "0.25rem", color: c.textSec }}>Increase font weight across the UI</div>
                 </div>
                 <div style={{ width: "44px", height: "24px", borderRadius: "12px", backgroundColor: boldText ? c.accent : c.toggleBg, position: "relative", flexShrink: 0 }}>
-                  <div style={{ width: "20px", height: "20px", borderRadius: "50%", backgroundColor: "#ffffff", position: "absolute", top: "2px", left: boldText ? "22px" : "2px", transition: "left 0.3s ease", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }}></div>
+                  <div style={{ width: "20px", height: "20px", borderRadius: "50%", backgroundColor: "#ffffff", position: "absolute", top: "2px", left: boldText ? "22px" : "2px", transition: "left 0.2s cubic-bezier(.4,0,.2,1)", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }}></div>
                 </div>
               </div>
             </div>
@@ -1114,9 +1135,9 @@ function App() {
         html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
         button, select, input { font-family: inherit; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25%, 75% { transform: translateX(-5px); } 50% { transform: translateX(5px); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translate3d(0, 12px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+        @keyframes shake { 0%, 100% { transform: translate3d(0, 0, 0); } 20%, 60% { transform: translate3d(-4px, 0, 0); } 40%, 80% { transform: translate3d(4px, 0, 0); } }
         ${L.extraCss}
       `}</style>
     </div>
