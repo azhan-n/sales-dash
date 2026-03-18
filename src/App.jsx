@@ -511,6 +511,19 @@ function App() {
     document.documentElement.style.fontSize = `${fontSize}px`;
     return () => { document.documentElement.style.fontSize = ""; };
   }, [fontSize]);
+
+  // Sync iOS status bar & body background with theme
+  useEffect(() => {
+    document.body.style.backgroundColor = c.bg;
+    document.body.style.margin = "0";
+    let meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) { meta = document.createElement("meta"); meta.name = "theme-color"; document.head.appendChild(meta); }
+    meta.content = c.bg;
+    // Ensure viewport-fit=cover for iOS safe area
+    const vp = document.querySelector('meta[name="viewport"]');
+    if (vp && !vp.content.includes("viewport-fit")) vp.content += ", viewport-fit=cover";
+    return () => { document.body.style.backgroundColor = ""; };
+  }, [c.bg]);
   useEffect(() => { localStorage.setItem("viewStyle", viewStyle); }, [viewStyle]);
   useEffect(() => { localStorage.setItem("boldText", boldText.toString()); }, [boldText]);
   useEffect(() => { localStorage.setItem("autoRefresh", autoRefresh.toString()); }, [autoRefresh]);
@@ -626,7 +639,7 @@ function App() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: c.bg, backgroundImage: c.bgPattern || "none", fontFamily: `"${font}", sans-serif`, fontWeight: bw, position: "relative", transition: "background-color 0.3s ease", overflowX: "hidden" }}>
+    <div style={{ minHeight: "100vh", backgroundColor: c.bg, backgroundImage: c.bgPattern || "none", fontFamily: `"${font}", sans-serif`, fontWeight: bw, position: "relative", overflowX: "hidden", paddingTop: "env(safe-area-inset-top)" }}>
 
       {isTerm && <div className="terminal-scanline"></div>}
       {isMid && <div className="midnight-stars"></div>}
