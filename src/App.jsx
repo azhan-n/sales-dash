@@ -26,6 +26,8 @@ const FONTS = [
   { name: "Rethink Sans", value: "Rethink Sans" },
   { name: "Noto Sans", value: "Noto Sans" },
   { name: "Noto Serif", value: "Noto Serif" },
+  { name: "Quicksand", value: "Quicksand" },
+  { name: "Winky Sans", value: "Winky Sans" },
 ];
 
 const THEME_OPTIONS = [
@@ -363,7 +365,7 @@ const getThemeColors = (themeName) => {
 
 if (typeof document !== 'undefined') {
   const link = document.createElement('link');
-  link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&family=League+Spartan:wght@300;400;500;600;700;800;900&family=Open+Sans:wght@300;400;500;600;700;800&family=Lexend:wght@300;400;500;600;700;800;900&family=Public+Sans:wght@300;400;500;600;700;800;900&family=Rethink+Sans:wght@400;500;600;700;800&family=Noto+Sans:wght@300;400;500;600;700;800;900&family=Noto+Serif:wght@300;400;500;600;700;800;900&display=swap';
+  link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&family=League+Spartan:wght@300;400;500;600;700;800;900&family=Open+Sans:wght@300;400;500;600;700;800&family=Lexend:wght@300;400;500;600;700;800;900&family=Public+Sans:wght@300;400;500;600;700;800;900&family=Rethink+Sans:wght@400;500;600;700;800&family=Noto+Sans:wght@300;400;500;600;700;800;900&family=Noto+Serif:wght@300;400;500;600;700;800;900&family=Quicksand:wght@300;400;500;600;700&family=Winky+Sans:wght@300;400;500;600;700;800&display=swap';
   link.rel = 'stylesheet';
   document.head.appendChild(link);
 }
