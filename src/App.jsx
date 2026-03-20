@@ -365,7 +365,7 @@ const getThemeColors = (themeName) => {
 
 if (typeof document !== 'undefined') {
   const link = document.createElement('link');
-  link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&family=League+Spartan:wght@300;400;500;600;700;800;900&family=Open+Sans:wght@300;400;500;600;700;800&family=Lexend:wght@300;400;500;600;700;800;900&family=Public+Sans:wght@300;400;500;600;700;800;900&family=Rethink+Sans:wght@400;500;600;700;800&family=Noto+Sans:wght@300;400;500;600;700;800;900&family=Noto+Serif:wght@300;400;500;600;700;800;900&family=Quicksand:wght@300;400;500;600;700&family=Winky+Sans:wght@300;400;500;600;700;800&display=swap';
+  link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&family=League+Spartan:wght@300;400;500;600;700;800;900&family=Open+Sans:wght@300;400;500;600;700;800&family=Lexend:wght@300;400;500;600;700;800;900&family=Public+Sans:wght@300;400;500;600;700;800;900&family=Rethink+Sans:wght@400;500;600;700;800&family=Noto+Sans:wght@300;400;500;600;700;800;900&family=Noto+Serif:wght@300;400;500;600;700;800;900&family=Quicksand:wght@300;400;500;600;700&family=Winky+Sans:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap';
   link.rel = 'stylesheet';
   document.head.appendChild(link);
 }
@@ -449,6 +449,7 @@ function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "sunset");
   const [viewMode, setViewMode] = useState("table");
   const [viewStyle, setViewStyle] = useState(() => localStorage.getItem("viewStyle") || "normal");
+  const [dashboardMode, setDashboardMode] = useState(() => localStorage.getItem("dashboardMode") || "classic");
   const [hoveredCard, setHoveredCard] = useState(null);
   const [hoveredStat, setHoveredStat] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -516,17 +517,18 @@ function App() {
 
   // Sync iOS status bar & body background with theme
   useEffect(() => {
-    document.body.style.backgroundColor = c.bg;
+    document.body.style.backgroundColor = dashboardMode === "modern" ? "#131313" : c.bg;
     document.body.style.margin = "0";
     let meta = document.querySelector('meta[name="theme-color"]');
     if (!meta) { meta = document.createElement("meta"); meta.name = "theme-color"; document.head.appendChild(meta); }
-    meta.content = c.bg;
+    meta.content = dashboardMode === "modern" ? "#131313" : c.bg;
     // Ensure viewport-fit=cover for iOS safe area
     const vp = document.querySelector('meta[name="viewport"]');
     if (vp && !vp.content.includes("viewport-fit")) vp.content += ", viewport-fit=cover";
     return () => { document.body.style.backgroundColor = ""; };
-  }, [c.bg]);
+  }, [c.bg, dashboardMode]);
   useEffect(() => { localStorage.setItem("viewStyle", viewStyle); }, [viewStyle]);
+  useEffect(() => { localStorage.setItem("dashboardMode", dashboardMode); }, [dashboardMode]);
   useEffect(() => { localStorage.setItem("boldText", boldText.toString()); }, [boldText]);
   useEffect(() => { localStorage.setItem("autoRefresh", autoRefresh.toString()); }, [autoRefresh]);
 
@@ -643,6 +645,7 @@ function App() {
   return (
     <div style={{ minHeight: "100vh", backgroundColor: c.bg, backgroundImage: c.bgPattern || "none", fontFamily: `"${font}", sans-serif`, fontWeight: bw, position: "relative", overflowX: "hidden", paddingTop: "env(safe-area-inset-top)" }}>
 
+      {dashboardMode === "classic" && (<>
       {isTerm && <div className="terminal-scanline"></div>}
       {isMid && <div className="midnight-stars"></div>}
       {isCirc && <>
@@ -1049,6 +1052,269 @@ function App() {
           </div>
         )}
       </div>
+      </>)}
+
+      {/* ===== MODERN VIEW ===== */}
+      {dashboardMode === "modern" && (() => {
+        const ob = { bg: "#131313", sidebar: "#1C1B1B", card: "#2A2A2A", cardAlt: "#201F1F", primary: "#ADC7FF", secondary: "#66DF75", tertiary: "#EF6719", text: "#E5E2E1", textSec: "#8B90A0", border: "rgba(255,255,255,0.05)", borderSolid: "#353534", accentBg: "rgba(173,199,255,0.1)" };
+        const obTab = activeTab;
+        const kpis = [
+          { label: "Net Profit", value: stats.totalNetProfit, pct: "+12%", color: ob.primary, bars: [4,6,5,8,10,12] },
+          { label: "Total USDT Sold", value: stats.totalUsdtSold, pct: "+8%", color: ob.secondary, bars: [8,5,10,6,12,9] },
+          { label: "Avg Buy Rate", value: stats.avgBuyRate, pct: "", color: ob.tertiary, bars: [4,8,10,7,9,11], noPrefix: true },
+          { label: "Avg Sell Rate", value: stats.avgSellRate, pct: "", color: "#8B90A0", bars: [10,12,8,11,5,7], noPrefix: true },
+        ];
+        return (
+          <div style={{ display: "flex", minHeight: "100vh", fontFamily: '"Inter", sans-serif', color: ob.text, backgroundColor: ob.bg }}>
+            {/* Sidebar */}
+            {!isMobile && (
+              <aside style={{ width: "16rem", position: "fixed", left: 0, top: 0, height: "100vh", backgroundColor: ob.sidebar, borderRight: `1px solid ${ob.border}`, boxShadow: "20px 0 40px rgba(0,0,0,0.4)", zIndex: 50, display: "flex", flexDirection: "column", padding: "1.5rem 1rem" }}>
+                <div style={{ marginBottom: "2.5rem", padding: "0 1rem" }}>
+                  <h1 style={{ fontSize: "1.5rem", fontFamily: '"Manrope", sans-serif', fontWeight: 700, letterSpacing: "-0.05em", color: ob.primary }}>Obsidian</h1>
+                  <p style={{ fontSize: "0.625rem", textTransform: "uppercase", letterSpacing: "0.2em", color: ob.textSec, marginTop: "0.25rem" }}>Sales Intelligence</p>
+                </div>
+                <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  {["Dashboard", "Transactions", "Monthly"].map((tab) => {
+                    const tabKey = tab.toLowerCase();
+                    const isActive = obTab === tabKey;
+                    return (
+                      <button key={tabKey} onClick={() => setActiveTab(tabKey)} style={{
+                        display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem 1rem", borderRadius: "0.5rem", border: "none", cursor: "pointer", fontFamily: '"Manrope", sans-serif', fontSize: "0.875rem", fontWeight: isActive ? 600 : 400, textAlign: "left", width: "100%",
+                        backgroundColor: isActive ? ob.card : "transparent", color: isActive ? ob.primary : "#9CA3AF",
+                        borderLeft: isActive ? `4px solid ${ob.primary}` : "4px solid transparent",
+                        transition: "all 0.15s ease",
+                      }}>{tab}</button>
+                    );
+                  })}
+                </nav>
+                <div style={{ marginTop: "auto", paddingTop: "1.5rem", borderTop: `1px solid ${ob.border}` }}>
+                  <button onClick={() => setShowSettings(true)} style={{ width: "100%", padding: "0.75rem", borderRadius: "0.5rem", border: `1px solid ${ob.borderSolid}`, background: "transparent", color: ob.textSec, cursor: "pointer", fontSize: "0.8125rem", fontWeight: 500 }}>Settings</button>
+                </div>
+              </aside>
+            )}
+            {/* Main area */}
+            <div style={{ marginLeft: isMobile ? 0 : "16rem", flex: 1, minHeight: "100vh" }}>
+              {/* Top bar */}
+              <header style={{ position: "sticky", top: 0, zIndex: 40, backgroundColor: "rgba(19,19,19,0.8)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", borderBottom: `1px solid ${ob.border}`, padding: "0 2rem", height: "4rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                {isMobile && (
+                  <div style={{ display: "flex", gap: "0.5rem" }}>
+                    {["Dashboard", "Transactions", "Monthly"].map((tab) => (
+                      <button key={tab} onClick={() => setActiveTab(tab.toLowerCase())} style={{ padding: "0.375rem 0.75rem", borderRadius: "0.375rem", border: "none", cursor: "pointer", fontSize: "0.75rem", fontWeight: 600, backgroundColor: obTab === tab.toLowerCase() ? ob.card : "transparent", color: obTab === tab.toLowerCase() ? ob.primary : ob.textSec }}>{tab}</button>
+                    ))}
+                  </div>
+                )}
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  {lastSync && <span style={{ fontSize: "0.75rem", color: ob.textSec }}>Updated {lastSync.toLocaleTimeString()}</span>}
+                  {autoRefresh > 0 && <span style={{ fontSize: "0.625rem", color: ob.primary, backgroundColor: ob.accentBg, padding: "0.125rem 0.5rem", borderRadius: "999px" }}>{autoRefresh}s</span>}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                  <button onClick={() => setShowSettings(true)} style={{ background: "none", border: "none", color: ob.textSec, cursor: "pointer", fontSize: "0.8125rem" }}><Settings size={18} /></button>
+                  <button onClick={fetchFromGoogleSheets} disabled={loading} style={{ padding: "0.5rem 1rem", borderRadius: "0.5rem", border: "none", cursor: loading ? "not-allowed" : "pointer", fontSize: "0.8125rem", fontWeight: 600, background: `linear-gradient(135deg, ${ob.primary}, #4A8EFF)`, color: "#002E68", opacity: loading ? 0.7 : 1, display: "flex", alignItems: "center", gap: "0.375rem" }}>
+                    <RefreshCw size={14} style={loading ? { animation: "spin 1s linear infinite" } : {}} /> Refresh
+                  </button>
+                </div>
+              </header>
+              {/* Content */}
+              <main style={{ padding: isMobile ? "1.5rem 1rem" : "2rem 2rem", maxWidth: "80rem" }}>
+                {obTab === "dashboard" && (<>
+                  {/* Hero */}
+                  <div style={{ marginBottom: "2.5rem" }}>
+                    <h2 style={{ fontSize: isMobile ? "1.75rem" : "2.25rem", fontFamily: '"Manrope", sans-serif', fontWeight: 800, letterSpacing: "-0.025em" }}>Sales Performance</h2>
+                    <p style={{ color: ob.textSec, marginTop: "0.25rem", fontSize: "0.875rem" }}>Real-time intelligence from the Obsidian Lens.</p>
+                  </div>
+                  {/* KPI Grid */}
+                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : (isTablet ? "repeat(2, 1fr)" : "repeat(4, 1fr)"), gap: "1.5rem", marginBottom: "2.5rem" }}>
+                    {kpis.map((kpi, i) => (
+                      <div key={i} style={{ backgroundColor: ob.card, padding: "1.5rem", borderRadius: "0.75rem", borderLeft: `2px solid ${kpi.color}40`, position: "relative", overflow: "hidden" }}>
+                        <div style={{ position: "absolute", top: 0, right: 0, width: "8rem", height: "8rem", background: `${kpi.color}08`, borderRadius: "50%", marginRight: "-4rem", marginTop: "-4rem", filter: "blur(40px)" }}></div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
+                          <span style={{ fontSize: "0.625rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: ob.textSec }}>{kpi.label}</span>
+                          {kpi.pct && <span style={{ fontSize: "0.6875rem", fontWeight: 700, color: ob.secondary, display: "flex", alignItems: "center", gap: "0.125rem" }}>
+                            <TrendingUp size={12} /> {kpi.pct}
+                          </span>}
+                        </div>
+                        <div style={{ fontSize: "1.875rem", fontFamily: '"Manrope", sans-serif', fontWeight: 800, filter: `drop-shadow(0 0 8px ${kpi.color}30)` }}>
+                          {kpi.noPrefix ? "" : "$"}{(kpi.value || 0).toFixed(2)}
+                        </div>
+                        <div style={{ marginTop: "1rem", height: "3rem", display: "flex", alignItems: "flex-end", gap: "3px", opacity: 0.6 }}>
+                          {kpi.bars.map((h, j) => (
+                            <div key={j} style={{ flex: 1, height: `${(h / 12) * 100}%`, backgroundColor: `${kpi.color}${j === kpi.bars.length - 1 ? "60" : "20"}`, borderRadius: "2px 2px 0 0" }}></div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Profit Trend + Owner Performance */}
+                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr", gap: "1.5rem", marginBottom: "2.5rem" }}>
+                    {/* Profit Trend */}
+                    <div style={{ backgroundColor: ob.cardAlt, padding: "2rem", borderRadius: "0.75rem" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+                        <h3 style={{ fontSize: "1.125rem", fontFamily: '"Manrope", sans-serif', fontWeight: 700 }}>Profit Trend</h3>
+                        <ChartToggle mode={profitChartMode} setMode={setProfitChartMode} opt1={{ key: "bar", label: "Bar" }} opt2={{ key: "line", label: "Line" }} c={{ accent: ob.primary, border: ob.borderSolid, accentBg: ob.accentBg, textSec: ob.textSec }} isBrut={false} isCompact={false} bws="600" />
+                      </div>
+                      {monthly.length > 0 && (() => {
+                        const maxP = Math.max(...monthly.map(m => m.profit), 1);
+                        const chartH = 200;
+                        return (
+                          <div style={{ position: "relative", height: `${chartH}px`, display: "flex", alignItems: "flex-end", gap: "6px", paddingBottom: "2rem", paddingLeft: "3rem" }}>
+                            {[0, 0.5, 1].map(pct => (
+                              <div key={pct} style={{ position: "absolute", left: 0, bottom: `${2 + pct * (chartH - 32) / chartH * 100}%`, fontSize: "0.5625rem", color: ob.textSec, width: "2.75rem", textAlign: "right", paddingRight: "0.5rem", transform: "translateY(50%)" }}>${Math.round(maxP * pct)}</div>
+                            ))}
+                            {[0, 0.5, 1].map(pct => (
+                              <div key={`g${pct}`} style={{ position: "absolute", left: "3rem", right: 0, bottom: `${2 + pct * (chartH - 32) / chartH * 100}%`, height: "1px", backgroundColor: ob.borderSolid, opacity: 0.3 }}></div>
+                            ))}
+                            {profitChartMode === "bar" ? monthly.map((m, i) => {
+                              const barH = (m.profit / maxP) * (chartH - 32);
+                              return (
+                                <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative", zIndex: 2 }}
+                                  onMouseEnter={() => setHoveredBar(i)} onMouseLeave={() => setHoveredBar(null)}>
+                                  {hoveredBar === i && <div style={{ position: "absolute", bottom: `${barH + 8}px`, backgroundColor: ob.card, border: `1px solid ${ob.borderSolid}`, borderRadius: "0.375rem", padding: "0.25rem 0.5rem", fontSize: "0.6875rem", fontWeight: 600, whiteSpace: "nowrap", zIndex: 10 }}>{m.month}: ${m.profit.toFixed(2)}</div>}
+                                  <div style={{ width: "100%", maxWidth: "40px", height: `${barH}px`, minHeight: "4px", background: ob.primary, borderRadius: "3px 3px 0 0", opacity: hoveredBar === null || hoveredBar === i ? 1 : 0.4, transition: "opacity 0.15s ease" }}></div>
+                                  <div style={{ fontSize: "0.5625rem", color: ob.textSec, marginTop: "0.375rem" }}>{m.month.slice(0, 3)}</div>
+                                </div>
+                              );
+                            }) : (
+                              <svg style={{ position: "absolute", left: "3rem", right: 0, top: 0, bottom: "2rem", width: "calc(100% - 3rem)", height: `${chartH - 32}px`, zIndex: 2 }} viewBox={`0 0 ${monthly.length * 100} ${chartH - 32}`} preserveAspectRatio="none">
+                                <polyline fill="none" stroke={ob.primary} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+                                  points={monthly.map((m, i) => `${i * 100 / (monthly.length - 1 || 1) * (monthly.length * 100 / 100)},${(chartH - 32) - (m.profit / maxP) * (chartH - 32)}`).join(" ")} />
+                                <polyline fill={`${ob.primary}15`} stroke="none"
+                                  points={`0,${chartH - 32} ${monthly.map((m, i) => `${i * 100 / (monthly.length - 1 || 1) * (monthly.length * 100 / 100)},${(chartH - 32) - (m.profit / maxP) * (chartH - 32)}`).join(" ")} ${monthly.length * 100},${chartH - 32}`} />
+                                {monthly.map((m, i) => {
+                                  const x = i * 100 / (monthly.length - 1 || 1) * (monthly.length * 100 / 100);
+                                  const y = (chartH - 32) - (m.profit / maxP) * (chartH - 32);
+                                  return <circle key={i} cx={x} cy={y} r={5} fill={ob.primary} stroke={ob.bg} strokeWidth="2" onMouseEnter={() => setHoveredBar(i)} onMouseLeave={() => setHoveredBar(null)} style={{ cursor: "pointer" }} />;
+                                })}
+                              </svg>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                    {/* Top Performers */}
+                    <div style={{ backgroundColor: ob.card, padding: "1.5rem", borderRadius: "0.75rem" }}>
+                      <h3 style={{ fontSize: "1.125rem", fontFamily: '"Manrope", sans-serif', fontWeight: 700, marginBottom: "1.5rem" }}>Top Performers</h3>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+                        {owners.map((o, i) => {
+                          const os = stats.ownerStats?.[o.id] || { totalNetProfit: 0, count: 0 };
+                          return (
+                            <div key={o.id} style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                              <div style={{ position: "relative" }}>
+                                <div style={{ width: "3rem", height: "3rem", borderRadius: "50%", background: `linear-gradient(135deg, ${ob.primary}40, ${ob.primary}10)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", fontWeight: 700, color: ob.primary, border: i === 0 ? `2px solid ${ob.primary}` : "2px solid transparent" }}>
+                                  {o.name.charAt(0)}
+                                </div>
+                                <div style={{ position: "absolute", top: "-4px", right: "-4px", width: "1.25rem", height: "1.25rem", borderRadius: "50%", backgroundColor: i === 0 ? ob.primary : ob.borderSolid, color: i === 0 ? "#002E68" : ob.text, fontSize: "0.625rem", fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</div>
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 700, fontSize: "0.875rem" }}>{o.name}</div>
+                                <div style={{ fontSize: "0.6875rem", color: ob.textSec }}>{os.count} transactions</div>
+                              </div>
+                              <div style={{ textAlign: "right" }}>
+                                <div style={{ fontSize: "0.875rem", fontFamily: '"Manrope", sans-serif', fontWeight: 700 }}>${os.totalNetProfit.toFixed(0)}</div>
+                                <div style={{ fontSize: "0.625rem", fontWeight: 700, color: ob.secondary }}>Net Profit</div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                  {/* Card Type Stats */}
+                  <div style={{ backgroundColor: ob.cardAlt, padding: "2rem", borderRadius: "0.75rem" }}>
+                    <h3 style={{ fontSize: "1.125rem", fontFamily: '"Manrope", sans-serif', fontWeight: 700, marginBottom: "1.5rem" }}>Card Type Performance</h3>
+                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : `repeat(${Math.min(Object.keys(stats.cardTypeStats || {}).length, 5)}, 1fr)`, gap: "1rem" }}>
+                      {Object.entries(stats.cardTypeStats || {}).map(([type, data]) => (
+                        <div key={type} style={{ padding: "1.25rem", backgroundColor: ob.card, borderRadius: "0.5rem", borderLeft: `3px solid ${getCardTypeColor(type)}` }}>
+                          <div style={{ fontSize: "0.6875rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: ob.textSec, marginBottom: "0.5rem" }}>{type}</div>
+                          <div style={{ fontSize: "1.25rem", fontFamily: '"Manrope", sans-serif', fontWeight: 800, color: ob.secondary }}>${data.netProfit.toFixed(2)}</div>
+                          <div style={{ fontSize: "0.625rem", color: ob.textSec, marginTop: "0.25rem" }}>{data.count} transactions</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>)}
+
+                {obTab === "transactions" && (<>
+                  <div style={{ marginBottom: "1.5rem", display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center" }}>
+                    {[{ val: filterCardType, set: setFilterCardType, opts: [{ v: "all", l: "All Card Types" }, ...cardTypes.map(t => ({ v: t, l: t }))] }, { val: filterOwner, set: setFilterOwner, opts: [{ v: "all", l: "All Owners" }, ...owners.map(o => ({ v: o.id, l: o.name }))] }, { val: filterCardNumber, set: setFilterCardNumber, opts: [{ v: "all", l: "All Card Numbers" }, ...availableCardNumbers.map(n => ({ v: n, l: `Card #${n}` }))] }].map((f, i) => (
+                      <select key={i} value={f.val} onChange={e => f.set(e.target.value)} style={{ padding: "0.5rem 0.75rem", border: `1px solid ${ob.borderSolid}`, borderRadius: "0.5rem", fontSize: "0.8125rem", backgroundColor: ob.card, color: ob.text, minWidth: "140px" }}>
+                        {f.opts.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
+                      </select>
+                    ))}
+                  </div>
+                  <div style={{ backgroundColor: ob.cardAlt, borderRadius: "0.75rem", overflow: "hidden" }}>
+                    <div style={{ overflowX: "auto" }}>
+                      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                        <thead>
+                          <tr style={{ borderBottom: `1px solid ${ob.border}` }}>
+                            {[{ label: "Card Type", col: "cardType" }, { label: "Card No.", col: "cardNumber" }, { label: "Owner", col: "owner" }, { label: "Buy Rate", col: "buyRate" }, { label: "Buy Amt", col: "buyAmount" }, { label: "Sell Rate", col: "sellRate" }, { label: "Sell Amt", col: "sellAmount" }, { label: "Cost", col: "cost" }, { label: "Gross", col: "grossProfit" }, { label: "Net", col: "netProfit" }, { label: "Margin", col: "profitMargin" }].map(({ label, col }) => (
+                              <th key={col} onClick={() => handleSort(col)} style={{ padding: "1rem 0.75rem", textAlign: col === "cardType" || col === "cardNumber" || col === "owner" ? "left" : "right", fontSize: "0.625rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: ob.textSec, cursor: "pointer", userSelect: "none", whiteSpace: "nowrap" }}>
+                                {label} {sortCol === col && <span style={{ fontSize: "0.5rem" }}>{sortDir === "asc" ? "▲" : "▼"}</span>}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {sortedTransactions.map(t => {
+                            const cd = getCardById(t.cardId); const ow = getOwnerById(t.ownerId);
+                            return (
+                              <tr key={t.id} style={{ borderBottom: `1px solid ${ob.border}`, transition: "background 0.1s" }} onMouseEnter={e => e.currentTarget.style.backgroundColor = ob.card} onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}>
+                                <td style={{ padding: "0.75rem", fontSize: "0.8125rem", fontWeight: 700 }}>{cd?.type}</td>
+                                <td style={{ padding: "0.75rem", fontSize: "0.8125rem", color: ob.textSec }}>{cd?.number}</td>
+                                <td style={{ padding: "0.75rem", fontSize: "0.8125rem", fontWeight: 600 }}>{ow?.name}</td>
+                                <td style={{ padding: "0.75rem", fontSize: "0.8125rem", textAlign: "right" }}>{parseFloat(t.buyRate).toFixed(2)}</td>
+                                <td style={{ padding: "0.75rem", fontSize: "0.8125rem", textAlign: "right" }}>${parseFloat(t.buyAmount).toFixed(2)}</td>
+                                <td style={{ padding: "0.75rem", fontSize: "0.8125rem", textAlign: "right" }}>{parseFloat(t.sellRate).toFixed(2)}</td>
+                                <td style={{ padding: "0.75rem", fontSize: "0.8125rem", textAlign: "right" }}>${parseFloat(t.sellAmount).toFixed(2)}</td>
+                                <td style={{ padding: "0.75rem", fontSize: "0.8125rem", textAlign: "right" }}>${t.cost.toFixed(2)}</td>
+                                <td style={{ padding: "0.75rem", fontSize: "0.8125rem", textAlign: "right", color: "#f97316", fontWeight: 700 }}>${t.grossProfit.toFixed(2)}</td>
+                                <td style={{ padding: "0.75rem", fontSize: "0.8125rem", textAlign: "right", color: ob.secondary, fontWeight: 700 }}>${t.netProfit.toFixed(2)}</td>
+                                <td style={{ padding: "0.75rem", fontSize: "0.8125rem", textAlign: "right" }}>
+                                  <span style={{ padding: "0.125rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.625rem", fontWeight: 700, textTransform: "uppercase", backgroundColor: t.profitMargin >= 15 ? `${ob.secondary}15` : (t.profitMargin >= 10 ? `${ob.primary}15` : "rgba(255,180,171,0.1)"), color: t.profitMargin >= 15 ? ob.secondary : (t.profitMargin >= 10 ? ob.primary : "#FFB4AB") }}>{t.profitMargin.toFixed(1)}%</span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>)}
+
+                {obTab === "monthly" && (<>
+                  {monthly.length > 0 && (
+                    <div style={{ maxWidth: "500px", margin: "0 auto 2rem", textAlign: "center", padding: "2rem", borderRadius: "0.75rem", background: `linear-gradient(135deg, ${ob.primary}, #4A8EFF)`, color: "#002E68" }}>
+                      <div style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.7, marginBottom: "0.5rem" }}>All Time Net Profit</div>
+                      <div style={{ fontSize: "2.5rem", fontFamily: '"Manrope", sans-serif', fontWeight: 800 }}>${monthly.reduce((s, m) => s + m.profit, 0).toFixed(2)}</div>
+                    </div>
+                  )}
+                  <div style={{ backgroundColor: ob.cardAlt, borderRadius: "0.75rem", overflow: "hidden" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                      <thead>
+                        <tr style={{ borderBottom: `1px solid ${ob.border}` }}>
+                          <th style={{ padding: "1rem", textAlign: "left", fontSize: "0.625rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: ob.textSec }}>Month</th>
+                          <th style={{ padding: "1rem", textAlign: "right", fontSize: "0.625rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: ob.textSec }}>Profit</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {monthly.map((m, i) => (
+                          <tr key={i} style={{ borderBottom: `1px solid ${ob.border}`, backgroundColor: i % 2 === 0 ? "transparent" : `${ob.card}40` }}>
+                            <td style={{ padding: "0.75rem 1rem", fontSize: "0.875rem", fontWeight: 600 }}>{m.month}</td>
+                            <td style={{ padding: "0.75rem 1rem", fontSize: "0.875rem", fontWeight: 700, textAlign: "right", color: ob.secondary }}>${m.profit.toFixed(2)}</td>
+                          </tr>
+                        ))}
+                        <tr style={{ backgroundColor: ob.card, fontWeight: 700 }}>
+                          <td style={{ padding: "0.75rem 1rem", fontSize: "0.875rem" }}>TOTAL</td>
+                          <td style={{ padding: "0.75rem 1rem", fontSize: "0.875rem", textAlign: "right", color: ob.primary }}>${monthly.reduce((s, m) => s + m.profit, 0).toFixed(2)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </>)}
+              </main>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ===== SETTINGS MODAL ===== */}
       {showSettings && (
@@ -1069,6 +1335,19 @@ function App() {
                       {opt.preview.map((color, i) => <div key={i} style={{ flex: 1, background: color }}></div>)}
                     </div>
                     <div style={{ fontSize: "0.6875rem", fontWeight: bws, color: theme === opt.key ? c.accent : c.text }}>{opt.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Dashboard Mode */}
+            <div style={{ marginBottom: "2rem" }}>
+              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: bws, marginBottom: "0.75rem", color: c.text }}>Dashboard Mode</label>
+              <div style={{ display: "flex", gap: "0.75rem" }}>
+                {[{ k: "classic", l: "Classic", d: "Original themed layout" }, { k: "modern", l: "Modern", d: "Obsidian Lens design" }].map((o) => (
+                  <div key={o.k} onClick={() => setDashboardMode(o.k)} style={{ flex: 1, padding: "0.75rem", border: dashboardMode === o.k ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "2rem" : "0.75rem"), backgroundColor: dashboardMode === o.k ? c.accentBg : c.surfaceAlt, cursor: "pointer", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", color: dashboardMode === o.k ? c.accent : c.text, transition: "border-color 0.15s cubic-bezier(.4,0,.2,1), background-color 0.15s cubic-bezier(.4,0,.2,1)" }}>
+                    <span style={{ fontSize: "0.875rem", fontWeight: bws }}>{o.l}</span>
+                    <div style={{ fontSize: "0.6875rem", opacity: 0.7 }}>{o.d}</div>
                   </div>
                 ))}
               </div>
