@@ -1066,8 +1066,8 @@ function App() {
         ];
         return (
           <div style={{ display: "flex", minHeight: "100vh", fontFamily: '"Inter", sans-serif', color: ob.text, backgroundColor: ob.bg }}>
-            {/* Sidebar */}
-            {!isMobile && (
+            {/* Sidebar - desktop only */}
+            {!isMobile && !isTablet && (
               <aside style={{ width: "16rem", position: "fixed", left: 0, top: 0, height: "100vh", backgroundColor: ob.sidebar, borderRight: `1px solid ${ob.border}`, boxShadow: "20px 0 40px rgba(0,0,0,0.4)", zIndex: 50, display: "flex", flexDirection: "column", padding: "1.5rem 1rem" }}>
                 <div style={{ marginBottom: "2.5rem", padding: "0 1rem" }}>
                   <h1 style={{ fontSize: "1.5rem", fontFamily: '"Manrope", sans-serif', fontWeight: 700, letterSpacing: "-0.05em", color: ob.primary }}>Obsidian</h1>
@@ -1093,50 +1093,52 @@ function App() {
               </aside>
             )}
             {/* Main area */}
-            <div style={{ marginLeft: isMobile ? 0 : "16rem", flex: 1, minHeight: "100vh" }}>
+            <div style={{ marginLeft: (isMobile || isTablet) ? 0 : "16rem", flex: 1, minHeight: "100vh" }}>
               {/* Top bar */}
-              <header style={{ position: "sticky", top: 0, zIndex: 40, backgroundColor: "rgba(19,19,19,0.8)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", borderBottom: `1px solid ${ob.border}`, padding: "0 2rem", height: "4rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                {isMobile && (
-                  <div style={{ display: "flex", gap: "0.5rem" }}>
+              <header style={{ position: "sticky", top: 0, zIndex: 40, backgroundColor: "rgba(19,19,19,0.85)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", borderBottom: `1px solid ${ob.border}`, padding: isMobile ? "0 0.75rem" : "0 2rem", height: isMobile ? "3.5rem" : "4rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem" }}>
+                {(isMobile || isTablet) && (
+                  <div style={{ display: "flex", gap: "0.25rem", flex: 1, minWidth: 0 }}>
                     {["Dashboard", "Transactions", "Monthly"].map((tab) => (
-                      <button key={tab} onClick={() => setActiveTab(tab.toLowerCase())} style={{ padding: "0.375rem 0.75rem", borderRadius: "0.375rem", border: "none", cursor: "pointer", fontSize: "0.75rem", fontWeight: 600, backgroundColor: obTab === tab.toLowerCase() ? ob.card : "transparent", color: obTab === tab.toLowerCase() ? ob.primary : ob.textSec }}>{tab}</button>
+                      <button key={tab} onClick={() => setActiveTab(tab.toLowerCase())} style={{ padding: isMobile ? "0.375rem 0.5rem" : "0.375rem 0.75rem", borderRadius: "0.5rem", border: "none", cursor: "pointer", fontSize: isMobile ? "0.6875rem" : "0.75rem", fontWeight: 600, backgroundColor: obTab === tab.toLowerCase() ? ob.card : "transparent", color: obTab === tab.toLowerCase() ? ob.primary : ob.textSec, whiteSpace: "nowrap" }}>{isMobile ? tab.slice(0, 5) : tab}</button>
                     ))}
                   </div>
                 )}
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  {lastSync && <span style={{ fontSize: "0.75rem", color: ob.textSec }}>Updated {lastSync.toLocaleTimeString()}</span>}
-                  {autoRefresh > 0 && <span style={{ fontSize: "0.625rem", color: ob.primary, backgroundColor: ob.accentBg, padding: "0.125rem 0.5rem", borderRadius: "999px" }}>{autoRefresh}s</span>}
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                  <button onClick={() => setShowSettings(true)} style={{ background: "none", border: "none", color: ob.textSec, cursor: "pointer", fontSize: "0.8125rem" }}><Settings size={18} /></button>
-                  <button onClick={fetchFromGoogleSheets} disabled={loading} style={{ padding: "0.5rem 1rem", borderRadius: "0.5rem", border: "none", cursor: loading ? "not-allowed" : "pointer", fontSize: "0.8125rem", fontWeight: 600, background: `linear-gradient(135deg, ${ob.primary}, #4A8EFF)`, color: "#002E68", opacity: loading ? 0.7 : 1, display: "flex", alignItems: "center", gap: "0.375rem" }}>
-                    <RefreshCw size={14} style={loading ? { animation: "spin 1s linear infinite" } : {}} /> Refresh
+                {!isMobile && !isTablet && (
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    {lastSync && <span style={{ fontSize: "0.75rem", color: ob.textSec }}>Updated {lastSync.toLocaleTimeString()}</span>}
+                    {autoRefresh > 0 && <span style={{ fontSize: "0.625rem", color: ob.primary, backgroundColor: ob.accentBg, padding: "0.125rem 0.5rem", borderRadius: "999px" }}>{autoRefresh}s</span>}
+                  </div>
+                )}
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}>
+                  <button onClick={() => setShowSettings(true)} style={{ background: "none", border: "none", color: ob.textSec, cursor: "pointer", padding: "0.375rem", display: "flex", alignItems: "center" }}><Settings size={isMobile ? 16 : 18} /></button>
+                  <button onClick={fetchFromGoogleSheets} disabled={loading} style={{ padding: isMobile ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: "0.5rem", border: "none", cursor: loading ? "not-allowed" : "pointer", fontSize: isMobile ? "0.6875rem" : "0.8125rem", fontWeight: 600, background: `linear-gradient(135deg, ${ob.primary}, #4A8EFF)`, color: "#002E68", opacity: loading ? 0.7 : 1, display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                    <RefreshCw size={isMobile ? 12 : 14} style={loading ? { animation: "spin 1s linear infinite" } : {}} /> {isMobile ? "" : "Refresh"}
                   </button>
                 </div>
               </header>
               {/* Content */}
-              <main style={{ padding: isMobile ? "1.5rem 1rem" : "2rem 2rem", maxWidth: "80rem" }}>
+              <main style={{ padding: isMobile ? "1.25rem 0.75rem" : (isTablet ? "1.5rem 1.25rem" : "2rem 2rem"), maxWidth: "80rem" }}>
                 {obTab === "dashboard" && (<>
                   {/* Hero */}
-                  <div style={{ marginBottom: "2.5rem" }}>
-                    <h2 style={{ fontSize: isMobile ? "1.75rem" : "2.25rem", fontFamily: '"Manrope", sans-serif', fontWeight: 800, letterSpacing: "-0.025em" }}>Sales Performance</h2>
-                    <p style={{ color: ob.textSec, marginTop: "0.25rem", fontSize: "0.875rem" }}>Real-time intelligence from the Obsidian Lens.</p>
+                  <div style={{ marginBottom: isMobile ? "1.25rem" : "2.5rem" }}>
+                    <h2 style={{ fontSize: isMobile ? "1.375rem" : (isTablet ? "1.75rem" : "2.25rem"), fontFamily: '"Manrope", sans-serif', fontWeight: 800, letterSpacing: "-0.025em" }}>Sales Performance</h2>
+                    <p style={{ color: ob.textSec, marginTop: "0.25rem", fontSize: isMobile ? "0.75rem" : "0.875rem" }}>Real-time intelligence from the Obsidian Lens.</p>
                   </div>
                   {/* KPI Grid */}
-                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : (isTablet ? "repeat(2, 1fr)" : "repeat(4, 1fr)"), gap: "1.5rem", marginBottom: "2.5rem" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : (isTablet ? "repeat(2, 1fr)" : "repeat(4, 1fr)"), gap: isMobile ? "0.625rem" : "1.5rem", marginBottom: isMobile ? "1.25rem" : "2.5rem" }}>
                     {kpis.map((kpi, i) => (
-                      <div key={i} style={{ backgroundColor: ob.card, padding: "1.5rem", borderRadius: "0.75rem", borderLeft: `2px solid ${kpi.color}40`, position: "relative", overflow: "hidden" }}>
-                        <div style={{ position: "absolute", top: 0, right: 0, width: "8rem", height: "8rem", background: `${kpi.color}08`, borderRadius: "50%", marginRight: "-4rem", marginTop: "-4rem", filter: "blur(40px)" }}></div>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
-                          <span style={{ fontSize: "0.625rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: ob.textSec }}>{kpi.label}</span>
-                          {kpi.pct && <span style={{ fontSize: "0.6875rem", fontWeight: 700, color: ob.secondary, display: "flex", alignItems: "center", gap: "0.125rem" }}>
-                            <TrendingUp size={12} /> {kpi.pct}
+                      <div key={i} style={{ backgroundColor: ob.card, padding: isMobile ? "0.875rem" : "1.5rem", borderRadius: "0.75rem", borderLeft: `2px solid ${kpi.color}40`, position: "relative", overflow: "hidden" }}>
+                        <div style={{ position: "absolute", top: 0, right: 0, width: "6rem", height: "6rem", background: `${kpi.color}08`, borderRadius: "50%", marginRight: "-3rem", marginTop: "-3rem", filter: "blur(30px)" }}></div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: isMobile ? "0.5rem" : "1rem" }}>
+                          <span style={{ fontSize: isMobile ? "0.5rem" : "0.625rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: ob.textSec }}>{kpi.label}</span>
+                          {kpi.pct && <span style={{ fontSize: isMobile ? "0.5rem" : "0.6875rem", fontWeight: 700, color: ob.secondary, display: "flex", alignItems: "center", gap: "0.125rem" }}>
+                            <TrendingUp size={isMobile ? 8 : 12} /> {kpi.pct}
                           </span>}
                         </div>
-                        <div style={{ fontSize: "1.875rem", fontFamily: '"Manrope", sans-serif', fontWeight: 800, filter: `drop-shadow(0 0 8px ${kpi.color}30)` }}>
+                        <div style={{ fontSize: isMobile ? "1.125rem" : "1.875rem", fontFamily: '"Manrope", sans-serif', fontWeight: 800, filter: `drop-shadow(0 0 8px ${kpi.color}30)` }}>
                           {kpi.noPrefix ? "" : "$"}{(kpi.value || 0).toFixed(2)}
                         </div>
-                        <div style={{ marginTop: "1rem", height: "3rem", display: "flex", alignItems: "flex-end", gap: "3px", opacity: 0.6 }}>
+                        <div style={{ marginTop: isMobile ? "0.5rem" : "1rem", height: isMobile ? "1.5rem" : "3rem", display: "flex", alignItems: "flex-end", gap: "2px", opacity: 0.6 }}>
                           {kpi.bars.map((h, j) => (
                             <div key={j} style={{ flex: 1, height: `${(h / 12) * 100}%`, backgroundColor: `${kpi.color}${j === kpi.bars.length - 1 ? "60" : "20"}`, borderRadius: "2px 2px 0 0" }}></div>
                           ))}
@@ -1145,44 +1147,44 @@ function App() {
                     ))}
                   </div>
                   {/* Profit Trend + Owner Performance */}
-                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr", gap: "1.5rem", marginBottom: "2.5rem" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : (isTablet ? "1fr" : "2fr 1fr"), gap: isMobile ? "0.75rem" : "1.5rem", marginBottom: isMobile ? "1.25rem" : "2.5rem" }}>
                     {/* Profit Trend */}
-                    <div style={{ backgroundColor: ob.cardAlt, padding: "2rem", borderRadius: "0.75rem" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-                        <h3 style={{ fontSize: "1.125rem", fontFamily: '"Manrope", sans-serif', fontWeight: 700 }}>Profit Trend</h3>
+                    <div style={{ backgroundColor: ob.cardAlt, padding: isMobile ? "1rem" : "2rem", borderRadius: "0.75rem" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isMobile ? "0.75rem" : "1.5rem" }}>
+                        <h3 style={{ fontSize: isMobile ? "0.875rem" : "1.125rem", fontFamily: '"Manrope", sans-serif', fontWeight: 700 }}>Profit Trend</h3>
                         <ChartToggle mode={profitChartMode} setMode={setProfitChartMode} opt1={{ key: "bar", label: "Bar" }} opt2={{ key: "line", label: "Line" }} c={{ accent: ob.primary, border: ob.borderSolid, accentBg: ob.accentBg, textSec: ob.textSec }} isBrut={false} isCompact={false} bws="600" />
                       </div>
                       {monthly.length > 0 && (() => {
                         const maxP = Math.max(...monthly.map(m => m.profit), 1);
-                        const chartH = 200;
+                        const chartH = isMobile ? 150 : 200;
                         return (
-                          <div style={{ position: "relative", height: `${chartH}px`, display: "flex", alignItems: "flex-end", gap: "6px", paddingBottom: "2rem", paddingLeft: "3rem" }}>
+                          <div style={{ position: "relative", height: `${chartH}px`, display: "flex", alignItems: "flex-end", gap: isMobile ? "3px" : "6px", paddingBottom: "1.5rem", paddingLeft: isMobile ? "2.25rem" : "3rem" }}>
                             {[0, 0.5, 1].map(pct => (
-                              <div key={pct} style={{ position: "absolute", left: 0, bottom: `${2 + pct * (chartH - 32) / chartH * 100}%`, fontSize: "0.5625rem", color: ob.textSec, width: "2.75rem", textAlign: "right", paddingRight: "0.5rem", transform: "translateY(50%)" }}>${Math.round(maxP * pct)}</div>
+                              <div key={pct} style={{ position: "absolute", left: 0, bottom: `${2 + pct * (chartH - 24) / chartH * 100}%`, fontSize: isMobile ? "0.5rem" : "0.5625rem", color: ob.textSec, width: isMobile ? "2rem" : "2.75rem", textAlign: "right", paddingRight: "0.25rem", transform: "translateY(50%)" }}>${Math.round(maxP * pct)}</div>
                             ))}
                             {[0, 0.5, 1].map(pct => (
-                              <div key={`g${pct}`} style={{ position: "absolute", left: "3rem", right: 0, bottom: `${2 + pct * (chartH - 32) / chartH * 100}%`, height: "1px", backgroundColor: ob.borderSolid, opacity: 0.3 }}></div>
+                              <div key={`g${pct}`} style={{ position: "absolute", left: isMobile ? "2.25rem" : "3rem", right: 0, bottom: `${2 + pct * (chartH - 24) / chartH * 100}%`, height: "1px", backgroundColor: ob.borderSolid, opacity: 0.3 }}></div>
                             ))}
                             {profitChartMode === "bar" ? monthly.map((m, i) => {
-                              const barH = (m.profit / maxP) * (chartH - 32);
+                              const barH = (m.profit / maxP) * (chartH - 24);
                               return (
                                 <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative", zIndex: 2 }}
                                   onMouseEnter={() => setHoveredBar(i)} onMouseLeave={() => setHoveredBar(null)}>
-                                  {hoveredBar === i && <div style={{ position: "absolute", bottom: `${barH + 8}px`, backgroundColor: ob.card, border: `1px solid ${ob.borderSolid}`, borderRadius: "0.375rem", padding: "0.25rem 0.5rem", fontSize: "0.6875rem", fontWeight: 600, whiteSpace: "nowrap", zIndex: 10 }}>{m.month}: ${m.profit.toFixed(2)}</div>}
-                                  <div style={{ width: "100%", maxWidth: "40px", height: `${barH}px`, minHeight: "4px", background: ob.primary, borderRadius: "3px 3px 0 0", opacity: hoveredBar === null || hoveredBar === i ? 1 : 0.4, transition: "opacity 0.15s ease" }}></div>
-                                  <div style={{ fontSize: "0.5625rem", color: ob.textSec, marginTop: "0.375rem" }}>{m.month.slice(0, 3)}</div>
+                                  {hoveredBar === i && <div style={{ position: "absolute", bottom: `${barH + 8}px`, backgroundColor: ob.card, border: `1px solid ${ob.borderSolid}`, borderRadius: "0.375rem", padding: "0.25rem 0.5rem", fontSize: "0.625rem", fontWeight: 600, whiteSpace: "nowrap", zIndex: 10 }}>{m.month}: ${m.profit.toFixed(2)}</div>}
+                                  <div style={{ width: "100%", maxWidth: isMobile ? "24px" : "40px", height: `${barH}px`, minHeight: "4px", background: ob.primary, borderRadius: "3px 3px 0 0", opacity: hoveredBar === null || hoveredBar === i ? 1 : 0.4, transition: "opacity 0.15s ease" }}></div>
+                                  <div style={{ fontSize: isMobile ? "0.4375rem" : "0.5625rem", color: ob.textSec, marginTop: "0.25rem" }}>{m.month.slice(0, 3)}</div>
                                 </div>
                               );
                             }) : (
-                              <svg style={{ position: "absolute", left: "3rem", right: 0, top: 0, bottom: "2rem", width: "calc(100% - 3rem)", height: `${chartH - 32}px`, zIndex: 2 }} viewBox={`0 0 ${monthly.length * 100} ${chartH - 32}`} preserveAspectRatio="none">
+                              <svg style={{ position: "absolute", left: isMobile ? "2.25rem" : "3rem", right: 0, top: 0, bottom: "1.5rem", width: `calc(100% - ${isMobile ? "2.25rem" : "3rem"})`, height: `${chartH - 24}px`, zIndex: 2 }} viewBox={`0 0 ${monthly.length * 100} ${chartH - 24}`} preserveAspectRatio="none">
                                 <polyline fill="none" stroke={ob.primary} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
-                                  points={monthly.map((m, i) => `${i * 100 / (monthly.length - 1 || 1) * (monthly.length * 100 / 100)},${(chartH - 32) - (m.profit / maxP) * (chartH - 32)}`).join(" ")} />
+                                  points={monthly.map((m, i) => `${i * 100 / (monthly.length - 1 || 1) * (monthly.length * 100 / 100)},${(chartH - 24) - (m.profit / maxP) * (chartH - 24)}`).join(" ")} />
                                 <polyline fill={`${ob.primary}15`} stroke="none"
-                                  points={`0,${chartH - 32} ${monthly.map((m, i) => `${i * 100 / (monthly.length - 1 || 1) * (monthly.length * 100 / 100)},${(chartH - 32) - (m.profit / maxP) * (chartH - 32)}`).join(" ")} ${monthly.length * 100},${chartH - 32}`} />
+                                  points={`0,${chartH - 24} ${monthly.map((m, i) => `${i * 100 / (monthly.length - 1 || 1) * (monthly.length * 100 / 100)},${(chartH - 24) - (m.profit / maxP) * (chartH - 24)}`).join(" ")} ${monthly.length * 100},${chartH - 24}`} />
                                 {monthly.map((m, i) => {
                                   const x = i * 100 / (monthly.length - 1 || 1) * (monthly.length * 100 / 100);
-                                  const y = (chartH - 32) - (m.profit / maxP) * (chartH - 32);
-                                  return <circle key={i} cx={x} cy={y} r={5} fill={ob.primary} stroke={ob.bg} strokeWidth="2" onMouseEnter={() => setHoveredBar(i)} onMouseLeave={() => setHoveredBar(null)} style={{ cursor: "pointer" }} />;
+                                  const y = (chartH - 24) - (m.profit / maxP) * (chartH - 24);
+                                  return <circle key={i} cx={x} cy={y} r={isMobile ? 4 : 5} fill={ob.primary} stroke={ob.bg} strokeWidth="2" onMouseEnter={() => setHoveredBar(i)} onMouseLeave={() => setHoveredBar(null)} style={{ cursor: "pointer" }} />;
                                 })}
                               </svg>
                             )}
@@ -1191,18 +1193,18 @@ function App() {
                       })()}
                     </div>
                     {/* Top Performers */}
-                    <div style={{ backgroundColor: ob.card, padding: "1.5rem", borderRadius: "0.75rem" }}>
-                      <h3 style={{ fontSize: "1.125rem", fontFamily: '"Manrope", sans-serif', fontWeight: 700, marginBottom: "1.5rem" }}>Top Performers</h3>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+                    <div style={{ backgroundColor: ob.card, padding: isMobile ? "1rem" : "1.5rem", borderRadius: "0.75rem" }}>
+                      <h3 style={{ fontSize: isMobile ? "0.875rem" : "1.125rem", fontFamily: '"Manrope", sans-serif', fontWeight: 700, marginBottom: isMobile ? "1rem" : "1.5rem" }}>Top Performers</h3>
+                      <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? "0.875rem" : "1.25rem" }}>
                         {owners.map((o, i) => {
                           const os = stats.ownerStats?.[o.id] || { totalNetProfit: 0, count: 0 };
                           return (
-                            <div key={o.id} style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                              <div style={{ position: "relative" }}>
-                                <div style={{ width: "3rem", height: "3rem", borderRadius: "50%", background: `linear-gradient(135deg, ${ob.primary}40, ${ob.primary}10)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", fontWeight: 700, color: ob.primary, border: i === 0 ? `2px solid ${ob.primary}` : "2px solid transparent" }}>
+                            <div key={o.id} style={{ display: "flex", alignItems: "center", gap: isMobile ? "0.625rem" : "1rem" }}>
+                              <div style={{ position: "relative", flexShrink: 0 }}>
+                                <div style={{ width: isMobile ? "2.25rem" : "3rem", height: isMobile ? "2.25rem" : "3rem", borderRadius: "50%", background: `linear-gradient(135deg, ${ob.primary}40, ${ob.primary}10)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: isMobile ? "0.75rem" : "1rem", fontWeight: 700, color: ob.primary, border: i === 0 ? `2px solid ${ob.primary}` : "2px solid transparent" }}>
                                   {o.name.charAt(0)}
                                 </div>
-                                <div style={{ position: "absolute", top: "-4px", right: "-4px", width: "1.25rem", height: "1.25rem", borderRadius: "50%", backgroundColor: i === 0 ? ob.primary : ob.borderSolid, color: i === 0 ? "#002E68" : ob.text, fontSize: "0.625rem", fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</div>
+                                <div style={{ position: "absolute", top: "-4px", right: "-4px", width: isMobile ? "1rem" : "1.25rem", height: isMobile ? "1rem" : "1.25rem", borderRadius: "50%", backgroundColor: i === 0 ? ob.primary : ob.borderSolid, color: i === 0 ? "#002E68" : ob.text, fontSize: "0.5rem", fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</div>
                               </div>
                               <div style={{ flex: 1 }}>
                                 <div style={{ fontWeight: 700, fontSize: "0.875rem" }}>{o.name}</div>
@@ -1219,14 +1221,14 @@ function App() {
                     </div>
                   </div>
                   {/* Card Type Stats */}
-                  <div style={{ backgroundColor: ob.cardAlt, padding: "2rem", borderRadius: "0.75rem" }}>
-                    <h3 style={{ fontSize: "1.125rem", fontFamily: '"Manrope", sans-serif', fontWeight: 700, marginBottom: "1.5rem" }}>Card Type Performance</h3>
-                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : `repeat(${Math.min(Object.keys(stats.cardTypeStats || {}).length, 5)}, 1fr)`, gap: "1rem" }}>
+                  <div style={{ backgroundColor: ob.cardAlt, padding: isMobile ? "1rem" : "2rem", borderRadius: "0.75rem" }}>
+                    <h3 style={{ fontSize: isMobile ? "0.875rem" : "1.125rem", fontFamily: '"Manrope", sans-serif', fontWeight: 700, marginBottom: isMobile ? "0.75rem" : "1.5rem" }}>Card Type Performance</h3>
+                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : `repeat(${Math.min(Object.keys(stats.cardTypeStats || {}).length, 5)}, 1fr)`, gap: isMobile ? "0.5rem" : "1rem" }}>
                       {Object.entries(stats.cardTypeStats || {}).map(([type, data]) => (
-                        <div key={type} style={{ padding: "1.25rem", backgroundColor: ob.card, borderRadius: "0.5rem", borderLeft: `3px solid ${getCardTypeColor(type)}` }}>
-                          <div style={{ fontSize: "0.6875rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: ob.textSec, marginBottom: "0.5rem" }}>{type}</div>
-                          <div style={{ fontSize: "1.25rem", fontFamily: '"Manrope", sans-serif', fontWeight: 800, color: ob.secondary }}>${data.netProfit.toFixed(2)}</div>
-                          <div style={{ fontSize: "0.625rem", color: ob.textSec, marginTop: "0.25rem" }}>{data.count} transactions</div>
+                        <div key={type} style={{ padding: isMobile ? "0.75rem" : "1.25rem", backgroundColor: ob.card, borderRadius: "0.5rem", borderLeft: `3px solid ${getCardTypeColor(type)}` }}>
+                          <div style={{ fontSize: isMobile ? "0.5rem" : "0.6875rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: ob.textSec, marginBottom: "0.375rem" }}>{type}</div>
+                          <div style={{ fontSize: isMobile ? "0.9375rem" : "1.25rem", fontFamily: '"Manrope", sans-serif', fontWeight: 800, color: ob.secondary }}>${data.netProfit.toFixed(2)}</div>
+                          <div style={{ fontSize: "0.5625rem", color: ob.textSec, marginTop: "0.125rem" }}>{data.count} txns</div>
                         </div>
                       ))}
                     </div>
@@ -1234,9 +1236,9 @@ function App() {
                 </>)}
 
                 {obTab === "transactions" && (<>
-                  <div style={{ marginBottom: "1.5rem", display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center" }}>
+                  <div style={{ marginBottom: isMobile ? "0.75rem" : "1.5rem", display: "flex", flexDirection: isMobile ? "column" : "row", flexWrap: "wrap", gap: isMobile ? "0.5rem" : "0.75rem", alignItems: isMobile ? "stretch" : "center" }}>
                     {[{ val: filterCardType, set: setFilterCardType, opts: [{ v: "all", l: "All Card Types" }, ...cardTypes.map(t => ({ v: t, l: t }))] }, { val: filterOwner, set: setFilterOwner, opts: [{ v: "all", l: "All Owners" }, ...owners.map(o => ({ v: o.id, l: o.name }))] }, { val: filterCardNumber, set: setFilterCardNumber, opts: [{ v: "all", l: "All Card Numbers" }, ...availableCardNumbers.map(n => ({ v: n, l: `Card #${n}` }))] }].map((f, i) => (
-                      <select key={i} value={f.val} onChange={e => f.set(e.target.value)} style={{ padding: "0.5rem 0.75rem", border: `1px solid ${ob.borderSolid}`, borderRadius: "0.5rem", fontSize: "0.8125rem", backgroundColor: ob.card, color: ob.text, minWidth: "140px" }}>
+                      <select key={i} value={f.val} onChange={e => f.set(e.target.value)} style={{ padding: isMobile ? "0.625rem 0.75rem" : "0.5rem 0.75rem", border: `1px solid ${ob.borderSolid}`, borderRadius: "0.5rem", fontSize: isMobile ? "0.8125rem" : "0.8125rem", backgroundColor: ob.card, color: ob.text, width: isMobile ? "100%" : "auto", minWidth: isMobile ? "0" : "140px" }}>
                         {f.opts.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
                       </select>
                     ))}
