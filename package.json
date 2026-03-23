@@ -5,6 +5,7 @@
   "keywords": [],
   "main": "src/index.tsx",
   "dependencies": {
+    "@supabase/supabase-js": "^2.100.0",
     "hugeicons-react": "0.4.0",
     "lucide-react": "0.563.0",
     "react": "^19.0.0",

@@ -14,9 +14,8 @@ import {
   Plus,
 } from "lucide-react";
 
-const GOOGLE_SHEETS_URL =
-  "https://script.google.com/macros/s/AKfycbyAgrF3WEgwtSzTr7xqh_Z3DUigMBTuXz1MWvEUMx-LxCnljJet4E08oeQazTM430VuyQ/exec";
-
+const SUPABASE_URL = "https://YOUR_PROJECT.supabase.co";
+const SUPABASE_ANON_KEY = "Azhan.dashboard";
 const FONTS = [
   { name: "Inter", value: "Inter" },
   { name: "Poppins", value: "Poppins" },
