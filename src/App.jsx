@@ -466,14 +466,11 @@ function App() {
   const [hoveredBar, setHoveredBar] = useState(null);
 
   // Add form states
-  const [showAddTx, setShowAddTx] = useState(false);
-  const [showAddMonthly, setShowAddMonthly] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [txForm, setTxForm] = useState({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "", cost: "", grossProfit: "", netProfit: "" });
-  const [monthlyForm, setMonthlyForm] = useState({ month: "", profit: "" });
   const [showTxForm, setShowTxForm] = useState(false);
   const [showMonthlyForm, setShowMonthlyForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [txForm, setTxForm] = useState({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "", cost: "", grossProfit: "", netProfit: "" });
+  const [monthlyForm, setMonthlyForm] = useState({ month: "", profit: "" });
 
   const submitTransaction = async () => {
     if (!txForm.owner || !txForm.cardNumber) return;
