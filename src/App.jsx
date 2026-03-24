@@ -14,7 +14,7 @@ import {
   Plus,
 } from "lucide-react";
 
-const SUPABASE_URL = "https://YOUR_PROJECT.supabase.co";
+const SUPABASE_URL = "https://whwoizhjktsyibyscpcv.supabase.co";
 const SUPABASE_ANON_KEY = "Azhan.dashboard";
 const FONTS = [
   { name: "Inter", value: "Inter" },
