@@ -16,7 +16,6 @@ import {
 
 const SUPABASE_URL = "https://whwoizhjktsyibyscpcv.supabase.co";
 const VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY="sb_publishable_bIRSApELXF6z89EmDFjsmQ_dA33sm_c";
-const SUPABASE_ANON_KEY = "Azhan.dashboard";
 const FONTS = [
   { name: "Inter", value: "Inter" },
   { name: "Poppins", value: "Poppins" },
