@@ -480,7 +480,6 @@ function App() {
 
   const submitTransaction = async () => {
     if (!txForm.owner || !txForm.cardNumber) return;
-    setSubmitting(true);
     const br = parseFloat(txForm.buyRate) || 0, ba = parseFloat(txForm.buyAmount) || 0;
     const sr = parseFloat(txForm.sellRate) || 0, sa = parseFloat(txForm.sellAmount) || 0;
     const cost = br * ba, gross = sr * sa, net = gross - cost;
@@ -489,17 +488,19 @@ function App() {
       buy_rate: br, buy_amount: ba, sell_rate: sr, sell_amount: sa,
       cost, gross_profit: gross, net_profit: net,
     };
+    // Close form immediately (optimistic)
+    setShowTxForm(false);
+    setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "" });
+    const wasEditing = editingTxId;
+    setEditingTxId(null);
+    // Sync in background
     try {
-      const { error: err } = editingTxId
-        ? await supabase.from("transactions").update(row).eq("id", editingTxId)
+      const { error: err } = wasEditing
+        ? await supabase.from("transactions").update(row).eq("id", wasEditing)
         : await supabase.from("transactions").insert(row);
       if (err) throw err;
-      setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "" });
-      setEditingTxId(null);
-      setShowTxForm(false);
-      fetchData();
-    } catch (err) { setError("Failed to save transaction: " + err.message); }
-    finally { setSubmitting(false); }
+      fetchData(true);
+    } catch (err) { setError("Failed to save: " + err.message); fetchData(true); }
   };
 
   const editTransaction = (t) => {
@@ -515,17 +516,18 @@ function App() {
 
   const submitMonthly = async () => {
     if (!monthlyForm.month || !monthlyForm.profit) return;
-    setSubmitting(true);
+    // Close form immediately
+    const formData = { ...monthlyForm };
+    setShowMonthlyForm(false);
+    setMonthlyForm({ month: "", profit: "" });
+    // Sync in background
     try {
       const { error: err } = await supabase.from("monthly").insert({
-        month: monthlyForm.month, profit: parseFloat(monthlyForm.profit) || 0,
+        month: formData.month, profit: parseFloat(formData.profit) || 0,
       });
       if (err) throw err;
-      setMonthlyForm({ month: "", profit: "" });
-      setShowMonthlyForm(false);
-      fetchData();
-    } catch (err) { setError("Failed to add monthly record: " + err.message); }
-    finally { setSubmitting(false); }
+      fetchData(true);
+    } catch (err) { setError("Failed to add monthly record: " + err.message); fetchData(true); }
   };
 
   // --- Monthly Transaction History ---
@@ -582,7 +584,7 @@ function App() {
       const { error: delErr } = await supabase.from("transactions").delete().neq("id", 0);
       if (delErr) throw delErr;
       // Refresh
-      fetchData();
+      fetchData(true);
       fetchHistoryPeriods();
     } catch (err) { setError("Failed to archive: " + err.message); }
     finally { setSubmitting(false); }
@@ -664,7 +666,7 @@ function App() {
   // Auto-refresh timer
   useEffect(() => {
     if (autoRefresh > 0) {
-      const interval = setInterval(() => fetchData(), autoRefresh * 1000);
+      const interval = setInterval(() => fetchData(true), autoRefresh * 1000);
       return () => clearInterval(interval);
     }
   }, [autoRefresh]);
@@ -676,8 +678,9 @@ function App() {
     return mkBadge(c.badgeRed.bg, c.badgeRed.text);
   };
 
-  const fetchData = async () => {
-    setLoading(true); setError(null);
+  const fetchData = async (silent = false) => {
+    if (!silent) setLoading(true);
+    setError(null);
     try {
       const [txRes, mRes] = await Promise.all([
         supabase.from("transactions").select("*").order("created_at", { ascending: false }),
