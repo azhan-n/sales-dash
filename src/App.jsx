@@ -510,6 +510,73 @@ function App() {
     finally { setSubmitting(false); }
   };
 
+  // --- Monthly Transaction History ---
+  const [historyPeriods, setHistoryPeriods] = useState([]);
+  const [selectedPeriod, setSelectedPeriod] = useState("current");
+  const [historyTransactions, setHistoryTransactions] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  const fetchHistoryPeriods = async () => {
+    const { data } = await supabase.from("transaction_history").select("period").order("period", { ascending: false });
+    if (data) {
+      const unique = [...new Set(data.map((r) => r.period))];
+      setHistoryPeriods(unique);
+    }
+  };
+
+  const fetchHistoryForPeriod = async (period) => {
+    setLoadingHistory(true);
+    const { data } = await supabase.from("transaction_history").select("*").eq("period", period).order("id", { ascending: true });
+    if (data) {
+      setHistoryTransactions(data.map((r) => ({
+        id: r.id, cardType: r.card_type, cardNumber: r.card_number, owner: r.owner,
+        buyRate: r.buy_rate, buyAmount: r.buy_amount, sellRate: r.sell_rate, sellAmount: r.sell_amount,
+        cost: r.cost, grossProfit: r.gross_profit, netProfit: r.net_profit,
+      })));
+    }
+    setLoadingHistory(false);
+  };
+
+  const archiveTransactions = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      // Get all current transactions
+      const { data: txns, error: readErr } = await supabase.from("transactions").select("*");
+      if (readErr) throw readErr;
+      if (!txns || txns.length === 0) { setSubmitting(false); return; }
+      // Determine period label (previous month)
+      const now = new Date();
+      const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const period = prev.toLocaleString("default", { month: "long", year: "numeric" });
+      // Check if already archived
+      const { data: existing } = await supabase.from("transaction_history").select("id").eq("period", period).limit(1);
+      if (existing && existing.length > 0) { setSubmitting(false); return; }
+      // Copy to history
+      const historyRows = txns.map((r) => ({
+        period, card_type: r.card_type, card_number: r.card_number, owner: r.owner,
+        buy_rate: r.buy_rate, buy_amount: r.buy_amount, sell_rate: r.sell_rate, sell_amount: r.sell_amount,
+        cost: r.cost, gross_profit: r.gross_profit, net_profit: r.net_profit,
+      }));
+      const { error: insertErr } = await supabase.from("transaction_history").insert(historyRows);
+      if (insertErr) throw insertErr;
+      // Clear transactions table
+      const { error: delErr } = await supabase.from("transactions").delete().neq("id", 0);
+      if (delErr) throw delErr;
+      // Refresh
+      fetchData();
+      fetchHistoryPeriods();
+    } catch (err) { setError("Failed to archive: " + err.message); }
+    finally { setSubmitting(false); }
+  };
+
+  // Auto-archive check on the 1st of the month
+  useEffect(() => {
+    const now = new Date();
+    if (now.getDate() === 1) archiveTransactions();
+    fetchHistoryPeriods();
+  }, []);
+
   const c = getThemeColors(theme);
   const L = getThemeLayout(theme);
   const isCompact = viewStyle === "compact";
@@ -958,11 +1025,36 @@ function App() {
         {/* ===== TRANSACTIONS TAB ===== */}
         {activeTab === "transactions" && (
           <div>
+            {/* Period Selector */}
+            <div style={{ ...cardBase, marginBottom: isCompact ? "0.625rem" : "1rem", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center", gap: "0.75rem", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                <Calendar size={isCompact ? 14 : 16} style={{ color: c.textSec }} />
+                <span style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, color: c.text }}>{isTerm ? "> Period:" : "Period:"}</span>
+                <select value={selectedPeriod} onChange={(e) => { setSelectedPeriod(e.target.value); if (e.target.value !== "current") fetchHistoryForPeriod(e.target.value); }} style={{ padding: isCompact ? "0.375rem 0.5rem" : "0.5rem 0.75rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.25rem"), fontSize: isCompact ? "0.75rem" : "0.875rem", backgroundColor: c.inputBg, color: c.text }}>
+                  <option value="current">Current Month</option>
+                  {historyPeriods.map((p) => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+              <button onClick={archiveTransactions} disabled={submitting || selectedPeriod !== "current"} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: submitting ? "not-allowed" : "pointer", fontSize: isCompact ? "0.75rem" : "0.8125rem", fontWeight: bwm, opacity: submitting || selectedPeriod !== "current" ? 0.5 : 1, display: "inline-flex", alignItems: "center", gap: "0.375rem" }}>
+                <Calendar size={isCompact ? 12 : 14} /> {submitting ? "Archiving..." : "Archive & Clear"}
+              </button>
+            </div>
+            {selectedPeriod !== "current" && (
+              <div style={{ padding: isCompact ? "0.5rem 0.75rem" : "0.75rem 1rem", backgroundColor: c.accentBg, borderRadius: rSm, marginBottom: isCompact ? "0.625rem" : "1rem", fontSize: isCompact ? "0.75rem" : "0.8125rem", color: c.accent, display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <Calendar size={14} /> Viewing archived transactions from <strong style={{ marginLeft: "0.25rem" }}>{selectedPeriod}</strong>
+              </div>
+            )}
+            {(() => {
+              // Use history or current data
+              const isHistory = selectedPeriod !== "current";
+              const displayTx = isHistory ? historyTransactions : sortedTransactions;
+              const displayFiltered = isHistory ? historyTransactions : filteredTransactions;
+              return (<>
             <div style={{ ...cardBase, marginBottom: isCompact ? "0.625rem" : "1rem" }}>
               <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", flexWrap: "wrap", gap: isCompact ? "0.5rem" : "1rem", alignItems: isMobile ? "stretch" : "center", justifyContent: "space-between" }}>
                 <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", flexWrap: "wrap", gap: isCompact ? "0.5rem" : "1rem", alignItems: isMobile ? "stretch" : "center", flex: isMobile ? "1" : undefined }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><Filter size={isCompact ? 14 : 16} style={{ color: c.textSec }} /><span style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, color: c.text, textTransform: isBrut ? "uppercase" : "none" }}>{isTerm ? "> Filters:" : "Filters:"}</span></div>
-                  {[{ val: filterCardType, set: setFilterCardType, opts: [{ v: "all", l: "All Card Types" }, ...cardTypes.map((t) => ({ v: t, l: t }))] }, { val: filterOwner, set: setFilterOwner, opts: [{ v: "all", l: "All Owners" }, ...owners.map((o) => ({ v: o.id, l: o.name }))] }, { val: filterCardNumber, set: setFilterCardNumber, opts: [{ v: "all", l: "All Card Numbers" }, ...availableCardNumbers.map((n) => ({ v: n, l: `Card #${n}` }))] }].map((f, i) => (
+                  {!isHistory && [{val: filterCardType, set: setFilterCardType, opts: [{ v: "all", l: "All Card Types" }, ...cardTypes.map((t) => ({ v: t, l: t }))] }, { val: filterOwner, set: setFilterOwner, opts: [{ v: "all", l: "All Owners" }, ...owners.map((o) => ({ v: o.id, l: o.name }))] }, { val: filterCardNumber, set: setFilterCardNumber, opts: [{ v: "all", l: "All Card Numbers" }, ...availableCardNumbers.map((n) => ({ v: n, l: `Card #${n}` }))] }].map((f, i) => (
                     <select key={i} style={{ padding: isCompact ? "0.375rem 0.5rem" : "0.5rem 0.75rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.25rem"), fontSize: isCompact ? "0.75rem" : "0.875rem", minWidth: isMobile ? "0" : (isCompact ? "120px" : "150px"), width: isMobile ? "100%" : "auto", backgroundColor: c.inputBg, color: c.text }} value={f.val} onChange={(e) => f.set(e.target.value)}>
                       {f.opts.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
                     </select>
@@ -972,7 +1064,7 @@ function App() {
                   {[{ m: "table", icon: List, label: "Table" }, { m: "cards", icon: LayoutGrid, label: "Cards" }].map(({ m, icon: Ic, label }) => (
                     <button key={m} onClick={() => setViewMode(m)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, backgroundColor: viewMode === m ? c.accent : c.inputBg, color: viewMode === m ? "#fff" : c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, flex: isMobile ? 1 : undefined, ...(isBrut && viewMode === m ? { boxShadow: "3px 3px 0 #000" } : {}) }}><Ic size={isCompact ? 14 : 16} /> {label}</button>
                   ))}
-                  <button onClick={() => setShowTxForm(true)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "none", background: c.btnGrad, color: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, flex: isMobile ? 1 : undefined, boxShadow: `0 2px 8px ${c.btnGlow}` }}><Plus size={isCompact ? 14 : 16} /> Add</button>
+                  {!isHistory && <button onClick={() => setShowTxForm(true)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "none", background: c.btnGrad, color: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, flex: isMobile ? 1 : undefined, boxShadow: `0 2px 8px ${c.btnGlow}` }}><Plus size={isCompact ? 14 : 16} /> Add</button>}
                 </div>
               </div>
             </div>
@@ -994,7 +1086,7 @@ function App() {
                       ))}
                     </tr></thead>
                     <tbody>
-                      {sortedTransactions.map((t) => {
+                      {displayTx.map((t) => {
                         const cd = getCardById(t.cardId); const ow = getOwnerById(t.ownerId); const cc = getCardTypeColor(cd?.type); const mb = getProfitMarginBadge(t.profitMargin);
                         return (
                           <tr key={t.id}>
@@ -1016,13 +1108,13 @@ function App() {
                     <tfoot>
                       <tr style={{ backgroundColor: c.surfaceAlt, fontWeight: bwx, borderTop: `2px solid ${c.borderStrong}` }}>
                         <td colSpan="2" style={{ ...tdStyle, fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textStrong, textTransform: isBrut ? "uppercase" : "none" }}>TOTALS</td>
-                        <td colSpan="2" style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Sell Amt:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>${filteredTransactions.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0).toFixed(2)}</div></td>
-                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Avg Sell:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>{filteredTransactions.length > 0 ? (filteredTransactions.reduce((s, t) => s + (parseFloat(t.sellRate) || 0), 0) / filteredTransactions.length).toFixed(2) : "0.00"}</div></td>
-                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Avg Buy:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>{(() => { const tc2 = filteredTransactions.reduce((s, t) => s + (parseFloat(t.cost) || 0), 0); const ts2 = filteredTransactions.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0); return (ts2 > 0 ? tc2 / ts2 : 0).toFixed(2); })()}</div></td>
-                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Buy Amt:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>${filteredTransactions.reduce((s, t) => s + (parseFloat(t.buyAmount) || 0), 0).toFixed(2)}</div></td>
+                        <td colSpan="2" style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Sell Amt:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>${displayFiltered.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0).toFixed(2)}</div></td>
+                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Avg Sell:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>{displayFiltered.length > 0 ? (displayFiltered.reduce((s, t) => s + (parseFloat(t.sellRate) || 0), 0) / displayFiltered.length).toFixed(2) : "0.00"}</div></td>
+                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Avg Buy:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>{(() => { const tc2 = displayFiltered.reduce((s, t) => s + (parseFloat(t.cost) || 0), 0); const ts2 = displayFiltered.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0); return (ts2 > 0 ? tc2 / ts2 : 0).toFixed(2); })()}</div></td>
+                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Buy Amt:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>${displayFiltered.reduce((s, t) => s + (parseFloat(t.buyAmount) || 0), 0).toFixed(2)}</div></td>
                         <td style={tdStyle}></td>
-                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Gross:</div><div style={{ color: isTerm ? c.text : "#f97316", fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem" }}>${filteredTransactions.reduce((s, t) => s + t.grossProfit, 0).toFixed(2)}</div></td>
-                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Net:</div><div style={{ color: isTerm ? c.text : "#16a34a", fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem" }} className={isTerm ? "terminal-glow" : ""}>${filteredTransactions.reduce((s, t) => s + t.netProfit, 0).toFixed(2)}</div></td>
+                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Gross:</div><div style={{ color: isTerm ? c.text : "#f97316", fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem" }}>${displayFiltered.reduce((s, t) => s + t.grossProfit, 0).toFixed(2)}</div></td>
+                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Net:</div><div style={{ color: isTerm ? c.text : "#16a34a", fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem" }} className={isTerm ? "terminal-glow" : ""}>${displayFiltered.reduce((s, t) => s + t.netProfit, 0).toFixed(2)}</div></td>
                         <td style={tdStyle}></td>
                       </tr>
                     </tfoot>
@@ -1031,7 +1123,7 @@ function App() {
               </div>
             ) : (
               <div style={{ display: "grid", gridTemplateColumns: (isBrut || isMobile) ? "1fr" : "repeat(2, 1fr)", gap: isCompact ? "0.625rem" : "1rem" }}>
-                {sortedTransactions.map((t, idx) => {
+                {displayTx.map((t, idx) => {
                   const cd = getCardById(t.cardId); const ow = getOwnerById(t.ownerId); const cc = getCardTypeColor(cd?.type); const mb = getProfitMarginBadge(t.profitMargin);
                   return (
                     <div key={t.id} className={isLG ? "lg-specular" : ""} style={{ backgroundColor: c.surface, borderRadius: isLG ? r : (isCirc ? "2rem" : rSm), padding: isCompact ? "0.875rem" : "1.5rem", border: isBrut ? `3px solid ${c.border}` : (isLG ? "1px solid rgba(255,255,255,0.6)" : `1px solid ${c.border}`), ...((isGlass || isLG) ? { backdropFilter: "blur(16px) saturate(150%)", WebkitBackdropFilter: "blur(16px) saturate(150%)" } : {}), ...(isBrut ? { boxShadow: "4px 4px 0 #000" } : {}), cursor: "pointer", animation: `slideUp 0.35s cubic-bezier(.16,1,.3,1) ${Math.min(idx, 10) * 0.04}s both`, transform: hoveredCard === `tx-${idx}` ? "translateY(-4px)" : "translateY(0)", boxShadow: hoveredCard === `tx-${idx}` ? c.cardHoverShadow : (isLG ? "0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7)" : (c.cardGlow || "none")), transition: "transform 0.2s cubic-bezier(.4,0,.2,1), box-shadow 0.2s cubic-bezier(.4,0,.2,1)" }}
@@ -1060,6 +1152,8 @@ function App() {
                 })}
               </div>
             )}
+              </>);
+            })()}
           </div>
         )}
 
