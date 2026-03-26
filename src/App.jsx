@@ -12,6 +12,7 @@ import {
   Calendar,
   Timer,
   Plus,
+  Pencil,
 } from "lucide-react";
 
 import { createClient } from "@supabase/supabase-js";
@@ -473,26 +474,43 @@ function App() {
   const [showTxForm, setShowTxForm] = useState(false);
   const [showMonthlyForm, setShowMonthlyForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [txForm, setTxForm] = useState({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "", cost: "", grossProfit: "", netProfit: "" });
+  const [editingTxId, setEditingTxId] = useState(null);
+  const [txForm, setTxForm] = useState({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "" });
   const [monthlyForm, setMonthlyForm] = useState({ month: "", profit: "" });
 
   const submitTransaction = async () => {
     if (!txForm.owner || !txForm.cardNumber) return;
     setSubmitting(true);
+    const br = parseFloat(txForm.buyRate) || 0, ba = parseFloat(txForm.buyAmount) || 0;
+    const sr = parseFloat(txForm.sellRate) || 0, sa = parseFloat(txForm.sellAmount) || 0;
+    const cost = br * ba, gross = sr * sa, net = gross - cost;
+    const row = {
+      card_type: txForm.cardType, card_number: txForm.cardNumber, owner: txForm.owner,
+      buy_rate: br, buy_amount: ba, sell_rate: sr, sell_amount: sa,
+      cost, gross_profit: gross, net_profit: net,
+    };
     try {
-      const { error: err } = await supabase.from("transactions").insert({
-        card_type: txForm.cardType, card_number: txForm.cardNumber, owner: txForm.owner,
-        buy_rate: parseFloat(txForm.buyRate) || 0, buy_amount: parseFloat(txForm.buyAmount) || 0,
-        sell_rate: parseFloat(txForm.sellRate) || 0, sell_amount: parseFloat(txForm.sellAmount) || 0,
-        cost: parseFloat(txForm.cost) || 0, gross_profit: parseFloat(txForm.grossProfit) || 0,
-        net_profit: parseFloat(txForm.netProfit) || 0,
-      });
+      const { error: err } = editingTxId
+        ? await supabase.from("transactions").update(row).eq("id", editingTxId)
+        : await supabase.from("transactions").insert(row);
       if (err) throw err;
-      setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "", cost: "", grossProfit: "", netProfit: "" });
+      setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "" });
+      setEditingTxId(null);
       setShowTxForm(false);
       fetchData();
-    } catch (err) { setError("Failed to add transaction: " + err.message); }
+    } catch (err) { setError("Failed to save transaction: " + err.message); }
     finally { setSubmitting(false); }
+  };
+
+  const editTransaction = (t) => {
+    const cd = getCardById(t.cardId); const ow = getOwnerById(t.ownerId);
+    setTxForm({
+      cardType: cd?.type || "VISA DEBIT", cardNumber: cd?.number || "", owner: ow?.name || "",
+      buyRate: String(parseFloat(t.buyRate) || ""), buyAmount: String(parseFloat(t.buyAmount) || ""),
+      sellRate: String(parseFloat(t.sellRate) || ""), sellAmount: String(parseFloat(t.sellAmount) || ""),
+    });
+    setEditingTxId(t.id);
+    setShowTxForm(true);
   };
 
   const submitMonthly = async () => {
@@ -1064,7 +1082,7 @@ function App() {
                   {[{ m: "table", icon: List, label: "Table" }, { m: "cards", icon: LayoutGrid, label: "Cards" }].map(({ m, icon: Ic, label }) => (
                     <button key={m} onClick={() => setViewMode(m)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, backgroundColor: viewMode === m ? c.accent : c.inputBg, color: viewMode === m ? "#fff" : c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, flex: isMobile ? 1 : undefined, ...(isBrut && viewMode === m ? { boxShadow: "3px 3px 0 #000" } : {}) }}><Ic size={isCompact ? 14 : 16} /> {label}</button>
                   ))}
-                  {!isHistory && <button onClick={() => setShowTxForm(true)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "none", background: c.btnGrad, color: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, flex: isMobile ? 1 : undefined, boxShadow: `0 2px 8px ${c.btnGlow}` }}><Plus size={isCompact ? 14 : 16} /> Add</button>}
+                  {!isHistory && <button onClick={() => { setEditingTxId(null); setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "" }); setShowTxForm(true); }} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "none", background: c.btnGrad, color: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, flex: isMobile ? 1 : undefined, boxShadow: `0 2px 8px ${c.btnGlow}` }}><Plus size={isCompact ? 14 : 16} /> Add</button>}
                 </div>
               </div>
             </div>
@@ -1084,6 +1102,7 @@ function App() {
                           <div style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", justifyContent: "flex-end" }}>{label} {sortCol === col && <span style={{ fontSize: "0.625rem" }}>{sortDir === "asc" ? "▲" : "▼"}</span>}</div>
                         </th>
                       ))}
+                      {!isHistory && <th style={{ ...thStyle, width: "40px" }}></th>}
                     </tr></thead>
                     <tbody>
                       {displayTx.map((t) => {
@@ -1101,6 +1120,7 @@ function App() {
                             <td style={{ ...tdStyle, textAlign: "right", color: isTerm ? c.text : "#f97316", fontWeight: bws }}>${t.grossProfit.toFixed(2)}</td>
                             <td style={{ ...tdStyle, textAlign: "right", color: isTerm ? c.text : "#16a34a", fontWeight: bws }} className={isTerm ? "terminal-glow" : ""}>${t.netProfit.toFixed(2)}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}><span style={mb.style}>{t.profitMargin.toFixed(1)}%</span></td>
+                            {!isHistory && <td style={{ ...tdStyle, textAlign: "center" }}><button onClick={() => editTransaction(t)} style={{ background: "none", border: "none", cursor: "pointer", color: c.accent, padding: "0.25rem", display: "flex", alignItems: "center", opacity: 0.6, transition: "opacity 0.15s" }} onMouseEnter={(e) => e.currentTarget.style.opacity = 1} onMouseLeave={(e) => e.currentTarget.style.opacity = 0.6}><Pencil size={14} /></button></td>}
                           </tr>
                         );
                       })}
@@ -1147,6 +1167,7 @@ function App() {
                           <div key={x.l}><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>{x.l}</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.875rem" : "inherit", color: isTerm ? c.text : x.cl }}>${x.v.toFixed(0)}</div></div>
                         ))}
                       </div>
+                      {!isHistory && <button onClick={(e) => { e.stopPropagation(); editTransaction(t); }} style={{ marginTop: isCompact ? "0.5rem" : "0.75rem", width: "100%", padding: "0.375rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), border: `1px solid ${c.border}`, backgroundColor: "transparent", color: c.textSec, cursor: "pointer", fontSize: "0.75rem", fontWeight: bwm, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", transition: "color 0.15s, border-color 0.15s" }} onMouseEnter={(e) => { e.currentTarget.style.color = c.accent; e.currentTarget.style.borderColor = c.accent; }} onMouseLeave={(e) => { e.currentTarget.style.color = c.textSec; e.currentTarget.style.borderColor = c.border; }}><Pencil size={12} /> Edit</button>}
                     </div>
                   );
                 })}
@@ -1205,11 +1226,11 @@ function App() {
         const fInput = { padding: isCompact ? "0.5rem" : "0.625rem 0.75rem", border: `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), fontSize: isCompact ? "0.8125rem" : "0.875rem", width: "100%", backgroundColor: c.inputBg, color: c.text, outline: "none" };
         const fLabel = { display: "block", fontSize: "0.75rem", fontWeight: bws, marginBottom: "0.375rem", color: c.textSec };
         return (
-          <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: isLG ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", zIndex: 200, animation: "fadeIn 0.2s cubic-bezier(.16,1,.3,1) both" }} onClick={() => setShowTxForm(false)}>
+          <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: isLG ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", zIndex: 200, animation: "fadeIn 0.2s cubic-bezier(.16,1,.3,1) both" }} onClick={() => { setShowTxForm(false); setEditingTxId(null); setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "" }); }}>
             <div style={{ backgroundColor: isGlass ? "rgba(20,14,48,0.95)" : (isLG ? "rgba(255,255,255,0.65)" : c.surface), borderRadius: isBrut ? "0" : (isCirc ? "2.5rem" : (isMobile ? "0.75rem" : "1rem")), padding: isMobile ? "1.25rem" : "2rem", maxWidth: isMobile ? "100%" : "520px", width: "100%", maxHeight: "90vh", overflowY: "auto", boxShadow: c.modalShadow, animation: "slideUp 0.3s cubic-bezier(.16,1,.3,1) both", border: isBrut ? `3px solid ${c.border}` : `1px solid ${c.border}`, margin: isMobile ? "0.5rem" : "0" }} onClick={(e) => e.stopPropagation()}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", paddingBottom: "0.75rem", borderBottom: `1px solid ${c.border}` }}>
-                <h2 style={{ fontSize: "1.25rem", fontFamily: headingFont, fontWeight: bwh, color: c.textStrong, margin: 0 }}>Add Transaction</h2>
-                <button onClick={() => setShowTxForm(false)} style={{ padding: "0.375rem", border: "none", background: "none", cursor: "pointer", color: c.textSec }}><X size={20} /></button>
+                <h2 style={{ fontSize: "1.25rem", fontFamily: headingFont, fontWeight: bwh, color: c.textStrong, margin: 0 }}>{editingTxId ? "Edit Transaction" : "Add Transaction"}</h2>
+                <button onClick={() => { setShowTxForm(false); setEditingTxId(null); setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "" }); }} style={{ padding: "0.375rem", border: "none", background: "none", cursor: "pointer", color: c.textSec }}><X size={20} /></button>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "0.75rem" }}>
                 <div><label style={fLabel}>Card Type</label><select value={txForm.cardType} onChange={(e) => setTxForm({ ...txForm, cardType: e.target.value })} style={fInput}>{cardTypes.map((t) => <option key={t} value={t}>{t}</option>)}</select></div>
@@ -1219,13 +1240,24 @@ function App() {
                 <div><label style={fLabel}>Buy Amount ($)</label><input type="number" step="0.01" value={txForm.buyAmount} onChange={(e) => setTxForm({ ...txForm, buyAmount: e.target.value })} style={fInput} /></div>
                 <div><label style={fLabel}>Sell Rate</label><input type="number" step="0.01" value={txForm.sellRate} onChange={(e) => setTxForm({ ...txForm, sellRate: e.target.value })} style={fInput} /></div>
                 <div><label style={fLabel}>Sell Amount ($)</label><input type="number" step="0.01" value={txForm.sellAmount} onChange={(e) => setTxForm({ ...txForm, sellAmount: e.target.value })} style={fInput} /></div>
-                <div><label style={fLabel}>Cost ($)</label><input type="number" step="0.01" value={txForm.cost} onChange={(e) => setTxForm({ ...txForm, cost: e.target.value })} style={fInput} /></div>
-                <div><label style={fLabel}>Gross Profit ($)</label><input type="number" step="0.01" value={txForm.grossProfit} onChange={(e) => setTxForm({ ...txForm, grossProfit: e.target.value })} style={fInput} /></div>
-                <div><label style={fLabel}>Net Profit ($)</label><input type="number" step="0.01" value={txForm.netProfit} onChange={(e) => setTxForm({ ...txForm, netProfit: e.target.value })} style={fInput} /></div>
               </div>
+              {/* Auto-computed values */}
+              {(() => {
+                const br = parseFloat(txForm.buyRate) || 0, ba = parseFloat(txForm.buyAmount) || 0;
+                const sr = parseFloat(txForm.sellRate) || 0, sa = parseFloat(txForm.sellAmount) || 0;
+                const cost = br * ba, gross = sr * sa, net = gross - cost;
+                const compStyle = { padding: isCompact ? "0.5rem" : "0.625rem 0.75rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), fontSize: isCompact ? "0.8125rem" : "0.875rem", width: "100%", backgroundColor: c.surfaceAlt, color: c.textStrong, fontWeight: bwx, border: `1px solid ${c.border}` };
+                return (
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.75rem", marginTop: "0.75rem" }}>
+                    <div><label style={fLabel}>Cost</label><div style={compStyle}>${cost.toFixed(2)}</div></div>
+                    <div><label style={fLabel}>Gross Profit</label><div style={{ ...compStyle, color: isTerm ? c.text : "#f97316" }}>${gross.toFixed(2)}</div></div>
+                    <div><label style={fLabel}>Net Profit</label><div style={{ ...compStyle, color: isTerm ? c.text : (net >= 0 ? "#16a34a" : "#ef4444") }}>${net.toFixed(2)}</div></div>
+                  </div>
+                );
+              })()}
               <div style={{ display: "flex", gap: "0.75rem", marginTop: "1.5rem", justifyContent: "flex-end" }}>
-                <button onClick={() => setShowTxForm(false)} style={{ padding: "0.5rem 1.25rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: "transparent", color: c.text, cursor: "pointer", fontSize: "0.875rem", fontWeight: bwm }}>Cancel</button>
-                <button onClick={submitTransaction} disabled={submitting} style={{ padding: "0.5rem 1.5rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "none", background: c.btnGrad, color: "#fff", cursor: submitting ? "not-allowed" : "pointer", fontSize: "0.875rem", fontWeight: bwm, opacity: submitting ? 0.7 : 1, boxShadow: `0 2px 8px ${c.btnGlow}` }}>{submitting ? "Saving..." : "Save"}</button>
+                <button onClick={() => { setShowTxForm(false); setEditingTxId(null); setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "" }); }} style={{ padding: "0.5rem 1.25rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: "transparent", color: c.text, cursor: "pointer", fontSize: "0.875rem", fontWeight: bwm }}>Cancel</button>
+                <button onClick={submitTransaction} disabled={submitting} style={{ padding: "0.5rem 1.5rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "none", background: c.btnGrad, color: "#fff", cursor: submitting ? "not-allowed" : "pointer", fontSize: "0.875rem", fontWeight: bwm, opacity: submitting ? 0.7 : 1, boxShadow: `0 2px 8px ${c.btnGlow}` }}>{submitting ? "Saving..." : (editingTxId ? "Update" : "Save")}</button>
               </div>
             </div>
           </div>
