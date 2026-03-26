@@ -14,8 +14,13 @@ import {
   Plus,
 } from "lucide-react";
 
-const SUPABASE_URL = "https://whwoizhjktsyibyscpcv.supabase.co";
-const VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY="sb_publishable_bIRSApELXF6z89EmDFjsmQ_dA33sm_c";
+import { createClient } from "@supabase/supabase-js";
+
+// ---- Supabase Config ----
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_KEY;
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 const FONTS = [
   { name: "Inter", value: "Inter" },
   { name: "Poppins", value: "Poppins" },
@@ -475,11 +480,18 @@ function App() {
     if (!txForm.owner || !txForm.cardNumber) return;
     setSubmitting(true);
     try {
-      await fetch(GOOGLE_SHEETS_URL, { method: "POST", body: JSON.stringify({ action: "addTransaction", data: txForm }), headers: { "Content-Type": "text/plain" } });
+      const { error: err } = await supabase.from("transactions").insert({
+        card_type: txForm.cardType, card_number: txForm.cardNumber, owner: txForm.owner,
+        buy_rate: parseFloat(txForm.buyRate) || 0, buy_amount: parseFloat(txForm.buyAmount) || 0,
+        sell_rate: parseFloat(txForm.sellRate) || 0, sell_amount: parseFloat(txForm.sellAmount) || 0,
+        cost: parseFloat(txForm.cost) || 0, gross_profit: parseFloat(txForm.grossProfit) || 0,
+        net_profit: parseFloat(txForm.netProfit) || 0,
+      });
+      if (err) throw err;
       setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "", cost: "", grossProfit: "", netProfit: "" });
       setShowTxForm(false);
-      fetchFromGoogleSheets();
-    } catch (err) { setError("Failed to add transaction"); }
+      fetchData();
+    } catch (err) { setError("Failed to add transaction: " + err.message); }
     finally { setSubmitting(false); }
   };
 
@@ -487,11 +499,14 @@ function App() {
     if (!monthlyForm.month || !monthlyForm.profit) return;
     setSubmitting(true);
     try {
-      await fetch(GOOGLE_SHEETS_URL, { method: "POST", body: JSON.stringify({ action: "addMonthly", data: monthlyForm }), headers: { "Content-Type": "text/plain" } });
+      const { error: err } = await supabase.from("monthly").insert({
+        month: monthlyForm.month, profit: parseFloat(monthlyForm.profit) || 0,
+      });
+      if (err) throw err;
       setMonthlyForm({ month: "", profit: "" });
       setShowMonthlyForm(false);
-      fetchFromGoogleSheets();
-    } catch (err) { setError("Failed to add monthly record"); }
+      fetchData();
+    } catch (err) { setError("Failed to add monthly record: " + err.message); }
     finally { setSubmitting(false); }
   };
 
@@ -564,7 +579,7 @@ function App() {
   // Auto-refresh timer
   useEffect(() => {
     if (autoRefresh > 0) {
-      const interval = setInterval(() => fetchFromGoogleSheets(), autoRefresh * 1000);
+      const interval = setInterval(() => fetchData(), autoRefresh * 1000);
       return () => clearInterval(interval);
     }
   }, [autoRefresh]);
@@ -576,23 +591,29 @@ function App() {
     return mkBadge(c.badgeRed.bg, c.badgeRed.text);
   };
 
-  const fetchFromGoogleSheets = async () => {
+  const fetchData = async () => {
     setLoading(true); setError(null);
     try {
-      const response = await fetch(GOOGLE_SHEETS_URL);
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
-      if (!data || (!data.transactions && !data.monthly)) { setTransactions([]); setMonthly([]); setOwners([]); setCards([]); setStats({}); }
-      else {
-        setLastSync(new Date());
-        if (data.transactions?.length > 0) processTransactions(data.transactions);
-        if (data.monthly?.length > 0) setMonthly(data.monthly);
-      }
-    } catch (err) { setError("Failed to load data. Please check your connection and try again."); }
+      const [txRes, mRes] = await Promise.all([
+        supabase.from("transactions").select("*").order("created_at", { ascending: false }),
+        supabase.from("monthly").select("*").order("id", { ascending: true }),
+      ]);
+      if (txRes.error) throw txRes.error;
+      if (mRes.error) throw mRes.error;
+      setLastSync(new Date());
+      // Map snake_case DB columns to camelCase frontend fields
+      const txData = (txRes.data || []).map((r, i) => ({
+        id: r.id, cardType: r.card_type, cardNumber: r.card_number, owner: r.owner,
+        buyRate: r.buy_rate, buyAmount: r.buy_amount, sellRate: r.sell_rate, sellAmount: r.sell_amount,
+        cost: r.cost, grossProfit: r.gross_profit, netProfit: r.net_profit,
+      }));
+      if (txData.length > 0) processTransactions(txData);
+      else { setTransactions([]); setOwners([]); setCards([]); setStats({}); }
+      setMonthly((mRes.data || []).map((r) => ({ month: r.month, profit: parseFloat(r.profit) || 0 })));
+    } catch (err) { setError("Failed to load data: " + (err.message || "Check connection")); }
     finally { setLoading(false); }
   };
-  useEffect(() => { fetchFromGoogleSheets(); }, []);
+  useEffect(() => { fetchData(); }, []);
   useEffect(() => { if (theme === "auto") { const mq = window.matchMedia("(prefers-color-scheme: dark)"); const h = () => setTheme("auto"); mq.addEventListener("change", h); return () => mq.removeEventListener("change", h); } }, [theme]);
 
   const processTransactions = (data) => {
@@ -688,12 +709,12 @@ function App() {
           <div>
             <h1 key={theme} style={{ fontSize: isBrut ? "3rem" : (isMobile ? "1.5rem" : (isCompact ? "1.75rem" : "2.5rem")), fontFamily: titleFontFamily, fontWeight: isBrut ? "900" : bwh, background: c.titleGrad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", color: "transparent", display: "inline-block", width: "fit-content", margin: 0, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>Sales Dashboard</h1>
             <p style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", color: c.textSec, marginTop: "0.25rem", display: "flex", alignItems: "center", gap: "0.75rem" }} className={isTerm ? "terminal-glow" : ""}>
-              {isTerm ? "> " : ""}{lastSync ? `Last updated: ${lastSync.toLocaleTimeString()}` : "Real-time data from Google Sheets"}
+              {isTerm ? "> " : ""}{lastSync ? `Last updated: ${lastSync.toLocaleTimeString()}` : "Loading data..."}
               {autoRefresh > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "0.6875rem", color: c.accent, backgroundColor: c.accentBg, padding: "0.125rem 0.5rem", borderRadius: "999px" }}><Timer size={10} />{autoRefresh}s</span>}
               <button onClick={() => setShowSettings(true)} style={{ padding: "0.5rem", borderRadius: isBrut ? "0" : (isCirc || isLG ? "50%" : "0.5rem"), border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", marginLeft: "0.5rem" }} title="Settings"><Settings size={16} /></button>
             </p>
           </div>
-          <button onClick={fetchFromGoogleSheets} style={{ padding: isCompact ? "0.5rem 0.875rem" : "0.625rem 1.25rem", borderRadius: isBrut ? "0" : ((isLG || isCirc) ? "999px" : "0.5rem"), border: isBrut ? "3px solid #000" : (isLG ? "1px solid rgba(255,255,255,0.5)" : "none"), cursor: loading ? "not-allowed" : "pointer", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bws, display: "inline-flex", alignItems: "center", gap: "0.5rem", background: c.btnGrad, color: isBrut ? "#fff" : "#ffffff", opacity: loading ? 0.7 : 1, boxShadow: isBrut ? "4px 4px 0 #000" : `0 4px 15px ${c.btnGlow}` }} disabled={loading}>
+          <button onClick={fetchData} style={{ padding: isCompact ? "0.5rem 0.875rem" : "0.625rem 1.25rem", borderRadius: isBrut ? "0" : ((isLG || isCirc) ? "999px" : "0.5rem"), border: isBrut ? "3px solid #000" : (isLG ? "1px solid rgba(255,255,255,0.5)" : "none"), cursor: loading ? "not-allowed" : "pointer", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bws, display: "inline-flex", alignItems: "center", gap: "0.5rem", background: c.btnGrad, color: isBrut ? "#fff" : "#ffffff", opacity: loading ? 0.7 : 1, boxShadow: isBrut ? "4px 4px 0 #000" : `0 4px 15px ${c.btnGlow}` }} disabled={loading}>
             <RefreshCw size={isMobile ? 16 : (isCompact ? 14 : 18)} style={loading ? { animation: "spin 1s linear infinite" } : {}} />
             {isMobile ? "" : (loading ? "Refreshing..." : "Refresh")}
           </button>
