@@ -483,10 +483,12 @@ function App() {
     const br = parseFloat(txForm.buyRate) || 0, ba = parseFloat(txForm.buyAmount) || 0;
     const sr = parseFloat(txForm.sellRate) || 0, sa = parseFloat(txForm.sellAmount) || 0;
     const cost = br * ba, gross = sr * sa, net = gross - cost;
+    const now = new Date();
+    const dateStr = `${String(now.getDate()).padStart(2,"0")}/${String(now.getMonth()+1).padStart(2,"0")}/${String(now.getFullYear()).slice(-2)}`;
     const row = {
       card_type: txForm.cardType, card_number: txForm.cardNumber, owner: txForm.owner,
       buy_rate: br, buy_amount: ba, sell_rate: sr, sell_amount: sa,
-      cost, gross_profit: gross, net_profit: net,
+      cost, gross_profit: gross, net_profit: net, date: dateStr,
     };
     // Close form immediately (optimistic)
     setShowTxForm(false);
@@ -551,7 +553,7 @@ function App() {
       setHistoryTransactions(data.map((r) => ({
         id: r.id, cardType: r.card_type, cardNumber: r.card_number, owner: r.owner,
         buyRate: r.buy_rate, buyAmount: r.buy_amount, sellRate: r.sell_rate, sellAmount: r.sell_amount,
-        cost: r.cost, grossProfit: r.gross_profit, netProfit: r.net_profit,
+        cost: r.cost, grossProfit: r.gross_profit, netProfit: r.net_profit, date: r.date || "",
       })));
     }
     setLoadingHistory(false);
@@ -576,7 +578,7 @@ function App() {
       const historyRows = txns.map((r) => ({
         period, card_type: r.card_type, card_number: r.card_number, owner: r.owner,
         buy_rate: r.buy_rate, buy_amount: r.buy_amount, sell_rate: r.sell_rate, sell_amount: r.sell_amount,
-        cost: r.cost, gross_profit: r.gross_profit, net_profit: r.net_profit,
+        cost: r.cost, gross_profit: r.gross_profit, net_profit: r.net_profit, date: r.date || "",
       }));
       const { error: insertErr } = await supabase.from("transaction_history").insert(historyRows);
       if (insertErr) throw insertErr;
@@ -693,7 +695,7 @@ function App() {
       const txData = (txRes.data || []).map((r, i) => ({
         id: r.id, cardType: r.card_type, cardNumber: r.card_number, owner: r.owner,
         buyRate: r.buy_rate, buyAmount: r.buy_amount, sellRate: r.sell_rate, sellAmount: r.sell_amount,
-        cost: r.cost, grossProfit: r.gross_profit, netProfit: r.net_profit,
+        cost: r.cost, grossProfit: r.gross_profit, netProfit: r.net_profit, date: r.date || "",
       }));
       if (txData.length > 0) processTransactions(txData);
       else { setTransactions([]); setOwners([]); setCards([]); setStats({}); }
@@ -744,7 +746,7 @@ function App() {
   const sortedTransactions = [...filteredTransactions].sort((a, b) => {
     if (!sortCol) return 0;
     let va, vb;
-    const colMap = { cardType: (t) => getCardById(t.cardId)?.type || "", cardNumber: (t) => getCardById(t.cardId)?.number || "", owner: (t) => getOwnerById(t.ownerId)?.name || "",
+    const colMap = { date: (t) => t.date || "", cardType: (t) => getCardById(t.cardId)?.type || "", cardNumber: (t) => getCardById(t.cardId)?.number || "", owner: (t) => getOwnerById(t.ownerId)?.name || "",
       buyRate: (t) => parseFloat(t.buyRate) || 0, buyAmount: (t) => parseFloat(t.buyAmount) || 0, sellRate: (t) => parseFloat(t.sellRate) || 0, sellAmount: (t) => parseFloat(t.sellAmount) || 0,
       cost: (t) => t.cost, grossProfit: (t) => t.grossProfit, netProfit: (t) => t.netProfit, profitMargin: (t) => t.profitMargin };
     const fn = colMap[sortCol];
@@ -1095,7 +1097,7 @@ function App() {
                 <div style={{ overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: isBrut ? "separate" : "collapse", borderSpacing: isBrut ? "0 2px" : "0" }}>
                     <thead><tr>
-                      {[{ label: "Card Type", col: "cardType" }, { label: "Card No.", col: "cardNumber" }, { label: "Owner", col: "owner" }].map(({ label, col }) => (
+                      {[{ label: "Date", col: "date" }, { label: "Card Type", col: "cardType" }, { label: "Card No.", col: "cardNumber" }, { label: "Owner", col: "owner" }].map(({ label, col }) => (
                         <th key={col} style={{ ...thStyle, cursor: "pointer", userSelect: "none" }} onClick={() => handleSort(col)}>
                           <div style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>{label} {sortCol === col && <span style={{ fontSize: "0.625rem" }}>{sortDir === "asc" ? "▲" : "▼"}</span>}</div>
                         </th>
@@ -1112,6 +1114,7 @@ function App() {
                         const cd = getCardById(t.cardId); const ow = getOwnerById(t.ownerId); const cc = getCardTypeColor(cd?.type); const mb = getProfitMarginBadge(t.profitMargin);
                         return (
                           <tr key={t.id}>
+                            <td style={{ ...tdStyle, fontSize: isCompact ? "0.6875rem" : "0.8125rem", color: c.textSec, whiteSpace: "nowrap" }}>{t.date || "-"}</td>
                             <td style={tdStyle}><div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><div style={{ width: "10px", height: "10px", borderRadius: isBrut ? "0" : "50%", backgroundColor: cc, flexShrink: 0 }}></div><span>{cd?.type || "UNKNOWN"}</span></div></td>
                             <td style={tdStyle}>{cd?.number || "-"}</td>
                             <td style={{ ...tdStyle, fontWeight: bwm }}>{ow?.name}</td>
@@ -1130,7 +1133,7 @@ function App() {
                     </tbody>
                     <tfoot>
                       <tr style={{ backgroundColor: c.surfaceAlt, fontWeight: bwx, borderTop: `2px solid ${c.borderStrong}` }}>
-                        <td colSpan="2" style={{ ...tdStyle, fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textStrong, textTransform: isBrut ? "uppercase" : "none" }}>TOTALS</td>
+                        <td colSpan="3" style={{ ...tdStyle, fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textStrong, textTransform: isBrut ? "uppercase" : "none" }}>TOTALS</td>
                         <td colSpan="2" style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Sell Amt:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>${displayFiltered.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0).toFixed(2)}</div></td>
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Avg Sell:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>{displayFiltered.length > 0 ? (displayFiltered.reduce((s, t) => s + (parseFloat(t.sellRate) || 0), 0) / displayFiltered.length).toFixed(2) : "0.00"}</div></td>
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Avg Buy:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>{(() => { const tc2 = displayFiltered.reduce((s, t) => s + (parseFloat(t.cost) || 0), 0); const ts2 = displayFiltered.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0); return (ts2 > 0 ? tc2 / ts2 : 0).toFixed(2); })()}</div></td>
@@ -1158,8 +1161,9 @@ function App() {
                         </div>
                         <span style={mb.style}>{t.profitMargin.toFixed(1)}%</span>
                       </div>
-                      <div style={{ marginBottom: isCompact ? "0.5rem" : "1rem" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isCompact ? "0.5rem" : "1rem" }}>
                         <div><div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textSec }}>Owner</div><div style={{ fontWeight: bws, fontSize: isCompact ? "0.8125rem" : "1rem", color: c.text }}>{ow?.name}</div></div>
+                        <div style={{ textAlign: "right" }}><div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textSec }}>Date</div><div style={{ fontWeight: bwm, fontSize: isCompact ? "0.75rem" : "0.875rem", color: c.text }}>{t.date || "-"}</div></div>
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: isCompact ? "0.5rem" : "1rem", marginBottom: isCompact ? "0.5rem" : "1rem" }}>
                         <div><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>Buy</div><div style={{ fontWeight: bws, fontSize: isCompact ? "0.75rem" : "inherit", color: c.text }}>{parseFloat(t.buyRate).toFixed(2)} × ${parseFloat(t.buyAmount).toFixed(0)}</div></div>
