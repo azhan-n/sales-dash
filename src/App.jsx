@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { supabase } from "./supabaseClient";
 import { FONTS, THEME_OPTIONS, getThemeLayout, getThemeColors } from "./themes";
-import { normalizeCardType, CARD_TYPES, getCardTypeColor, getTodayDate, exportToCSV, exportMonthlyToCSV, exportToPDF } from "./utils";
+import { normalizeCardType, CARD_TYPES, getCardTypeColor, getTodayDate, exportToCSV, exportMonthlyToCSV, exportTransactionsPDF, exportMonthlyPDF } from "./utils";
 import { SimplePieChart, ChartToggle, StatIcon } from "./Charts";
 
 if (typeof document !== 'undefined') {
@@ -663,7 +663,7 @@ function App() {
                   ))}
                   {!isHistory && <button onClick={() => { setEditingTxId(null); setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "" }); setShowTxForm(true); }} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "none", background: c.btnGrad, color: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, flex: isMobile ? 1 : undefined, boxShadow: `0 2px 8px ${c.btnGlow}` }}><Plus size={isCompact ? 14 : 16} /> Add</button>}
                   <button onClick={() => exportToCSV(displayFiltered, getCardById, getOwnerById, isHistory ? selectedPeriod : "transactions")} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm }}><Download size={isCompact ? 12 : 14} /> CSV</button>
-                  <button onClick={exportToPDF} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm }}><Download size={isCompact ? 12 : 14} /> PDF</button>
+                  <button onClick={() => exportTransactionsPDF(displayFiltered, getCardById, getOwnerById, isHistory ? selectedPeriod : "Transactions Report")} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm }}><Download size={isCompact ? 12 : 14} /> PDF</button>
                 </div>
               </div>
             </div>
@@ -766,7 +766,7 @@ function App() {
           <div>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginBottom: isCompact ? "0.625rem" : "1rem" }}>
               <button onClick={() => exportMonthlyToCSV(monthly)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm }}><Download size={isCompact ? 12 : 14} /> CSV</button>
-              <button onClick={exportToPDF} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm }}><Download size={isCompact ? 12 : 14} /> PDF</button>
+              <button onClick={() => exportMonthlyPDF(monthly)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm }}><Download size={isCompact ? 12 : 14} /> PDF</button>
               <button onClick={() => setShowMonthlyForm(true)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "none", background: c.btnGrad, color: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, boxShadow: `0 2px 8px ${c.btnGlow}` }}><Plus size={isCompact ? 14 : 16} /> Add Month</button>
             </div>
             {monthly.length > 0 && (
