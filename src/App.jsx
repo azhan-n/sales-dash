@@ -1,373 +1,12 @@
 import React, { useState, useEffect } from "react";
 import {
-  TrendingUp,
-  DollarSign,
-  Filter,
-  User,
-  RefreshCw,
-  LayoutGrid,
-  List,
-  Settings,
-  X,
-  Calendar,
-  Timer,
-  Plus,
-  Pencil,
+  TrendingUp, DollarSign, Filter, User, RefreshCw, LayoutGrid, List,
+  Settings, X, Calendar, Timer, Plus, Pencil, Download,
 } from "lucide-react";
-
-import { createClient } from "@supabase/supabase-js";
-
-// ---- Supabase Config ----
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_KEY;
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-const FONTS = [
-  { name: "Inter", value: "Inter" },
-  { name: "Poppins", value: "Poppins" },
-  { name: "League Spartan", value: "League Spartan" },
-  { name: "Open Sans", value: "Open Sans" },
-  { name: "Lexend", value: "Lexend" },
-  { name: "Public Sans", value: "Public Sans" },
-  { name: "Rethink Sans", value: "Rethink Sans" },
-  { name: "Noto Sans", value: "Noto Sans" },
-  { name: "Noto Serif", value: "Noto Serif" },
-  { name: "Quicksand", value: "Quicksand" },
-  { name: "Winky Sans", value: "Winky Sans" },
-];
-
-const THEME_OPTIONS = [
-  { key: "auto", label: "Auto", preview: ["#94a3b8", "#667eea", "#84fab0", "#64748b"] },
-  { key: "sunset", label: "Sunset", preview: ["#fff7ed", "#f97316", "#e11d48", "#fbbf24"] },
-  { key: "glass", label: "Glass", preview: ["#1a1a2e", "#e0e7ff", "#818cf8", "#312e81"] },
-  { key: "terminal", label: "Terminal", preview: ["#0a0a0a", "#00ff41", "#003b00", "#1a1a1a"] },
-  { key: "brutalist", label: "Brutalist", preview: ["#f5f5f0", "#000000", "#ff3333", "#ffffff"] },
-  { key: "midnight", label: "Midnight", preview: ["#0f0720", "#7c3aed", "#c084fc", "#1e1b4b"] },
-  { key: "liquid_glass", label: "Liquid Glass", preview: ["#f0f2f5", "#e8ecf4", "#ffffff80", "#d0d5e0"] },
-  { key: "circular", label: "Circular", preview: ["#faf5ff", "#8b5cf6", "#c084fc", "#ede9fe"] },
-];
-
-// --- Layout descriptors per theme ---
-const themeLayouts = {
-  default: {
-    statCardDir: "column",        // stat card flex direction
-    statIconSize: 32,             // dashboard stat icon size
-    statIconSizeSm: 20,           // compact
-    statIconBg: false,            // wrap icon in a bg circle
-    statIconBgStyle: null,
-    statGridMin: "280px",         // min-width for stat grid items
-    statGridMinSm: "180px",
-    ownerLayout: "grid",          // "grid" | "horizontal"
-    cardTypeLayout: "grid",       // "grid" | "list"
-    tableStyle: "default",        // "default" | "terminal" | "brutalist"
-    extraCss: "",
-  },
-  glass: {
-    statCardDir: "row",           // horizontal: icon left, text right
-    statIconSize: 36,
-    statIconSizeSm: 24,
-    statIconBg: true,
-    statIconBgStyle: (isDark) => ({
-      width: "52px", height: "52px", borderRadius: "50%",
-      background: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)",
-      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-    }),
-    statGridMin: "320px",
-    statGridMinSm: "240px",
-    ownerLayout: "grid",
-    cardTypeLayout: "grid",
-    tableStyle: "default",
-    extraCss: `.glass-card { backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%); }`,
-  },
-  terminal: {
-    statCardDir: "row",           // inline readout: icon left, data right
-    statIconSize: 20,
-    statIconSizeSm: 16,
-    statIconBg: true,
-    statIconBgStyle: () => ({
-      width: "32px", height: "32px", borderRadius: "2px",
-      border: "1px solid rgba(0,255,65,0.3)", background: "rgba(0,255,65,0.05)",
-      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-    }),
-    statGridMin: "280px",
-    statGridMinSm: "200px",
-    ownerLayout: "horizontal",
-    cardTypeLayout: "list",
-    tableStyle: "terminal",
-    extraCss: `
-      .terminal-scanline { pointer-events: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 50;
-        background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,65,0.015) 2px, rgba(0,255,65,0.015) 4px); }
-      .terminal-glow { text-shadow: 0 0 8px rgba(0,255,65,0.4); }
-    `,
-  },
-  brutalist: {
-    statCardDir: "column",
-    statIconSize: 28,
-    statIconSizeSm: 20,
-    statIconBg: true,
-    statIconBgStyle: () => ({
-      width: "44px", height: "44px", borderRadius: "0",
-      border: "3px solid #000000", background: "#ffffff",
-      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-    }),
-    statGridMin: "100%",          // force single-column stack
-    statGridMinSm: "100%",
-    ownerLayout: "horizontal",
-    cardTypeLayout: "list",
-    tableStyle: "brutalist",
-    extraCss: `.brutalist-shadow { box-shadow: 6px 6px 0px #000000 !important; }`,
-  },
-  midnight: {
-    statCardDir: "column",
-    statIconSize: 40,
-    statIconSizeSm: 28,
-    statIconBg: true,
-    statIconBgStyle: (isDark) => ({
-      width: "64px", height: "64px", borderRadius: "50%",
-      background: "linear-gradient(135deg, rgba(124,58,237,0.3), rgba(192,132,252,0.15))",
-      boxShadow: "0 0 20px rgba(124,58,237,0.2)",
-      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-      marginBottom: "0.75rem",
-    }),
-    statGridMin: "260px",
-    statGridMinSm: "180px",
-    ownerLayout: "grid",
-    cardTypeLayout: "grid",
-    tableStyle: "default",
-    extraCss: `.midnight-stars { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 0; pointer-events: none;
-      background-image: radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.3), transparent),
-        radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.2), transparent),
-        radial-gradient(1.5px 1.5px at 50% 10%, rgba(255,255,255,0.35), transparent),
-        radial-gradient(1px 1px at 70% 40%, rgba(255,255,255,0.15), transparent),
-        radial-gradient(1px 1px at 90% 80%, rgba(255,255,255,0.25), transparent),
-        radial-gradient(1.5px 1.5px at 20% 90%, rgba(255,255,255,0.2), transparent),
-        radial-gradient(1px 1px at 60% 75%, rgba(255,255,255,0.3), transparent),
-        radial-gradient(1px 1px at 80% 15%, rgba(255,255,255,0.15), transparent),
-        radial-gradient(1.5px 1.5px at 40% 45%, rgba(255,255,255,0.25), transparent),
-        radial-gradient(1px 1px at 15% 55%, rgba(255,255,255,0.2), transparent); }`,
-  },
-  liquid_glass: {
-    statCardDir: "column",
-    statIconSize: 32,
-    statIconSizeSm: 22,
-    statIconBg: true,
-    statIconBgStyle: () => ({
-      width: "48px", height: "48px", borderRadius: "14px",
-      background: "rgba(255,255,255,0.45)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-      border: "1px solid rgba(255,255,255,0.6)",
-      boxShadow: "0 2px 8px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.8)",
-      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-    }),
-    statGridMin: "280px",
-    statGridMinSm: "180px",
-    ownerLayout: "grid",
-    cardTypeLayout: "grid",
-    tableStyle: "default",
-    extraCss: `.lg-surface { backdrop-filter: blur(16px) saturate(150%); -webkit-backdrop-filter: blur(16px) saturate(150%); }
-      .lg-specular { position: relative; overflow: hidden; }
-      .lg-specular::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%; background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, transparent 100%); border-radius: inherit; pointer-events: none; z-index: 1; }`,
-  },
-  circular: {
-    statCardDir: "column",
-    statIconSize: 36,
-    statIconSizeSm: 24,
-    statIconBg: true,
-    statIconBgStyle: () => ({
-      width: "56px", height: "56px", borderRadius: "50%",
-      background: "linear-gradient(135deg, rgba(139,92,246,0.15), rgba(192,132,252,0.1))",
-      border: "2px solid rgba(139,92,246,0.2)",
-      boxShadow: "0 4px 12px rgba(139,92,246,0.1)",
-      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-      margin: "0 auto 0.75rem auto",
-    }),
-    statGridMin: "280px",
-    statGridMinSm: "180px",
-    ownerLayout: "grid",
-    cardTypeLayout: "grid",
-    tableStyle: "default",
-    extraCss: `.circ-blob { position: fixed; border-radius: 50%; pointer-events: none; z-index: 0; filter: blur(80px); opacity: 0.12; }`,
-  },
-};
-
-const getThemeLayout = (name) => {
-  const map = { auto: "default", sunset: "default",
-    glass: "glass", terminal: "terminal", brutalist: "brutalist", midnight: "midnight", liquid_glass: "liquid_glass", circular: "circular" };
-  return themeLayouts[map[name] || "default"];
-};
-
-const getThemeColors = (themeName) => {
-  const autoIsDark = typeof window !== 'undefined' && window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const base = {
-    radius: "1rem", radiusSm: "0.75rem", radiusCompact: "0.375rem", radiusCompactSm: "0.25rem",
-    headerBorderBottom: null, bgPattern: null, cardGlow: null, cardBackdrop: null,
-  };
-
-  const palettes = {
-    sunset: {
-      ...base, isDark: false, radius: "1.125rem", radiusSm: "0.875rem", radiusCompact: "0.5rem",
-      bg: "#fef7f0", bgAlt: "#fff5eb", surface: "#ffffff", surfaceAlt: "#fff5eb", surfaceDeep: "#fff1e6",
-      text: "#431407", textSec: "#9a3412", textMuted: "#c2410c", textLight: "#fff7ed", textMid: "#ea580c", textStrong: "#7c2d12",
-      border: "#fed7aa", borderAlt: "#fdba74", borderStrong: "#fb923c", borderHover: "#ea580c",
-      accent: "#ea580c", accentBg: "#ffedd5", accentDark: "#9a3412", inputBg: "#ffffff", inputBorder: "#fed7aa",
-      titleGrad: "linear-gradient(135deg, #f97316 0%, #e11d48 50%, #be123c 100%)",
-      btnGrad: "linear-gradient(135deg, #f97316 0%, #ef4444 100%)", btnGlow: "rgba(249, 115, 22, 0.4)",
-      statCards: { Green: { bg: "linear-gradient(135deg, #fbbf24 0%, #f97316 100%)", text: "#451a03" }, Teal: { bg: "linear-gradient(135deg, #f97316 0%, #ef4444 100%)" }, Orange: { bg: "linear-gradient(135deg, #fde68a 0%, #fbbf24 100%)", text: "#78350f" }, Blue: { bg: "linear-gradient(135deg, #e11d48 0%, #be123c 100%)" }, Pink: { bg: "linear-gradient(135deg, #fb7185 0%, #f43f5e 100%)" }, Purple: { bg: "linear-gradient(135deg, #fecdd3 0%, #fda4af 100%)", text: "#9f1239" } },
-      profitGrad: "linear-gradient(135deg, #ea580c 0%, #dc2626 100%)",
-      errorBg: "#fef2f2", errorBorder: "#ef4444", errorText: "#991b1b",
-      badgeGreen: { bg: "#fef3c7", text: "#92400e" }, badgeYellow: { bg: "#ffedd5", text: "#9a3412" }, badgeRed: { bg: "#fee2e2", text: "#991b1b" },
-      shadow: "0 2px 8px rgba(249,115,22,0.08)", shadowCompact: "0 1px 4px rgba(249,115,22,0.06)",
-      shadowLg: "0 20px 40px -10px rgba(249,115,22,0.12)", shadowLgCompact: "0 2px 8px rgba(249,115,22,0.06)",
-      hoverShadow: "0 25px 50px -12px rgba(249,115,22,0.2)",
-      cardHoverShadow: "0 8px 24px rgba(249,115,22,0.12)", modalShadow: "0 25px 50px -12px rgba(249,115,22,0.15)", toggleBg: "#fed7aa",
-      bgPattern: "radial-gradient(ellipse at 80% 80%, rgba(251,191,36,0.08) 0%, transparent 50%)",
-    },
-    // --- ADVANCED THEMES ---
-    glass: {
-      ...base, isDark: true, radius: "1.25rem", radiusSm: "1rem", radiusCompact: "0.75rem", radiusCompactSm: "0.5rem",
-      bg: "#0f0f23", bgAlt: "#0f0f23", surface: "rgba(255,255,255,0.06)", surfaceAlt: "rgba(255,255,255,0.03)", surfaceDeep: "rgba(255,255,255,0.02)",
-      text: "#e0e7ff", textSec: "#a5b4fc", textMuted: "#818cf8", textLight: "#eef2ff", textMid: "#c7d2fe", textStrong: "#eef2ff",
-      border: "rgba(165,180,252,0.15)", borderAlt: "rgba(165,180,252,0.1)", borderStrong: "rgba(165,180,252,0.25)", borderHover: "#818cf8",
-      accent: "#818cf8", accentBg: "rgba(129,140,248,0.15)", accentDark: "#4338ca",
-      inputBg: "rgba(255,255,255,0.06)", inputBorder: "rgba(165,180,252,0.2)",
-      titleGrad: "linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #e879f9 100%)",
-      btnGrad: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)", btnGlow: "rgba(129,140,248,0.4)",
-      statCards: { Green: { bg: "linear-gradient(135deg, rgba(16,185,129,0.4) 0%, rgba(6,182,212,0.3) 100%)" }, Teal: { bg: "linear-gradient(135deg, rgba(99,102,241,0.4) 0%, rgba(59,130,246,0.3) 100%)" }, Orange: { bg: "linear-gradient(135deg, rgba(251,191,36,0.2) 0%, rgba(249,115,22,0.15) 100%)", text: "#fde68a" }, Blue: { bg: "linear-gradient(135deg, rgba(129,140,248,0.4) 0%, rgba(168,85,247,0.3) 100%)" }, Pink: { bg: "linear-gradient(135deg, rgba(236,72,153,0.4) 0%, rgba(244,63,94,0.3) 100%)" }, Purple: { bg: "linear-gradient(135deg, rgba(192,132,252,0.3) 0%, rgba(232,121,249,0.2) 100%)", text: "#e9d5ff" } },
-      profitGrad: "linear-gradient(135deg, rgba(16,185,129,0.6) 0%, rgba(6,182,212,0.5) 100%)",
-      errorBg: "rgba(239,68,68,0.1)", errorBorder: "rgba(239,68,68,0.3)", errorText: "#fca5a5",
-      badgeGreen: { bg: "rgba(16,185,129,0.2)", text: "#6ee7b7" }, badgeYellow: { bg: "rgba(251,191,36,0.2)", text: "#fde68a" }, badgeRed: { bg: "rgba(239,68,68,0.2)", text: "#fca5a5" },
-      shadow: "0 4px 24px rgba(0,0,0,0.2)", shadowCompact: "0 2px 12px rgba(0,0,0,0.15)",
-      shadowLg: "0 8px 40px rgba(99,102,241,0.1), 0 4px 20px rgba(0,0,0,0.2)", shadowLgCompact: "0 4px 20px rgba(0,0,0,0.15)",
-      hoverShadow: "0 12px 48px rgba(99,102,241,0.2), 0 8px 24px rgba(0,0,0,0.3)",
-      cardHoverShadow: "0 8px 32px rgba(99,102,241,0.15)", modalShadow: "0 25px 80px rgba(0,0,0,0.6)", toggleBg: "rgba(255,255,255,0.1)",
-      headerBorderBottom: "1px solid rgba(165,180,252,0.1)",
-      bgPattern: "radial-gradient(ellipse at 20% 20%, rgba(99,102,241,0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(168,85,247,0.06) 0%, transparent 50%)",
-      cardBackdrop: "blur(16px) saturate(180%)", cardGlow: "0 0 0 1px rgba(165,180,252,0.08)",
-    },
-    terminal: {
-      ...base, isDark: true, radius: "0", radiusSm: "0", radiusCompact: "0", radiusCompactSm: "0",
-      bg: "#0a0a0a", bgAlt: "#0a0a0a", surface: "#111111", surfaceAlt: "#0a0a0a", surfaceDeep: "#050505",
-      text: "#00ff41", textSec: "#00cc33", textMuted: "#009926", textLight: "#33ff66", textMid: "#00e639", textStrong: "#00ff41",
-      border: "rgba(0,255,65,0.2)", borderAlt: "rgba(0,255,65,0.15)", borderStrong: "rgba(0,255,65,0.35)", borderHover: "#00ff41",
-      accent: "#00ff41", accentBg: "rgba(0,255,65,0.1)", accentDark: "#003b00",
-      inputBg: "#0d0d0d", inputBorder: "rgba(0,255,65,0.25)",
-      titleGrad: "linear-gradient(90deg, #00ff41 0%, #00cc33 100%)",
-      btnGrad: "linear-gradient(90deg, #00cc33 0%, #009926 100%)", btnGlow: "rgba(0,255,65,0.3)",
-      statCards: { Green: { bg: "rgba(0,255,65,0.08)", border: "1px dashed rgba(0,255,65,0.3)", text: "#00ff41" }, Teal: { bg: "rgba(0,255,65,0.06)", border: "1px dashed rgba(0,255,65,0.3)", text: "#00ff41" }, Orange: { bg: "rgba(0,255,65,0.04)", border: "1px dashed rgba(0,255,65,0.3)", text: "#00ff41" }, Blue: { bg: "rgba(0,255,65,0.08)", border: "1px dashed rgba(0,255,65,0.3)", text: "#00ff41" }, Pink: { bg: "rgba(0,255,65,0.06)", border: "1px dashed rgba(0,255,65,0.3)", text: "#00ff41" }, Purple: { bg: "rgba(0,255,65,0.04)", border: "1px dashed rgba(0,255,65,0.3)", text: "#00ff41" } },
-      profitGrad: "rgba(0,255,65,0.12)",
-      errorBg: "rgba(255,0,0,0.1)", errorBorder: "rgba(255,0,0,0.4)", errorText: "#ff4444",
-      badgeGreen: { bg: "rgba(0,255,65,0.15)", text: "#00ff41" }, badgeYellow: { bg: "rgba(255,255,0,0.15)", text: "#ffff00" }, badgeRed: { bg: "rgba(255,0,0,0.15)", text: "#ff4444" },
-      shadow: "none", shadowCompact: "none",
-      shadowLg: "0 0 15px rgba(0,255,65,0.05)", shadowLgCompact: "none",
-      hoverShadow: "0 0 20px rgba(0,255,65,0.1)",
-      cardHoverShadow: "0 0 15px rgba(0,255,65,0.08)", modalShadow: "0 0 40px rgba(0,255,65,0.1)", toggleBg: "rgba(0,255,65,0.15)",
-      headerBorderBottom: "1px dashed rgba(0,255,65,0.3)", bgPattern: null,
-    },
-    brutalist: {
-      ...base, isDark: false, radius: "0", radiusSm: "0", radiusCompact: "0", radiusCompactSm: "0",
-      bg: "#f5f5f0", bgAlt: "#f5f5f0", surface: "#ffffff", surfaceAlt: "#eeeeea", surfaceDeep: "#e5e5e0",
-      text: "#000000", textSec: "#333333", textMuted: "#666666", textLight: "#ffffff", textMid: "#444444", textStrong: "#000000",
-      border: "#000000", borderAlt: "#000000", borderStrong: "#000000", borderHover: "#ff3333",
-      accent: "#ff3333", accentBg: "#ffe5e5", accentDark: "#cc0000",
-      inputBg: "#ffffff", inputBorder: "#000000",
-      titleGrad: "linear-gradient(90deg, #000000 0%, #333333 100%)",
-      btnGrad: "#000000", btnGlow: "rgba(0,0,0,0.2)",
-      statCards: { Green: { bg: "#000000", text: "#ffffff" }, Teal: { bg: "#ff3333", text: "#ffffff" }, Orange: { bg: "#ffffff", text: "#000000", border: "3px solid #000000" }, Blue: { bg: "#000000", text: "#ffffff" }, Pink: { bg: "#ff3333", text: "#ffffff" }, Purple: { bg: "#ffffff", text: "#000000", border: "3px solid #000000" } },
-      profitGrad: "#000000",
-      errorBg: "#ffffff", errorBorder: "#ff3333", errorText: "#ff0000",
-      badgeGreen: { bg: "#000000", text: "#ffffff" }, badgeYellow: { bg: "#ff3333", text: "#ffffff" }, badgeRed: { bg: "#ffffff", text: "#ff0000" },
-      shadow: "4px 4px 0px #000000", shadowCompact: "3px 3px 0px #000000",
-      shadowLg: "6px 6px 0px #000000", shadowLgCompact: "4px 4px 0px #000000",
-      hoverShadow: "8px 8px 0px #000000",
-      cardHoverShadow: "8px 8px 0px #ff3333", modalShadow: "8px 8px 0px #000000", toggleBg: "#cccccc",
-      headerBorderBottom: "4px solid #000000", bgPattern: null,
-    },
-    midnight: {
-      ...base, isDark: true, radius: "1.5rem", radiusSm: "1.25rem", radiusCompact: "0.75rem", radiusCompactSm: "0.5rem",
-      bg: "#0a0520", bgAlt: "#0a0520", surface: "#140e30", surfaceAlt: "#0f0825", surfaceDeep: "#0a0520",
-      text: "#e9d5ff", textSec: "#c084fc", textMuted: "#a855f7", textLight: "#f5f3ff", textMid: "#d8b4fe", textStrong: "#f5f3ff",
-      border: "rgba(139,92,246,0.2)", borderAlt: "rgba(139,92,246,0.15)", borderStrong: "rgba(139,92,246,0.35)", borderHover: "#a855f7",
-      accent: "#a855f7", accentBg: "rgba(139,92,246,0.15)", accentDark: "#6d28d9",
-      inputBg: "rgba(139,92,246,0.08)", inputBorder: "rgba(139,92,246,0.25)",
-      titleGrad: "linear-gradient(135deg, #a855f7 0%, #ec4899 50%, #f43e5c 100%)",
-      btnGrad: "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)", btnGlow: "rgba(139,92,246,0.4)",
-      statCards: { Green: { bg: "linear-gradient(135deg, #059669 0%, #7c3aed 100%)" }, Teal: { bg: "linear-gradient(135deg, #6d28d9 0%, #4f46e5 100%)" }, Orange: { bg: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)", text: "#fde68a" }, Blue: { bg: "linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)" }, Pink: { bg: "linear-gradient(135deg, #be185d 0%, #9333ea 100%)" }, Purple: { bg: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)", text: "#c4b5fd" } },
-      profitGrad: "linear-gradient(135deg, #7c3aed 0%, #059669 100%)",
-      errorBg: "rgba(239,68,68,0.1)", errorBorder: "rgba(239,68,68,0.3)", errorText: "#fca5a5",
-      badgeGreen: { bg: "rgba(16,185,129,0.2)", text: "#6ee7b7" }, badgeYellow: { bg: "rgba(251,191,36,0.2)", text: "#fde68a" }, badgeRed: { bg: "rgba(239,68,68,0.2)", text: "#fca5a5" },
-      shadow: "0 4px 20px rgba(139,92,246,0.08)", shadowCompact: "0 2px 12px rgba(139,92,246,0.06)",
-      shadowLg: "0 12px 40px rgba(139,92,246,0.12), 0 4px 16px rgba(0,0,0,0.2)", shadowLgCompact: "0 4px 20px rgba(139,92,246,0.06)",
-      hoverShadow: "0 16px 48px rgba(139,92,246,0.2), 0 0 20px rgba(168,85,247,0.15)",
-      cardHoverShadow: "0 8px 32px rgba(139,92,246,0.15)", modalShadow: "0 25px 80px rgba(0,0,0,0.5), 0 0 40px rgba(139,92,246,0.1)", toggleBg: "rgba(139,92,246,0.2)",
-      headerBorderBottom: "1px solid rgba(168,85,247,0.2)",
-      bgPattern: "radial-gradient(ellipse at 30% 20%, rgba(124,58,237,0.08) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(236,72,153,0.05) 0%, transparent 50%)",
-      cardGlow: "0 0 0 1px rgba(139,92,246,0.1)",
-    },
-    liquid_glass: {
-      ...base, isDark: false, radius: "1.5rem", radiusSm: "1.25rem", radiusCompact: "1rem", radiusCompactSm: "0.75rem",
-      bg: "#eef0f5", bgAlt: "#eef0f5",
-      surface: "rgba(255,255,255,0.55)", surfaceAlt: "rgba(255,255,255,0.35)", surfaceDeep: "rgba(255,255,255,0.25)",
-      text: "#1c1c1e", textSec: "#636366", textMuted: "#8e8e93", textLight: "#ffffff", textMid: "#48484a", textStrong: "#000000",
-      border: "rgba(255,255,255,0.6)", borderAlt: "rgba(255,255,255,0.4)", borderStrong: "rgba(0,0,0,0.08)", borderHover: "rgba(0,0,0,0.15)",
-      accent: "#007aff", accentBg: "rgba(0,122,255,0.12)", accentDark: "#0056b3",
-      inputBg: "rgba(255,255,255,0.5)", inputBorder: "rgba(0,0,0,0.06)",
-      titleGrad: "linear-gradient(135deg, #1c1c1e 0%, #3a3a3c 100%)",
-      btnGrad: "linear-gradient(135deg, rgba(0,122,255,0.85) 0%, rgba(0,100,220,0.9) 100%)", btnGlow: "rgba(0,122,255,0.25)",
-      statCards: {
-        Green: { bg: "rgba(52,199,89,0.18)", text: "#1c7a36", border: "1px solid rgba(52,199,89,0.25)" },
-        Teal: { bg: "rgba(0,122,255,0.15)", text: "#0055cc", border: "1px solid rgba(0,122,255,0.2)" },
-        Orange: { bg: "rgba(255,149,0,0.15)", text: "#995c00", border: "1px solid rgba(255,149,0,0.2)" },
-        Blue: { bg: "rgba(88,86,214,0.15)", text: "#3634a3", border: "1px solid rgba(88,86,214,0.2)" },
-        Pink: { bg: "rgba(255,45,85,0.12)", text: "#cc0033", border: "1px solid rgba(255,45,85,0.18)" },
-        Purple: { bg: "rgba(175,82,222,0.12)", text: "#7b3a9e", border: "1px solid rgba(175,82,222,0.18)" },
-      },
-      profitGrad: "rgba(52,199,89,0.2)",
-      errorBg: "rgba(255,59,48,0.1)", errorBorder: "rgba(255,59,48,0.3)", errorText: "#ff3b30",
-      badgeGreen: { bg: "rgba(52,199,89,0.15)", text: "#248a3d" },
-      badgeYellow: { bg: "rgba(255,204,0,0.18)", text: "#997a00" },
-      badgeRed: { bg: "rgba(255,59,48,0.12)", text: "#d70015" },
-      shadow: "0 2px 16px rgba(0,0,0,0.06)", shadowCompact: "0 1px 8px rgba(0,0,0,0.04)",
-      shadowLg: "0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04)", shadowLgCompact: "0 4px 16px rgba(0,0,0,0.05)",
-      hoverShadow: "0 12px 40px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.06)",
-      cardHoverShadow: "0 8px 28px rgba(0,0,0,0.08)", modalShadow: "0 25px 60px rgba(0,0,0,0.15), 0 8px 20px rgba(0,0,0,0.08)",
-      toggleBg: "rgba(0,0,0,0.08)",
-      headerBorderBottom: "1px solid rgba(0,0,0,0.04)",
-      bgPattern: "radial-gradient(ellipse at 25% 0%, rgba(174,198,255,0.35) 0%, transparent 50%), radial-gradient(ellipse at 75% 100%, rgba(255,200,220,0.2) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(200,210,255,0.15) 0%, transparent 60%)",
-      cardBackdrop: "blur(16px) saturate(150%)",
-      cardGlow: "inset 0 1px 0 rgba(255,255,255,0.7), 0 1px 0 rgba(0,0,0,0.04)",
-    },
-    circular: {
-      ...base, isDark: false, radius: "999px", radiusSm: "2rem", radiusCompact: "999px", radiusCompactSm: "1.5rem",
-      bg: "#faf5ff", bgAlt: "#faf5ff", surface: "#ffffff", surfaceAlt: "#f5f0ff", surfaceDeep: "#ede9fe",
-      text: "#1e1b4b", textSec: "#6d28d9", textMuted: "#8b5cf6", textLight: "#f5f3ff", textMid: "#7c3aed", textStrong: "#1e1b4b",
-      border: "#ddd6fe", borderAlt: "#c4b5fd", borderStrong: "#a78bfa", borderHover: "#7c3aed",
-      accent: "#7c3aed", accentBg: "#ede9fe", accentDark: "#5b21b6",
-      inputBg: "#ffffff", inputBorder: "#ddd6fe",
-      titleGrad: "linear-gradient(135deg, #7c3aed 0%, #c084fc 50%, #e879f9 100%)",
-      btnGrad: "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)", btnGlow: "rgba(124,58,237,0.3)",
-      statCards: {
-        Green: { bg: "linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%)", text: "#065f46" },
-        Teal: { bg: "linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%)", text: "#1e1b4b" },
-        Orange: { bg: "linear-gradient(135deg, #fde68a 0%, #fbbf24 100%)", text: "#78350f" },
-        Blue: { bg: "linear-gradient(135deg, #818cf8 0%, #6366f1 100%)" },
-        Pink: { bg: "linear-gradient(135deg, #fbcfe8 0%, #f472b6 100%)", text: "#831843" },
-        Purple: { bg: "linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%)", text: "#581c87" },
-      },
-      profitGrad: "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)",
-      errorBg: "#fef2f2", errorBorder: "#ef4444", errorText: "#991b1b",
-      badgeGreen: { bg: "#d1fae5", text: "#065f46" }, badgeYellow: { bg: "#fef3c7", text: "#92400e" }, badgeRed: { bg: "#fee2e2", text: "#991b1b" },
-      shadow: "0 4px 20px rgba(124,58,237,0.08)", shadowCompact: "0 2px 12px rgba(124,58,237,0.06)",
-      shadowLg: "0 12px 40px rgba(124,58,237,0.1)", shadowLgCompact: "0 4px 16px rgba(124,58,237,0.06)",
-      hoverShadow: "0 16px 48px rgba(124,58,237,0.15)",
-      cardHoverShadow: "0 8px 28px rgba(124,58,237,0.12)", modalShadow: "0 25px 60px rgba(124,58,237,0.15)",
-      toggleBg: "#ddd6fe",
-      headerBorderBottom: "none",
-      bgPattern: "radial-gradient(circle at 15% 15%, rgba(139,92,246,0.08) 0%, transparent 40%), radial-gradient(circle at 85% 85%, rgba(232,121,249,0.06) 0%, transparent 40%), radial-gradient(circle at 50% 50%, rgba(167,139,250,0.04) 0%, transparent 50%)",
-    },
-  };
-
-  if (themeName === "auto") return palettes[autoIsDark ? "midnight" : "sunset"];
-  return palettes[themeName] || palettes.sunset;
-};
+import { supabase } from "./supabaseClient";
+import { FONTS, THEME_OPTIONS, getThemeLayout, getThemeColors } from "./themes";
+import { normalizeCardType, CARD_TYPES, getCardTypeColor, getTodayDate, exportToCSV, exportMonthlyToCSV, exportToPDF } from "./utils";
+import { SimplePieChart, ChartToggle, StatIcon } from "./Charts";
 
 if (typeof document !== 'undefined') {
   const link = document.createElement('link');
@@ -375,70 +14,6 @@ if (typeof document !== 'undefined') {
   link.rel = 'stylesheet';
   document.head.appendChild(link);
 }
-
-const normalizeCardType = (type) => { if (!type) return "UNKNOWN"; const n = type.toString().trim().toUpperCase(); if (n.includes("VISA") && n.includes("DEBIT")) return "VISA DEBIT"; if (n.includes("VISA") && n.includes("CREDIT")) return "VISA CREDIT"; if (n.includes("AMEX")) return "AMEX"; if (n.includes("SELLER")) return "SELLER"; if (n.includes("MASTERCARD")) return "MASTERCARD"; return n; };
-const cardTypeColors = { "VISA DEBIT": "#3b82f6", "VISA CREDIT": "#10b981", AMEX: "#8b5cf6", SELLER: "#64748b", MASTERCARD: "#f59e0b", UNKNOWN: "#94a3b8" };
-const getCardTypeColor = (type) => cardTypeColors[normalizeCardType(type)] || cardTypeColors["UNKNOWN"];
-
-// -- Simple Pie Chart (pure CSS/SVG) --
-const SimplePieChart = ({ data, colors, size = 200, c }) => {
-  const total = data.reduce((s, d) => s + d.value, 0);
-  if (total === 0) return null;
-  let cumAngle = 0;
-  const slices = data.map((d, i) => {
-    const angle = (d.value / total) * 360;
-    const startAngle = cumAngle;
-    cumAngle += angle;
-    const startRad = (startAngle - 90) * Math.PI / 180;
-    const endRad = (startAngle + angle - 90) * Math.PI / 180;
-    const largeArc = angle > 180 ? 1 : 0;
-    const r = size / 2 - 4;
-    const cx = size / 2, cy = size / 2;
-    const x1 = cx + r * Math.cos(startRad), y1 = cy + r * Math.sin(startRad);
-    const x2 = cx + r * Math.cos(endRad), y2 = cy + r * Math.sin(endRad);
-    const path = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
-    return { ...d, path, color: colors[i % colors.length], pct: ((d.value / total) * 100).toFixed(1) };
-  });
-  return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        {slices.map((s, i) => <path key={i} d={s.path} fill={s.color} stroke={c.surface} strokeWidth="2" />)}
-      </svg>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", justifyContent: "center" }}>
-        {slices.map((s, i) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontSize: "0.75rem", color: c.text }}>
-            <div style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: s.color, flexShrink: 0 }}></div>
-            <span>{s.label}: {s.pct}%</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// -- Chart toggle button pair --
-const ChartToggle = ({ mode, setMode, opt1, opt2, c, isBrut, isCompact, bws }) => (
-  <div style={{ display: "flex", gap: "0.375rem" }}>
-    {[opt1, opt2].map(({ key, label }) => (
-      <button key={key} onClick={() => setMode(key)} style={{
-        padding: isCompact ? "0.25rem 0.5rem" : "0.375rem 0.75rem",
-        borderRadius: isBrut ? "0" : "999px", border: `1px solid ${mode === key ? c.accent : c.border}`,
-        backgroundColor: mode === key ? c.accentBg : "transparent",
-        color: mode === key ? c.accent : c.textSec, cursor: "pointer",
-        fontSize: isCompact ? "0.625rem" : "0.75rem", fontWeight: bws || "600",
-      }}>{label}</button>
-    ))}
-  </div>
-);
-
-// -- Icon wrapper component --
-const StatIcon = ({ Icon, size, layout, c }) => {
-  if (layout.statIconBg && layout.statIconBgStyle) {
-    const bgStyle = layout.statIconBgStyle(c.isDark);
-    return <div style={bgStyle}><Icon size={size} style={{ opacity: 0.9, color: "inherit" }} /></div>;
-  }
-  return <Icon size={size} style={{ opacity: 0.7 }} />;
-};
 
 function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -483,8 +58,7 @@ function App() {
     const br = parseFloat(txForm.buyRate) || 0, ba = parseFloat(txForm.buyAmount) || 0;
     const sr = parseFloat(txForm.sellRate) || 0, sa = parseFloat(txForm.sellAmount) || 0;
     const cost = br * ba, gross = sr * sa, net = gross - cost;
-    const now = new Date();
-    const dateStr = `${String(now.getDate()).padStart(2,"0")}/${String(now.getMonth()+1).padStart(2,"0")}/${String(now.getFullYear()).slice(-2)}`;
+    const dateStr = getTodayDate();
     const row = {
       card_type: txForm.cardType, card_number: txForm.cardNumber, owner: txForm.owner,
       buy_rate: br, buy_amount: ba, sell_rate: sr, sell_amount: sa,
@@ -760,7 +334,7 @@ function App() {
     if (sortCol === col) setSortDir(sortDir === "asc" ? "desc" : "asc");
     else { setSortCol(col); setSortDir("asc"); }
   };
-  const cardTypes = ["VISA DEBIT", "VISA CREDIT", "AMEX", "SELLER", "MASTERCARD"];
+  const cardTypes = CARD_TYPES;
 
   // -- Shared styles --
   const cardBase = { backgroundColor: c.surface, borderRadius: isCirc ? "2rem" : r, padding: isCompact ? "1rem" : "2rem", boxShadow: c.cardGlow ? `${c.shadow}, ${c.cardGlow}` : c.shadow, marginBottom: isCompact ? "1rem" : "2rem", border: isBrut ? `3px solid ${c.border}` : `1px solid ${c.border}`, ...(c.cardBackdrop ? { backdropFilter: c.cardBackdrop, WebkitBackdropFilter: c.cardBackdrop } : {}), animation: "fadeIn 0.35s cubic-bezier(.16,1,.3,1) both" };
@@ -1088,6 +662,8 @@ function App() {
                     <button key={m} onClick={() => setViewMode(m)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, backgroundColor: viewMode === m ? c.accent : c.inputBg, color: viewMode === m ? "#fff" : c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, flex: isMobile ? 1 : undefined, ...(isBrut && viewMode === m ? { boxShadow: "3px 3px 0 #000" } : {}) }}><Ic size={isCompact ? 14 : 16} /> {label}</button>
                   ))}
                   {!isHistory && <button onClick={() => { setEditingTxId(null); setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "" }); setShowTxForm(true); }} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "none", background: c.btnGrad, color: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, flex: isMobile ? 1 : undefined, boxShadow: `0 2px 8px ${c.btnGlow}` }}><Plus size={isCompact ? 14 : 16} /> Add</button>}
+                  <button onClick={() => exportToCSV(displayFiltered, getCardById, getOwnerById, isHistory ? selectedPeriod : "transactions")} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm }}><Download size={isCompact ? 12 : 14} /> CSV</button>
+                  <button onClick={exportToPDF} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm }}><Download size={isCompact ? 12 : 14} /> PDF</button>
                 </div>
               </div>
             </div>
@@ -1188,7 +764,9 @@ function App() {
         {/* ===== MONTHLY TAB ===== */}
         {activeTab === "monthly" && (
           <div>
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: isCompact ? "0.625rem" : "1rem" }}>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginBottom: isCompact ? "0.625rem" : "1rem" }}>
+              <button onClick={() => exportMonthlyToCSV(monthly)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm }}><Download size={isCompact ? 12 : 14} /> CSV</button>
+              <button onClick={exportToPDF} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm }}><Download size={isCompact ? 12 : 14} /> PDF</button>
               <button onClick={() => setShowMonthlyForm(true)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "none", background: c.btnGrad, color: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, boxShadow: `0 2px 8px ${c.btnGlow}` }}><Plus size={isCompact ? 14 : 16} /> Add Month</button>
             </div>
             {monthly.length > 0 && (
@@ -1397,6 +975,16 @@ function App() {
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { opacity: 0; transform: translate3d(0, 12px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
         @keyframes shake { 0%, 100% { transform: translate3d(0, 0, 0); } 20%, 60% { transform: translate3d(-4px, 0, 0); } 40%, 80% { transform: translate3d(4px, 0, 0); } }
+        @media print {
+          body { background: white !important; color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          * { box-shadow: none !important; text-shadow: none !important; animation: none !important; transition: none !important; }
+          [style*="position: sticky"], [style*="position: fixed"] { position: static !important; }
+          button, select, nav, .terminal-scanline, .midnight-stars, .circ-blob, .lg-specular::before { display: none !important; }
+          table { font-size: 10px !important; border-collapse: collapse !important; }
+          td, th { border: 1px solid #ddd !important; padding: 4px 8px !important; color: #000 !important; background: white !important; }
+          th { background: #f5f5f5 !important; font-weight: 700 !important; }
+          h1, h2, h3 { color: #000 !important; -webkit-text-fill-color: #000 !important; background: none !important; }
+        }
         ${L.extraCss}
       `}</style>
     </div>
