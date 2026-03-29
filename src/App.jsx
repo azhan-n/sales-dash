@@ -209,6 +209,7 @@ function App() {
   const [profitChartMode, setProfitChartMode] = useState("bar");
   const [ownerChartMode, setOwnerChartMode] = useState("stats");
   const [expandedOwner, setExpandedOwner] = useState(null);
+  const [showExportMenu, setShowExportMenu] = useState(false);
   const [cardTypeChartMode, setCardTypeChartMode] = useState("stats");
 
   const font = selectedFont;
@@ -389,9 +390,9 @@ function App() {
       {/* TABS */}
       <div style={{ backgroundColor: (isGlass || isLG) ? (isLG ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.02)") : c.surface, borderBottom: isBrut ? `3px solid ${c.border}` : `1px solid ${c.border}`, ...((isGlass || isLG) ? { backdropFilter: "blur(16px) saturate(150%)", WebkitBackdropFilter: "blur(16px) saturate(150%)" } : {}), position: "relative", zIndex: 10 }}>
         <div style={{ maxWidth: "80rem", margin: "0 auto", padding: "0 1rem" }}>
-          <nav style={{ display: "flex", gap: isBrut ? "0" : (isMobile ? "1rem" : "2rem") }}>
+          <nav style={{ display: "flex", gap: isBrut ? "0" : (isMobile ? "1rem" : "2rem"), alignItems: "center" }}>
             {["dashboard", "transactions", "monthly"].map((tab) => (
-              <button key={tab} onClick={() => setActiveTab(tab)} style={{
+              <button key={tab} onClick={() => { setActiveTab(tab); setShowExportMenu(false); }} style={{
                 padding: isBrut ? "1rem 1.5rem" : (isCompact ? "0.625rem 0.25rem" : "1rem 0.25rem"), border: "none",
                 borderBottom: activeTab === tab ? (isBrut ? `4px solid ${c.accent}` : `2px solid ${c.accent}`) : (isBrut ? "4px solid transparent" : "2px solid transparent"),
                 backgroundColor: isBrut && activeTab === tab ? c.accentBg : "transparent",
@@ -403,12 +404,49 @@ function App() {
                 {isTerm ? `[${tab.toUpperCase()}]` : tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
             ))}
+            {(activeTab === "transactions" || activeTab === "monthly") && (
+              <div style={{ marginLeft: "auto", position: "relative" }}>
+                <button onClick={() => setShowExportMenu(!showExportMenu)} style={{
+                  padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 0.875rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"),
+                  border: `1px solid ${showExportMenu ? c.accent : c.border}`, backgroundColor: showExportMenu ? c.accentBg : c.inputBg,
+                  color: showExportMenu ? c.accent : c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.375rem",
+                  fontSize: isCompact ? "0.75rem" : "0.8125rem", fontWeight: bwm,
+                  transition: "border-color 0.15s, background-color 0.15s, color 0.15s",
+                }}><Download size={isCompact ? 13 : 15} /> {isMobile ? "" : "Export"}</button>
+                {showExportMenu && (
+                  <div style={{
+                    position: "absolute", right: 0, top: "calc(100% + 6px)", zIndex: 100,
+                    backgroundColor: isGlass ? "rgba(20,14,48,0.95)" : (isLG ? "rgba(255,255,255,0.85)" : c.surface),
+                    border: `1px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "1rem" : "0.5rem"),
+                    boxShadow: c.shadowLg, overflow: "hidden", minWidth: "120px",
+                    animation: "slideUp 0.2s cubic-bezier(.16,1,.3,1) both",
+                    ...((isGlass || isLG) ? { backdropFilter: "blur(16px) saturate(150%)", WebkitBackdropFilter: "blur(16px) saturate(150%)" } : {}),
+                  }}>
+                    <button onClick={() => {
+                      if (activeTab === "transactions") exportToCSV(filteredTransactions, getCardById, getOwnerById, "transactions");
+                      else exportMonthlyToCSV(monthly);
+                      setShowExportMenu(false);
+                    }} style={{ display: "flex", alignItems: "center", gap: "0.5rem", width: "100%", padding: "0.625rem 1rem", border: "none", backgroundColor: "transparent", color: c.text, cursor: "pointer", fontSize: "0.8125rem", fontWeight: bwm, textAlign: "left", transition: "background-color 0.1s" }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = c.accentBg} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}>
+                      <Download size={14} /> Download CSV
+                    </button>
+                    <div style={{ height: "1px", backgroundColor: c.border }}></div>
+                    <button onClick={() => {
+                      if (activeTab === "transactions") exportTransactionsPDF(filteredTransactions, getCardById, getOwnerById, "Transactions Report");
+                      else exportMonthlyPDF(monthly);
+                      setShowExportMenu(false);
+                    }} style={{ display: "flex", alignItems: "center", gap: "0.5rem", width: "100%", padding: "0.625rem 1rem", border: "none", backgroundColor: "transparent", color: c.text, cursor: "pointer", fontSize: "0.8125rem", fontWeight: bwm, textAlign: "left", transition: "background-color 0.1s" }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = c.accentBg} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}>
+                      <Download size={14} /> Download PDF
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </nav>
         </div>
       </div>
 
       {/* MAIN CONTENT */}
-      <div style={{ maxWidth: "80rem", margin: "0 auto", padding: isMobile ? "0.75rem 0.5rem" : (isCompact ? "1rem" : "2rem 1rem"), position: "relative", zIndex: 5, animation: "fadeIn 0.3s cubic-bezier(.16,1,.3,1) both" }}>
+      <div onClick={() => showExportMenu && setShowExportMenu(false)} style={{ maxWidth: "80rem", margin: "0 auto", padding: isMobile ? "0.75rem 0.5rem" : (isCompact ? "1rem" : "2rem 1rem"), position: "relative", zIndex: 5, animation: "fadeIn 0.3s cubic-bezier(.16,1,.3,1) both" }}>
         {error && <div style={{ padding: isCompact ? "0.625rem" : "1rem", backgroundColor: c.errorBg, border: `1px solid ${c.errorBorder}`, borderRadius: r, color: c.errorText, marginBottom: isCompact ? "1rem" : "2rem", textAlign: "center", fontSize: isCompact ? "0.8125rem" : "inherit", animation: "shake 0.5s ease-in-out" }}><strong>Error:</strong> {error}</div>}
 
         {/* ===== DASHBOARD TAB ===== */}
@@ -713,8 +751,6 @@ function App() {
                     <button key={m} onClick={() => setViewMode(m)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, backgroundColor: viewMode === m ? c.accent : c.inputBg, color: viewMode === m ? "#fff" : c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, flex: isMobile ? 1 : undefined, ...(isBrut && viewMode === m ? { boxShadow: "3px 3px 0 #000" } : {}) }}><Ic size={isCompact ? 14 : 16} /> {label}</button>
                   ))}
                   {!isHistory && <button onClick={() => { setEditingTxId(null); setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "" }); setShowTxForm(true); }} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "none", background: c.btnGrad, color: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, flex: isMobile ? 1 : undefined, boxShadow: `0 2px 8px ${c.btnGlow}` }}><Plus size={isCompact ? 14 : 16} /> Add</button>}
-                  <button onClick={() => exportToCSV(displayFiltered, getCardById, getOwnerById, isHistory ? selectedPeriod : "transactions")} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm }}><Download size={isCompact ? 12 : 14} /> CSV</button>
-                  <button onClick={() => exportTransactionsPDF(displayFiltered, getCardById, getOwnerById, isHistory ? selectedPeriod : "Transactions Report")} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm }}><Download size={isCompact ? 12 : 14} /> PDF</button>
                 </div>
               </div>
             </div>
@@ -816,8 +852,6 @@ function App() {
         {activeTab === "monthly" && (
           <div>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginBottom: isCompact ? "0.625rem" : "1rem" }}>
-              <button onClick={() => exportMonthlyToCSV(monthly)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm }}><Download size={isCompact ? 12 : 14} /> CSV</button>
-              <button onClick={() => exportMonthlyPDF(monthly)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm }}><Download size={isCompact ? 12 : 14} /> PDF</button>
               <button onClick={() => setShowMonthlyForm(true)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "none", background: c.btnGrad, color: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, boxShadow: `0 2px 8px ${c.btnGlow}` }}><Plus size={isCompact ? 14 : 16} /> Add Month</button>
             </div>
             {monthly.length > 0 && (
