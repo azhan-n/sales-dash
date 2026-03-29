@@ -208,6 +208,7 @@ function App() {
   // Chart toggles
   const [profitChartMode, setProfitChartMode] = useState("bar");
   const [ownerChartMode, setOwnerChartMode] = useState("stats");
+  const [expandedOwner, setExpandedOwner] = useState(null);
   const [cardTypeChartMode, setCardTypeChartMode] = useState("stats");
 
   const font = selectedFont;
@@ -562,9 +563,13 @@ function App() {
                     {owners.map((o) => {
                       const os = stats.ownerStats?.[o.id] || { count: 0, totalCost: 0, totalGrossProfit: 0, totalNetProfit: 0 };
                       return (
-                        <div key={o.id} style={{ padding: isCompact ? "1rem" : "1.5rem", backgroundColor: c.surfaceAlt, borderRadius: isBrut ? "0" : (isCirc ? "1.5rem" : rSm), border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, ...(isBrut ? { boxShadow: "3px 3px 0 #000" } : {}), ...((isGlass || isLG) ? { backdropFilter: "blur(16px) saturate(150%)", WebkitBackdropFilter: "blur(16px) saturate(150%)" } : {}) }}>
+                        <div key={o.id} style={{ cursor: "pointer" }} onClick={() => setExpandedOwner(expandedOwner === o.id ? null : o.id)}>
+                        <div style={{ padding: isCompact ? "1rem" : "1.5rem", backgroundColor: c.surfaceAlt, borderRadius: isBrut ? "0" : (isCirc ? "1.5rem" : rSm), border: isBrut ? `2px solid ${c.border}` : `1px solid ${expandedOwner === o.id ? c.accent : c.border}`, ...(isBrut ? { boxShadow: "3px 3px 0 #000" } : {}), ...((isGlass || isLG) ? { backdropFilter: "blur(16px) saturate(150%)", WebkitBackdropFilter: "blur(16px) saturate(150%)" } : {}), transition: "border-color 0.15s ease" }}>
                           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", marginBottom: isCompact ? "0.625rem" : "1rem", gap: "0.5rem" }}>
-                            <span style={{ fontFamily: headingFont, fontWeight: bwh, fontSize: isMobile ? "0.9375rem" : (isCompact ? "1rem" : "1.25rem"), color: c.textStrong, textTransform: isBrut ? "uppercase" : "none" }} className={isTerm ? "terminal-glow" : ""}>{isTerm ? `> ${o.name}` : o.name}</span>
+                            <span style={{ fontFamily: headingFont, fontWeight: bwh, fontSize: isMobile ? "0.9375rem" : (isCompact ? "1rem" : "1.25rem"), color: c.textStrong, textTransform: isBrut ? "uppercase" : "none", display: "flex", alignItems: "center", gap: "0.5rem" }} className={isTerm ? "terminal-glow" : ""}>
+                              {isTerm ? `> ${o.name}` : o.name}
+                              <span style={{ fontSize: "0.625rem", color: expandedOwner === o.id ? c.accent : c.textSec, transition: "transform 0.2s ease, color 0.15s ease", display: "inline-block", transform: expandedOwner === o.id ? "rotate(180deg)" : "rotate(0)" }}>▼</span>
+                            </span>
                             <span style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", color: c.textSec, backgroundColor: c.surface, padding: "0.25rem 0.75rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), fontWeight: bws, border: isBrut ? "1px solid #000" : "none" }}>{os.count} transactions</span>
                           </div>
                           <div style={{ display: (L.ownerLayout === "horizontal" && !isMobile) ? "flex" : "grid", flexDirection: L.ownerLayout === "horizontal" ? "column" : undefined, gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: isCompact ? "0.625rem" : "1rem" }}>
@@ -575,6 +580,52 @@ function App() {
                               </div>
                             ))}
                           </div>
+                        </div>
+                        {expandedOwner === o.id && (() => {
+                          const ownerTx = transactions.filter((t) => t.ownerId === o.id);
+                          if (ownerTx.length === 0) return <div style={{ padding: "1rem", color: c.textSec, fontSize: "0.8125rem" }}>No transactions</div>;
+                          return (
+                            <div style={{ marginTop: isCompact ? "0.5rem" : "0.75rem", borderRadius: isBrut ? "0" : (isCirc ? "1rem" : rSm), overflow: "hidden", border: `1px solid ${c.border}`, animation: "slideUp 0.25s cubic-bezier(.16,1,.3,1) both" }}>
+                              <div style={{ overflowX: "auto" }}>
+                                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: isCompact ? "0.6875rem" : "0.8125rem" }}>
+                                  <thead><tr>
+                                    {["Date", "Card", "Buy Rate", "Buy Amt", "Sell Rate", "Sell Amt", "Cost", "Gross", "Net"].map((h) => (
+                                      <th key={h} style={{ padding: isCompact ? "0.375rem 0.5rem" : "0.5rem 0.625rem", textAlign: h === "Date" || h === "Card" ? "left" : "right", backgroundColor: c.surfaceDeep, color: c.textSec, fontWeight: bws, fontSize: isCompact ? "0.5625rem" : "0.6875rem", borderBottom: `1px solid ${c.border}`, textTransform: "uppercase", letterSpacing: "0.05em", whiteSpace: "nowrap" }}>{h}</th>
+                                    ))}
+                                  </tr></thead>
+                                  <tbody>
+                                    {ownerTx.map((t, ti) => {
+                                      const cd = getCardById(t.cardId);
+                                      return (
+                                        <tr key={t.id} style={{ backgroundColor: ti % 2 === 0 ? "transparent" : c.surfaceAlt }}>
+                                          <td style={{ padding: "0.375rem 0.5rem", color: c.textSec, whiteSpace: "nowrap" }}>{t.date || "-"}</td>
+                                          <td style={{ padding: "0.375rem 0.5rem", whiteSpace: "nowrap" }}><span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", backgroundColor: getCardTypeColor(cd?.type), marginRight: "0.375rem", verticalAlign: "middle" }}></span>{cd?.type} #{cd?.number}</td>
+                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>{parseFloat(t.buyRate).toFixed(2)}</td>
+                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>${parseFloat(t.buyAmount).toFixed(2)}</td>
+                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>{parseFloat(t.sellRate).toFixed(2)}</td>
+                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>${parseFloat(t.sellAmount).toFixed(2)}</td>
+                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>${t.cost.toFixed(2)}</td>
+                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", color: isTerm ? c.text : "#f97316", fontWeight: bws }}>${t.grossProfit.toFixed(2)}</td>
+                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", color: isTerm ? c.text : (t.netProfit >= 0 ? "#16a34a" : "#ef4444"), fontWeight: bwx }}>${t.netProfit.toFixed(2)}</td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                  <tfoot><tr style={{ backgroundColor: c.surfaceDeep, borderTop: `2px solid ${c.border}` }}>
+                                    <td colSpan="2" style={{ padding: "0.5rem", fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.8125rem", color: c.textStrong }}>TOTALS</td>
+                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}></td>
+                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>${ownerTx.reduce((s, t) => s + (parseFloat(t.buyAmount) || 0), 0).toFixed(2)}</td>
+                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}></td>
+                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>${ownerTx.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0).toFixed(2)}</td>
+                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>${ownerTx.reduce((s, t) => s + t.cost, 0).toFixed(2)}</td>
+                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx, color: isTerm ? c.text : "#f97316" }}>${ownerTx.reduce((s, t) => s + t.grossProfit, 0).toFixed(2)}</td>
+                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx, color: isTerm ? c.text : "#16a34a" }}>${ownerTx.reduce((s, t) => s + t.netProfit, 0).toFixed(2)}</td>
+                                  </tr></tfoot>
+                                </table>
+                              </div>
+                            </div>
+                          );
+                        })()}
                         </div>
                       );
                     })}
