@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   TrendingUp, DollarSign, Filter, User, RefreshCw, LayoutGrid, List,
   Settings, X, Calendar, Timer, Plus, Pencil, Download,
@@ -7,6 +7,10 @@ import { supabase } from "./supabaseClient";
 import { FONTS, THEME_OPTIONS, getThemeLayout, getThemeColors } from "./themes";
 import { normalizeCardType, CARD_TYPES, getCardTypeColor, getTodayDate, exportToCSV, exportMonthlyToCSV, exportTransactionsPDF, exportMonthlyPDF } from "./utils";
 import { SimplePieChart, ChartToggle, StatIcon } from "./Charts";
+import { ToastProvider, useToast } from "./Toast";
+import { StatCardsSkeleton, ChartSkeleton, TableSkeleton, SKELETON_CSS } from "./Skeleton";
+import { TransactionForm } from "./TransactionForm";
+import { MonthlyForm } from "./MonthlyForm";
 
 if (typeof document !== 'undefined') {
   const link = document.createElement('link');
@@ -15,7 +19,8 @@ if (typeof document !== 'undefined') {
   document.head.appendChild(link);
 }
 
-function App() {
+function AppInner() {
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [transactions, setTransactions] = useState([]);
   const [monthly, setMonthly] = useState([]);
@@ -75,8 +80,9 @@ function App() {
         ? await supabase.from("transactions").update(row).eq("id", wasEditing)
         : await supabase.from("transactions").insert(row);
       if (err) throw err;
+      toast.success(wasEditing ? "Transaction updated" : "Transaction saved");
       fetchData(true);
-    } catch (err) { setError("Failed to save: " + err.message); fetchData(true); }
+    } catch (err) { toast.error("Failed to save: " + err.message); setError("Failed to save: " + err.message); fetchData(true); }
   };
 
   const editTransaction = (t) => {
@@ -102,8 +108,9 @@ function App() {
         month: formData.month, profit: parseFloat(formData.profit) || 0,
       });
       if (err) throw err;
+      toast.success("Monthly record saved");
       fetchData(true);
-    } catch (err) { setError("Failed to add monthly record: " + err.message); fetchData(true); }
+    } catch (err) { toast.error("Failed to add monthly record: " + err.message); setError("Failed to add monthly record: " + err.message); fetchData(true); }
   };
 
   // --- Monthly Transaction History ---
@@ -159,10 +166,11 @@ function App() {
       // Clear transactions table
       const { error: delErr } = await supabase.from("transactions").delete().neq("id", 0);
       if (delErr) throw delErr;
+      toast.success("Transactions archived successfully");
       // Refresh
       fetchData(true);
       fetchHistoryPeriods();
-    } catch (err) { setError("Failed to archive: " + err.message); }
+    } catch (err) { toast.error("Failed to archive: " + err.message); setError("Failed to archive: " + err.message); }
     finally { setSubmitting(false); }
   };
 
@@ -305,21 +313,23 @@ function App() {
   useEffect(() => { setFilterCardNumber("all"); }, [filterOwner]);
 
   // Available card numbers based on selected owner
-  const availableCardNumbers = filterOwner === "all"
-    ? [...new Set(transactions.map((t) => getCardById(t.cardId)?.number).filter(Boolean))]
-    : [...new Set(transactions.filter((t) => t.ownerId === parseInt(filterOwner)).map((t) => getCardById(t.cardId)?.number).filter(Boolean))];
+  const availableCardNumbers = useMemo(() =>
+    filterOwner === "all"
+      ? [...new Set(transactions.map((t) => getCardById(t.cardId)?.number).filter(Boolean))]
+      : [...new Set(transactions.filter((t) => t.ownerId === parseInt(filterOwner)).map((t) => getCardById(t.cardId)?.number).filter(Boolean))],
+  [transactions, filterOwner, cards]);
 
   // Filter
-  const filteredTransactions = transactions.filter((t) => {
+  const filteredTransactions = useMemo(() => transactions.filter((t) => {
     const cd = getCardById(t.cardId);
     if (filterCardType !== "all" && cd?.type !== filterCardType) return false;
     if (filterOwner !== "all" && t.ownerId !== parseInt(filterOwner)) return false;
     if (filterCardNumber !== "all" && cd?.number !== filterCardNumber) return false;
     return true;
-  });
+  }), [transactions, filterCardType, filterOwner, filterCardNumber, cards]);
 
   // Sort
-  const sortedTransactions = [...filteredTransactions].sort((a, b) => {
+  const sortedTransactions = useMemo(() => [...filteredTransactions].sort((a, b) => {
     if (!sortCol) return 0;
     let va, vb;
     const colMap = { date: (t) => t.date || "", cardType: (t) => getCardById(t.cardId)?.type || "", cardNumber: (t) => getCardById(t.cardId)?.number || "", owner: (t) => getOwnerById(t.ownerId)?.name || "",
@@ -330,7 +340,7 @@ function App() {
     va = fn(a); vb = fn(b);
     if (typeof va === "string") return sortDir === "asc" ? va.localeCompare(vb) : vb.localeCompare(va);
     return sortDir === "asc" ? va - vb : vb - va;
-  });
+  }), [filteredTransactions, sortCol, sortDir, cards, owners]);
 
   const handleSort = (col) => {
     if (sortCol === col) setSortDir(sortDir === "asc" ? "desc" : "asc");
@@ -350,10 +360,19 @@ function App() {
 
   if (loading && transactions.length === 0) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", fontSize: "1.125rem", color: c.textSec, flexDirection: "column", gap: "1rem", backgroundColor: c.bg, fontFamily: `"${font}", sans-serif` }}>
-        <RefreshCw size={48} style={{ animation: "spin 1s linear infinite" }} />
-        <div className={isTerm ? "terminal-glow" : ""}>Loading dashboard...</div>
-        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+      <div style={{ minHeight: "100vh", backgroundColor: c.bg, fontFamily: `"${font}", sans-serif` }}>
+        <style>{`@keyframes skeletonShimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } } ${SKELETON_CSS}`}</style>
+        {/* Skeleton header */}
+        <div style={{ backgroundColor: c.surface, borderBottom: `1px solid ${c.border}`, padding: "1.5rem 1rem" }}>
+          <div style={{ maxWidth: "80rem", margin: "0 auto" }}>
+            <div style={{ width: "200px", height: "2rem", borderRadius: "0.5rem", backgroundColor: "rgba(128,128,128,0.12)", backgroundImage: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)", backgroundSize: "200% 100%", animation: "skeletonShimmer 1.5s infinite linear", marginBottom: "0.5rem" }} />
+            <div style={{ width: "160px", height: "0.875rem", borderRadius: "0.375rem", backgroundColor: "rgba(128,128,128,0.08)", backgroundImage: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)", backgroundSize: "200% 100%", animation: "skeletonShimmer 1.5s infinite linear" }} />
+          </div>
+        </div>
+        <div style={{ maxWidth: "80rem", margin: "0 auto", padding: isCompact ? "1rem" : "2rem 1rem" }}>
+          <StatCardsSkeleton count={8} isMobile={isMobile} isCompact={isCompact} />
+          <ChartSkeleton isMobile={isMobile} isCompact={isCompact} c={c} />
+        </div>
       </div>
     );
   }
@@ -889,71 +908,29 @@ function App() {
       </div>
 
       {/* ===== ADD TRANSACTION FORM ===== */}
-      {showTxForm && (() => {
-        const fInput = { padding: isCompact ? "0.5rem" : "0.625rem 0.75rem", border: `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), fontSize: isCompact ? "0.8125rem" : "0.875rem", width: "100%", backgroundColor: c.inputBg, color: c.text, outline: "none" };
-        const fLabel = { display: "block", fontSize: "0.75rem", fontWeight: bws, marginBottom: "0.375rem", color: c.textSec };
-        return (
-          <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: isLG ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", zIndex: 200, animation: "fadeIn 0.2s cubic-bezier(.16,1,.3,1) both" }} onClick={() => { setShowTxForm(false); setEditingTxId(null); setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "" }); }}>
-            <div style={{ backgroundColor: isGlass ? "rgba(20,14,48,0.95)" : (isLG ? "rgba(255,255,255,0.65)" : c.surface), borderRadius: isBrut ? "0" : (isCirc ? "2.5rem" : (isMobile ? "0.75rem" : "1rem")), padding: isMobile ? "1.25rem" : "2rem", maxWidth: isMobile ? "100%" : "520px", width: "100%", maxHeight: "90vh", overflowY: "auto", boxShadow: c.modalShadow, animation: "slideUp 0.3s cubic-bezier(.16,1,.3,1) both", border: isBrut ? `3px solid ${c.border}` : `1px solid ${c.border}`, margin: isMobile ? "0.5rem" : "0" }} onClick={(e) => e.stopPropagation()}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", paddingBottom: "0.75rem", borderBottom: `1px solid ${c.border}` }}>
-                <h2 style={{ fontSize: "1.25rem", fontFamily: headingFont, fontWeight: bwh, color: c.textStrong, margin: 0 }}>{editingTxId ? "Edit Transaction" : "Add Transaction"}</h2>
-                <button onClick={() => { setShowTxForm(false); setEditingTxId(null); setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "" }); }} style={{ padding: "0.375rem", border: "none", background: "none", cursor: "pointer", color: c.textSec }}><X size={20} /></button>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "0.75rem" }}>
-                <div><label style={fLabel}>Card Type</label><select value={txForm.cardType} onChange={(e) => setTxForm({ ...txForm, cardType: e.target.value })} style={fInput}>{cardTypes.map((t) => <option key={t} value={t}>{t}</option>)}</select></div>
-                <div><label style={fLabel}>Card Number</label><input type="text" value={txForm.cardNumber} onChange={(e) => setTxForm({ ...txForm, cardNumber: e.target.value })} placeholder="e.g. 2581" style={fInput} /></div>
-                <div><label style={fLabel}>Owner</label><input type="text" value={txForm.owner} onChange={(e) => setTxForm({ ...txForm, owner: e.target.value })} placeholder="Name" style={fInput} /></div>
-                <div><label style={fLabel}>Buy Rate</label><input type="number" step="0.01" value={txForm.buyRate} onChange={(e) => setTxForm({ ...txForm, buyRate: e.target.value })} style={fInput} /></div>
-                <div><label style={fLabel}>Buy Amount ($)</label><input type="number" step="0.01" value={txForm.buyAmount} onChange={(e) => setTxForm({ ...txForm, buyAmount: e.target.value })} style={fInput} /></div>
-                <div><label style={fLabel}>Sell Rate</label><input type="number" step="0.01" value={txForm.sellRate} onChange={(e) => setTxForm({ ...txForm, sellRate: e.target.value })} style={fInput} /></div>
-                <div><label style={fLabel}>Sell Amount ($)</label><input type="number" step="0.01" value={txForm.sellAmount} onChange={(e) => setTxForm({ ...txForm, sellAmount: e.target.value })} style={fInput} /></div>
-              </div>
-              {/* Auto-computed values */}
-              {(() => {
-                const br = parseFloat(txForm.buyRate) || 0, ba = parseFloat(txForm.buyAmount) || 0;
-                const sr = parseFloat(txForm.sellRate) || 0, sa = parseFloat(txForm.sellAmount) || 0;
-                const cost = br * ba, gross = sr * sa, net = gross - cost;
-                const compStyle = { padding: isCompact ? "0.5rem" : "0.625rem 0.75rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), fontSize: isCompact ? "0.8125rem" : "0.875rem", width: "100%", backgroundColor: c.surfaceAlt, color: c.textStrong, fontWeight: bwx, border: `1px solid ${c.border}` };
-                return (
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.75rem", marginTop: "0.75rem" }}>
-                    <div><label style={fLabel}>Cost</label><div style={compStyle}>${cost.toFixed(2)}</div></div>
-                    <div><label style={fLabel}>Gross Profit</label><div style={{ ...compStyle, color: isTerm ? c.text : "#f97316" }}>${gross.toFixed(2)}</div></div>
-                    <div><label style={fLabel}>Net Profit</label><div style={{ ...compStyle, color: isTerm ? c.text : (net >= 0 ? "#16a34a" : "#ef4444") }}>${net.toFixed(2)}</div></div>
-                  </div>
-                );
-              })()}
-              <div style={{ display: "flex", gap: "0.75rem", marginTop: "1.5rem", justifyContent: "flex-end" }}>
-                <button onClick={() => { setShowTxForm(false); setEditingTxId(null); setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "" }); }} style={{ padding: "0.5rem 1.25rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: "transparent", color: c.text, cursor: "pointer", fontSize: "0.875rem", fontWeight: bwm }}>Cancel</button>
-                <button onClick={submitTransaction} disabled={submitting} style={{ padding: "0.5rem 1.5rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "none", background: c.btnGrad, color: "#fff", cursor: submitting ? "not-allowed" : "pointer", fontSize: "0.875rem", fontWeight: bwm, opacity: submitting ? 0.7 : 1, boxShadow: `0 2px 8px ${c.btnGlow}` }}>{submitting ? "Saving..." : (editingTxId ? "Update" : "Save")}</button>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
+      <TransactionForm
+        th={{ c, isBrut, isCirc, isGlass, isLG, isTerm, isMobile, isCompact, headingFont, bwh, bwm, bws, bwx, r, rSm }}
+        txForm={txForm}
+        setTxForm={setTxForm}
+        editingTxId={editingTxId}
+        setEditingTxId={setEditingTxId}
+        showTxForm={showTxForm}
+        setShowTxForm={setShowTxForm}
+        submitting={submitting}
+        cardTypes={cardTypes}
+        onSubmit={submitTransaction}
+      />
 
       {/* ===== ADD MONTHLY FORM ===== */}
-      {showMonthlyForm && (() => {
-        const fInput = { padding: isCompact ? "0.5rem" : "0.625rem 0.75rem", border: `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), fontSize: isCompact ? "0.8125rem" : "0.875rem", width: "100%", backgroundColor: c.inputBg, color: c.text, outline: "none" };
-        const fLabel = { display: "block", fontSize: "0.75rem", fontWeight: bws, marginBottom: "0.375rem", color: c.textSec };
-        return (
-          <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: isLG ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", zIndex: 200, animation: "fadeIn 0.2s cubic-bezier(.16,1,.3,1) both" }} onClick={() => setShowMonthlyForm(false)}>
-            <div style={{ backgroundColor: isGlass ? "rgba(20,14,48,0.95)" : (isLG ? "rgba(255,255,255,0.65)" : c.surface), borderRadius: isBrut ? "0" : (isCirc ? "2.5rem" : (isMobile ? "0.75rem" : "1rem")), padding: isMobile ? "1.25rem" : "2rem", maxWidth: "400px", width: "100%", boxShadow: c.modalShadow, animation: "slideUp 0.3s cubic-bezier(.16,1,.3,1) both", border: isBrut ? `3px solid ${c.border}` : `1px solid ${c.border}`, margin: isMobile ? "0.5rem" : "0" }} onClick={(e) => e.stopPropagation()}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", paddingBottom: "0.75rem", borderBottom: `1px solid ${c.border}` }}>
-                <h2 style={{ fontSize: "1.25rem", fontFamily: headingFont, fontWeight: bwh, color: c.textStrong, margin: 0 }}>Add Monthly Record</h2>
-                <button onClick={() => setShowMonthlyForm(false)} style={{ padding: "0.375rem", border: "none", background: "none", cursor: "pointer", color: c.textSec }}><X size={20} /></button>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                <div><label style={fLabel}>Month</label><input type="text" value={monthlyForm.month} onChange={(e) => setMonthlyForm({ ...monthlyForm, month: e.target.value })} placeholder="e.g. March 2026" style={fInput} /></div>
-                <div><label style={fLabel}>Profit ($)</label><input type="number" step="0.01" value={monthlyForm.profit} onChange={(e) => setMonthlyForm({ ...monthlyForm, profit: e.target.value })} placeholder="e.g. 5500" style={fInput} /></div>
-              </div>
-              <div style={{ display: "flex", gap: "0.75rem", marginTop: "1.5rem", justifyContent: "flex-end" }}>
-                <button onClick={() => setShowMonthlyForm(false)} style={{ padding: "0.5rem 1.25rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: "transparent", color: c.text, cursor: "pointer", fontSize: "0.875rem", fontWeight: bwm }}>Cancel</button>
-                <button onClick={submitMonthly} disabled={submitting} style={{ padding: "0.5rem 1.5rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "none", background: c.btnGrad, color: "#fff", cursor: submitting ? "not-allowed" : "pointer", fontSize: "0.875rem", fontWeight: bwm, opacity: submitting ? 0.7 : 1, boxShadow: `0 2px 8px ${c.btnGlow}` }}>{submitting ? "Saving..." : "Save"}</button>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
+      <MonthlyForm
+        th={{ c, isBrut, isCirc, isGlass, isLG, isMobile, isCompact, headingFont, bwh, bwm, bws }}
+        monthlyForm={monthlyForm}
+        setMonthlyForm={setMonthlyForm}
+        showMonthlyForm={showMonthlyForm}
+        setShowMonthlyForm={setShowMonthlyForm}
+        submitting={submitting}
+        onSubmit={submitMonthly}
+      />
 
       {/* ===== SETTINGS MODAL ===== */}
       {/* ===== SETTINGS MODAL ===== */}
@@ -1050,6 +1027,7 @@ function App() {
       )}
 
       <style>{`
+        ${SKELETON_CSS}
         *, *::before, *::after { font-family: inherit; box-sizing: border-box; }
         html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
         button, select, input { font-family: inherit; }
@@ -1070,6 +1048,14 @@ function App() {
         ${L.extraCss}
       `}</style>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <ToastProvider>
+      <AppInner />
+    </ToastProvider>
   );
 }
 
