@@ -1,7 +1,7 @@
 // =============================================
 // TransactionForm.jsx — Add/Edit transaction modal with validation
 // =============================================
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
 export function TransactionForm({
@@ -18,6 +18,16 @@ export function TransactionForm({
 }) {
   const { c, isBrut, isCirc, isGlass, isLG, isTerm, isMobile, isCompact, headingFont, bwh, bwm, bws, bwx, r, rSm } = th;
   const [errors, setErrors] = useState({});
+  const firstInputRef = useRef(null);
+
+  // Close on Escape; focus first field on open
+  useEffect(() => {
+    if (!showTxForm) return;
+    firstInputRef.current?.focus();
+    const onKey = (e) => { if (e.key === "Escape") resetForm(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showTxForm]);
 
   const resetForm = () => {
     setErrors({});
@@ -99,6 +109,9 @@ export function TransactionForm({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tx-form-title"
       style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: isLG ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", zIndex: 200, animation: "fadeIn 0.2s cubic-bezier(.16,1,.3,1) both" }}
       onClick={resetForm}
     >
@@ -108,10 +121,10 @@ export function TransactionForm({
       >
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", paddingBottom: "0.75rem", borderBottom: `1px solid ${c.border}` }}>
-          <h2 style={{ fontSize: "1.25rem", fontFamily: headingFont, fontWeight: bwh, color: c.textStrong, margin: 0 }}>
+          <h2 id="tx-form-title" style={{ fontSize: "1.25rem", fontFamily: headingFont, fontWeight: bwh, color: c.textStrong, margin: 0 }}>
             {editingTxId ? "Edit Transaction" : "Add Transaction"}
           </h2>
-          <button onClick={resetForm} style={{ padding: "0.375rem", border: "none", background: "none", cursor: "pointer", color: c.textSec }}>
+          <button onClick={resetForm} aria-label="Close dialog" style={{ padding: "0.375rem", border: "none", background: "none", cursor: "pointer", color: c.textSec }}>
             <X size={20} />
           </button>
         </div>
@@ -126,7 +139,7 @@ export function TransactionForm({
           </div>
           <div>
             <label style={fLabel}>Card Number *</label>
-            <input type="text" value={txForm.cardNumber} onChange={(e) => { setTxForm({ ...txForm, cardNumber: e.target.value }); if (errors.cardNumber) setErrors((p) => ({ ...p, cardNumber: null })); }} placeholder="e.g. 2581" style={fInput("cardNumber")} />
+            <input ref={firstInputRef} type="text" value={txForm.cardNumber} onChange={(e) => { setTxForm({ ...txForm, cardNumber: e.target.value }); if (errors.cardNumber) setErrors((p) => ({ ...p, cardNumber: null })); }} placeholder="e.g. 2581" style={fInput("cardNumber")} />
             {errMsg("cardNumber")}
           </div>
           <div>

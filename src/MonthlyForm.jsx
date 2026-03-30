@@ -1,7 +1,7 @@
 // =============================================
 // MonthlyForm.jsx — Add monthly record modal with validation
 // =============================================
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
 export function MonthlyForm({
@@ -15,6 +15,16 @@ export function MonthlyForm({
 }) {
   const { c, isBrut, isCirc, isGlass, isLG, isMobile, isCompact, headingFont, bwh, bwm, bws } = th;
   const [errors, setErrors] = useState({});
+  const firstInputRef = useRef(null);
+
+  // Close on Escape; focus month field on open
+  useEffect(() => {
+    if (!showMonthlyForm) return;
+    firstInputRef.current?.focus();
+    const onKey = (e) => { if (e.key === "Escape") resetForm(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showMonthlyForm]);
 
   const resetForm = () => {
     setErrors({});
@@ -73,6 +83,9 @@ export function MonthlyForm({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="monthly-form-title"
       style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: isLG ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", zIndex: 200, animation: "fadeIn 0.2s cubic-bezier(.16,1,.3,1) both" }}
       onClick={resetForm}
     >
@@ -82,10 +95,10 @@ export function MonthlyForm({
       >
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", paddingBottom: "0.75rem", borderBottom: `1px solid ${c.border}` }}>
-          <h2 style={{ fontSize: "1.25rem", fontFamily: headingFont, fontWeight: bwh, color: c.textStrong, margin: 0 }}>
+          <h2 id="monthly-form-title" style={{ fontSize: "1.25rem", fontFamily: headingFont, fontWeight: bwh, color: c.textStrong, margin: 0 }}>
             Add Monthly Record
           </h2>
-          <button onClick={resetForm} style={{ padding: "0.375rem", border: "none", background: "none", cursor: "pointer", color: c.textSec }}>
+          <button onClick={resetForm} aria-label="Close dialog" style={{ padding: "0.375rem", border: "none", background: "none", cursor: "pointer", color: c.textSec }}>
             <X size={20} />
           </button>
         </div>
@@ -95,6 +108,7 @@ export function MonthlyForm({
           <div>
             <label style={fLabel}>Month *</label>
             <input
+              ref={firstInputRef}
               type="text"
               value={monthlyForm.month}
               onChange={(e) => { setMonthlyForm({ ...monthlyForm, month: e.target.value }); if (errors.month) setErrors((p) => ({ ...p, month: null })); }}

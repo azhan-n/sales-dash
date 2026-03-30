@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
   TrendingUp, DollarSign, Filter, User, RefreshCw, LayoutGrid, List,
-  Settings, X, Calendar, Timer, Plus, Pencil, Download,
+  Settings, X, Calendar, Timer, Plus, Pencil, Download, Search, Trash2, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { supabase } from "./supabaseClient";
 import { FONTS, THEME_OPTIONS, getThemeLayout, getThemeColors } from "./themes";
@@ -11,6 +11,8 @@ import { ToastProvider, useToast } from "./Toast";
 import { StatCardsSkeleton, ChartSkeleton, TableSkeleton, SKELETON_CSS } from "./Skeleton";
 import { TransactionForm } from "./TransactionForm";
 import { MonthlyForm } from "./MonthlyForm";
+import { ErrorBoundary } from "./ErrorBoundary";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 if (typeof document !== 'undefined') {
   const link = document.createElement('link');
@@ -174,6 +176,20 @@ function AppInner() {
     finally { setSubmitting(false); }
   };
 
+  const deleteSelectedTransactions = async () => {
+    if (selectedTxIds.size === 0) return;
+    setSubmitting(true);
+    try {
+      const ids = [...selectedTxIds];
+      const { error: err } = await supabase.from("transactions").delete().in("id", ids);
+      if (err) throw err;
+      toast.success(`Deleted ${ids.length} transaction${ids.length > 1 ? "s" : ""}`);
+      setSelectedTxIds(new Set());
+      fetchData(true);
+    } catch (err) { toast.error("Failed to delete: " + err.message); }
+    finally { setSubmitting(false); }
+  };
+
   // Auto-archive check on the 1st of the month
   useEffect(() => {
     const now = new Date();
@@ -213,6 +229,16 @@ function AppInner() {
 
   // Card number filter
   const [filterCardNumber, setFilterCardNumber] = useState("all");
+  // Search
+  const [searchQuery, setSearchQuery] = useState("");
+  // Bulk select
+  const [selectedTxIds, setSelectedTxIds] = useState(new Set());
+  // Pagination
+  const PAGE_SIZE = 25;
+  const [currentPage, setCurrentPage] = useState(1);
+  // Confirm dialogs
+  const [confirmArchive, setConfirmArchive] = useState(false);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   // Chart toggles
   const [profitChartMode, setProfitChartMode] = useState("bar");
   const [ownerChartMode, setOwnerChartMode] = useState("stats");
@@ -232,6 +258,14 @@ function AppInner() {
     document.documentElement.style.fontSize = `${fontSize}px`;
     return () => { document.documentElement.style.fontSize = ""; };
   }, [fontSize]);
+
+  // Close settings modal on Escape
+  useEffect(() => {
+    if (!showSettings) return;
+    const onKey = (e) => { if (e.key === "Escape") setShowSettings(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showSettings]);
 
   // Sync iOS status bar & body background with theme
   useEffect(() => {
@@ -311,6 +345,8 @@ function AppInner() {
 
   // Reset card number filter when owner changes
   useEffect(() => { setFilterCardNumber("all"); }, [filterOwner]);
+  // Reset to page 1 when filters/search change
+  useEffect(() => { setCurrentPage(1); setSelectedTxIds(new Set()); }, [filterCardType, filterOwner, filterCardNumber, searchQuery]);
 
   // Available card numbers based on selected owner
   const availableCardNumbers = useMemo(() =>
@@ -319,14 +355,22 @@ function AppInner() {
       : [...new Set(transactions.filter((t) => t.ownerId === parseInt(filterOwner)).map((t) => getCardById(t.cardId)?.number).filter(Boolean))],
   [transactions, filterOwner, cards]);
 
-  // Filter
-  const filteredTransactions = useMemo(() => transactions.filter((t) => {
-    const cd = getCardById(t.cardId);
-    if (filterCardType !== "all" && cd?.type !== filterCardType) return false;
-    if (filterOwner !== "all" && t.ownerId !== parseInt(filterOwner)) return false;
-    if (filterCardNumber !== "all" && cd?.number !== filterCardNumber) return false;
-    return true;
-  }), [transactions, filterCardType, filterOwner, filterCardNumber, cards]);
+  // Filter + search
+  const filteredTransactions = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return transactions.filter((t) => {
+      const cd = getCardById(t.cardId);
+      const ow = getOwnerById(t.ownerId);
+      if (filterCardType !== "all" && cd?.type !== filterCardType) return false;
+      if (filterOwner !== "all" && t.ownerId !== parseInt(filterOwner)) return false;
+      if (filterCardNumber !== "all" && cd?.number !== filterCardNumber) return false;
+      if (q) {
+        const haystack = [cd?.type, cd?.number, ow?.name, t.date].filter(Boolean).join(" ").toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [transactions, filterCardType, filterOwner, filterCardNumber, searchQuery, cards, owners]);
 
   // Sort
   const sortedTransactions = useMemo(() => [...filteredTransactions].sort((a, b) => {
@@ -341,6 +385,12 @@ function AppInner() {
     if (typeof va === "string") return sortDir === "asc" ? va.localeCompare(vb) : vb.localeCompare(va);
     return sortDir === "asc" ? va - vb : vb - va;
   }), [filteredTransactions, sortCol, sortDir, cards, owners]);
+
+  // Pagination derived values
+  const totalPages = Math.max(1, Math.ceil(sortedTransactions.length / PAGE_SIZE));
+  const pagedTransactions = useMemo(() =>
+    sortedTransactions.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+  [sortedTransactions, currentPage]);
 
   const handleSort = (col) => {
     if (sortCol === col) setSortDir(sortDir === "asc" ? "desc" : "asc");
@@ -464,6 +514,7 @@ function AppInner() {
       {/* MAIN CONTENT */}
       <div onClick={() => showExportMenu && setShowExportMenu(false)} style={{ maxWidth: "80rem", margin: "0 auto", padding: isMobile ? "0.75rem 0.5rem" : (isCompact ? "1rem" : "2rem 1rem"), position: "relative", zIndex: 5, animation: "fadeIn 0.3s cubic-bezier(.16,1,.3,1) both" }}>
         {error && <div style={{ padding: isCompact ? "0.625rem" : "1rem", backgroundColor: c.errorBg, border: `1px solid ${c.errorBorder}`, borderRadius: r, color: c.errorText, marginBottom: isCompact ? "1rem" : "2rem", textAlign: "center", fontSize: isCompact ? "0.8125rem" : "inherit", animation: "shake 0.5s ease-in-out" }}><strong>Error:</strong> {error}</div>}
+        <ErrorBoundary bg={c.bg} title="Section failed to render" message="An error occurred in this tab. Try refreshing or switching tabs.">
 
         {/* ===== DASHBOARD TAB ===== */}
         {activeTab === "dashboard" && (
@@ -737,7 +788,7 @@ function AppInner() {
                   {historyPeriods.map((p) => <option key={p} value={p}>{p}</option>)}
                 </select>
               </div>
-              <button onClick={archiveTransactions} disabled={submitting || selectedPeriod !== "current"} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: submitting ? "not-allowed" : "pointer", fontSize: isCompact ? "0.75rem" : "0.8125rem", fontWeight: bwm, opacity: submitting || selectedPeriod !== "current" ? 0.5 : 1, display: "inline-flex", alignItems: "center", gap: "0.375rem" }}>
+              <button onClick={() => setConfirmArchive(true)} disabled={submitting || selectedPeriod !== "current"} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: submitting ? "not-allowed" : "pointer", fontSize: isCompact ? "0.75rem" : "0.8125rem", fontWeight: bwm, opacity: submitting || selectedPeriod !== "current" ? 0.5 : 1, display: "inline-flex", alignItems: "center", gap: "0.375rem" }}>
                 <Calendar size={isCompact ? 12 : 14} /> {submitting ? "Archiving..." : "Archive & Clear"}
               </button>
             </div>
@@ -761,11 +812,28 @@ function AppInner() {
                       {f.opts.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
                     </select>
                   ))}
+                  {/* Search */}
+                  <div style={{ position: "relative", width: isMobile ? "100%" : "auto" }}>
+                    <Search size={isCompact ? 12 : 14} style={{ position: "absolute", left: "0.5rem", top: "50%", transform: "translateY(-50%)", color: c.textSec, pointerEvents: "none" }} />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search..."
+                      aria-label="Search transactions"
+                      style={{ padding: isCompact ? "0.375rem 0.5rem 0.375rem 1.75rem" : "0.5rem 0.75rem 0.5rem 2rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.25rem"), fontSize: isCompact ? "0.75rem" : "0.875rem", backgroundColor: c.inputBg, color: c.text, width: isMobile ? "100%" : (isCompact ? "130px" : "160px"), outline: "none" }}
+                    />
+                  </div>
                 </div>
                 <div style={{ display: "flex", gap: "0.5rem", width: isMobile ? "100%" : "auto" }}>
                   {[{ m: "table", icon: List, label: "Table" }, { m: "cards", icon: LayoutGrid, label: "Cards" }].map(({ m, icon: Ic, label }) => (
                     <button key={m} onClick={() => setViewMode(m)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, backgroundColor: viewMode === m ? c.accent : c.inputBg, color: viewMode === m ? "#fff" : c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, flex: isMobile ? 1 : undefined, ...(isBrut && viewMode === m ? { boxShadow: "3px 3px 0 #000" } : {}) }}><Ic size={isCompact ? 14 : 16} /> {label}</button>
                   ))}
+                  {!isHistory && selectedTxIds.size > 0 && (
+                    <button onClick={() => setConfirmBulkDelete(true)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "1px solid #ef4444", background: "transparent", color: "#ef4444", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm }}>
+                      <Trash2 size={isCompact ? 13 : 15} /> Delete {selectedTxIds.size}
+                    </button>
+                  )}
                   {!isHistory && <button onClick={() => { setEditingTxId(null); setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "" }); setShowTxForm(true); }} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "none", background: c.btnGrad, color: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, flex: isMobile ? 1 : undefined, boxShadow: `0 2px 8px ${c.btnGlow}` }}><Plus size={isCompact ? 14 : 16} /> Add</button>}
                 </div>
               </div>
@@ -776,6 +844,21 @@ function AppInner() {
                 <div style={{ overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: isBrut ? "separate" : "collapse", borderSpacing: isBrut ? "0 2px" : "0" }}>
                     <thead><tr>
+                      {!isHistory && (
+                        <th style={{ ...thStyle, width: "36px", textAlign: "center" }}>
+                          <input
+                            type="checkbox"
+                            aria-label="Select all transactions on this page"
+                            checked={pagedTransactions.length > 0 && pagedTransactions.every((t) => selectedTxIds.has(t.id))}
+                            onChange={(e) => {
+                              const next = new Set(selectedTxIds);
+                              pagedTransactions.forEach((t) => e.target.checked ? next.add(t.id) : next.delete(t.id));
+                              setSelectedTxIds(next);
+                            }}
+                            style={{ cursor: "pointer", accentColor: c.accent }}
+                          />
+                        </th>
+                      )}
                       {[{ label: "Date", col: "date" }, { label: "Card Type", col: "cardType" }, { label: "Card No.", col: "cardNumber" }, { label: "Owner", col: "owner" }].map(({ label, col }) => (
                         <th key={col} style={{ ...thStyle, cursor: "pointer", userSelect: "none" }} onClick={() => handleSort(col)}>
                           <div style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>{label} {sortCol === col && <span style={{ fontSize: "0.625rem" }}>{sortDir === "asc" ? "▲" : "▼"}</span>}</div>
@@ -789,10 +872,26 @@ function AppInner() {
                       {!isHistory && <th style={{ ...thStyle, width: "40px" }}></th>}
                     </tr></thead>
                     <tbody>
-                      {displayTx.map((t) => {
+                      {pagedTransactions.map((t) => {
                         const cd = getCardById(t.cardId); const ow = getOwnerById(t.ownerId); const cc = getCardTypeColor(cd?.type); const mb = getProfitMarginBadge(t.profitMargin);
+                        const isSelected = selectedTxIds.has(t.id);
                         return (
-                          <tr key={t.id}>
+                          <tr key={t.id} style={isSelected ? { backgroundColor: c.accentBg } : {}}>
+                            {!isHistory && (
+                              <td style={{ ...tdStyle, textAlign: "center", backgroundColor: isSelected ? c.accentBg : c.surface }}>
+                                <input
+                                  type="checkbox"
+                                  aria-label={`Select transaction ${t.id}`}
+                                  checked={isSelected}
+                                  onChange={(e) => {
+                                    const next = new Set(selectedTxIds);
+                                    e.target.checked ? next.add(t.id) : next.delete(t.id);
+                                    setSelectedTxIds(next);
+                                  }}
+                                  style={{ cursor: "pointer", accentColor: c.accent }}
+                                />
+                              </td>
+                            )}
                             <td style={{ ...tdStyle, fontSize: isCompact ? "0.6875rem" : "0.8125rem", color: c.textSec, whiteSpace: "nowrap" }}>{t.date || "-"}</td>
                             <td style={tdStyle}><div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><div style={{ width: "10px", height: "10px", borderRadius: isBrut ? "0" : "50%", backgroundColor: cc, flexShrink: 0 }}></div><span>{cd?.type || "UNKNOWN"}</span></div></td>
                             <td style={tdStyle}>{cd?.number || "-"}</td>
@@ -805,14 +904,14 @@ function AppInner() {
                             <td style={{ ...tdStyle, textAlign: "right", color: isTerm ? c.text : "#f97316", fontWeight: bws }}>${t.grossProfit.toFixed(2)}</td>
                             <td style={{ ...tdStyle, textAlign: "right", color: isTerm ? c.text : "#16a34a", fontWeight: bws }} className={isTerm ? "terminal-glow" : ""}>${t.netProfit.toFixed(2)}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}><span style={mb.style}>{t.profitMargin.toFixed(1)}%</span></td>
-                            {!isHistory && <td style={{ ...tdStyle, textAlign: "center" }}><button onClick={() => editTransaction(t)} style={{ background: "none", border: "none", cursor: "pointer", color: c.accent, padding: "0.25rem", display: "flex", alignItems: "center", opacity: 0.6, transition: "opacity 0.15s" }} onMouseEnter={(e) => e.currentTarget.style.opacity = 1} onMouseLeave={(e) => e.currentTarget.style.opacity = 0.6}><Pencil size={14} /></button></td>}
+                            {!isHistory && <td style={{ ...tdStyle, textAlign: "center" }}><button onClick={() => editTransaction(t)} aria-label="Edit transaction" style={{ background: "none", border: "none", cursor: "pointer", color: c.accent, padding: "0.25rem", display: "flex", alignItems: "center", opacity: 0.6, transition: "opacity 0.15s" }} onMouseEnter={(e) => e.currentTarget.style.opacity = 1} onMouseLeave={(e) => e.currentTarget.style.opacity = 0.6}><Pencil size={14} /></button></td>}
                           </tr>
                         );
                       })}
                     </tbody>
                     <tfoot>
                       <tr style={{ backgroundColor: c.surfaceAlt, fontWeight: bwx, borderTop: `2px solid ${c.borderStrong}` }}>
-                        <td colSpan="3" style={{ ...tdStyle, fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textStrong, textTransform: isBrut ? "uppercase" : "none" }}>TOTALS</td>
+                        <td colSpan={isHistory ? 3 : 4} style={{ ...tdStyle, fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textStrong, textTransform: isBrut ? "uppercase" : "none" }}>TOTALS</td>
                         <td colSpan="2" style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Sell Amt:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>${displayFiltered.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0).toFixed(2)}</div></td>
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Avg Sell:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>{displayFiltered.length > 0 ? (displayFiltered.reduce((s, t) => s + (parseFloat(t.sellRate) || 0), 0) / displayFiltered.length).toFixed(2) : "0.00"}</div></td>
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Avg Buy:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>{(() => { const tc2 = displayFiltered.reduce((s, t) => s + (parseFloat(t.cost) || 0), 0); const ts2 = displayFiltered.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0); return (ts2 > 0 ? tc2 / ts2 : 0).toFixed(2); })()}</div></td>
@@ -828,7 +927,7 @@ function AppInner() {
               </div>
             ) : (
               <div style={{ display: "grid", gridTemplateColumns: (isBrut || isMobile) ? "1fr" : "repeat(2, 1fr)", gap: isCompact ? "0.625rem" : "1rem" }}>
-                {displayTx.map((t, idx) => {
+                {pagedTransactions.map((t, idx) => {
                   const cd = getCardById(t.cardId); const ow = getOwnerById(t.ownerId); const cc = getCardTypeColor(cd?.type); const mb = getProfitMarginBadge(t.profitMargin);
                   return (
                     <div key={t.id} className={isLG ? "lg-specular" : ""} style={{ backgroundColor: c.surface, borderRadius: isLG ? r : (isCirc ? "2rem" : rSm), padding: isCompact ? "0.875rem" : "1.5rem", border: isBrut ? `3px solid ${c.border}` : (isLG ? "1px solid rgba(255,255,255,0.6)" : `1px solid ${c.border}`), ...((isGlass || isLG) ? { backdropFilter: "blur(16px) saturate(150%)", WebkitBackdropFilter: "blur(16px) saturate(150%)" } : {}), ...(isBrut ? { boxShadow: "4px 4px 0 #000" } : {}), cursor: "pointer", animation: `slideUp 0.35s cubic-bezier(.16,1,.3,1) ${Math.min(idx, 10) * 0.04}s both`, transform: hoveredCard === `tx-${idx}` ? "translateY(-4px)" : "translateY(0)", boxShadow: hoveredCard === `tx-${idx}` ? c.cardHoverShadow : (isLG ? "0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7)" : (c.cardGlow || "none")), transition: "transform 0.2s cubic-bezier(.4,0,.2,1), box-shadow 0.2s cubic-bezier(.4,0,.2,1)" }}
@@ -857,6 +956,20 @@ function AppInner() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+            {/* Pagination */}
+            {!isHistory && totalPages > 1 && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: isCompact ? "0.75rem" : "1.25rem", padding: isCompact ? "0.5rem 0.75rem" : "0.75rem 1rem", backgroundColor: c.surface, borderRadius: isCirc ? "2rem" : rSm, border: `1px solid ${c.border}` }}>
+                <span style={{ fontSize: isCompact ? "0.6875rem" : "0.8125rem", color: c.textSec }}>{sortedTransactions.length} result{sortedTransactions.length !== 1 ? "s" : ""} &nbsp;·&nbsp; Page {currentPage} of {totalPages}</span>
+                <div style={{ display: "flex", gap: "0.375rem" }}>
+                  <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} aria-label="Previous page" style={{ padding: isCompact ? "0.25rem 0.5rem" : "0.375rem 0.625rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: currentPage === 1 ? c.textSec : c.text, cursor: currentPage === 1 ? "not-allowed" : "pointer", opacity: currentPage === 1 ? 0.4 : 1, display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: isCompact ? "0.6875rem" : "0.8125rem", fontWeight: bwm }}>
+                    <ChevronLeft size={isCompact ? 13 : 15} /> Prev
+                  </button>
+                  <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} aria-label="Next page" style={{ padding: isCompact ? "0.25rem 0.5rem" : "0.375rem 0.625rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: currentPage === totalPages ? c.textSec : c.text, cursor: currentPage === totalPages ? "not-allowed" : "pointer", opacity: currentPage === totalPages ? 0.4 : 1, display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: isCompact ? "0.6875rem" : "0.8125rem", fontWeight: bwm }}>
+                    Next <ChevronRight size={isCompact ? 13 : 15} />
+                  </button>
+                </div>
               </div>
             )}
               </>);
@@ -905,6 +1018,7 @@ function AppInner() {
             </div>
           </div>
         )}
+        </ErrorBoundary>
       </div>
 
       {/* ===== ADD TRANSACTION FORM ===== */}
@@ -932,13 +1046,34 @@ function AppInner() {
         onSubmit={submitMonthly}
       />
 
-      {/* ===== SETTINGS MODAL ===== */}
+      {/* ===== CONFIRM DIALOGS ===== */}
+      <ConfirmDialog
+        open={confirmArchive}
+        title="Archive & Clear Transactions"
+        message="This will move all current transactions to history and clear the table. This cannot be undone."
+        confirmLabel="Archive"
+        danger
+        th={{ c, isBrut, isCirc, isGlass, isLG, isMobile, headingFont, bwh, bwm, bws }}
+        onConfirm={() => { setConfirmArchive(false); archiveTransactions(); }}
+        onCancel={() => setConfirmArchive(false)}
+      />
+      <ConfirmDialog
+        open={confirmBulkDelete}
+        title={`Delete ${selectedTxIds.size} transaction${selectedTxIds.size !== 1 ? "s" : ""}?`}
+        message="Selected transactions will be permanently deleted and cannot be recovered."
+        confirmLabel={`Delete ${selectedTxIds.size}`}
+        danger
+        th={{ c, isBrut, isCirc, isGlass, isLG, isMobile, headingFont, bwh, bwm, bws }}
+        onConfirm={() => { setConfirmBulkDelete(false); deleteSelectedTransactions(); }}
+        onCancel={() => setConfirmBulkDelete(false)}
+      />
+
       {/* ===== SETTINGS MODAL ===== */}
       {showSettings && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: isLG ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", zIndex: 200, animation: "fadeIn 0.2s cubic-bezier(.16,1,.3,1) both" }} onClick={() => setShowSettings(false)}>
+        <div role="dialog" aria-modal="true" aria-labelledby="settings-title" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: isLG ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", zIndex: 200, animation: "fadeIn 0.2s cubic-bezier(.16,1,.3,1) both" }} onClick={() => setShowSettings(false)}>
           <div style={{ backgroundColor: isGlass ? "rgba(20,14,48,0.95)" : (isLG ? "rgba(255,255,255,0.65)" : c.surface), borderRadius: isBrut ? "0" : (isCirc ? "2.5rem" : (isMobile ? "0.75rem" : (isLG ? "1.5rem" : "1rem"))), padding: isMobile ? "1.25rem" : "2rem", maxWidth: isMobile ? "100%" : "560px", width: "100%", maxHeight: "90vh", overflowY: "auto", boxShadow: c.modalShadow, animation: "slideUp 0.3s cubic-bezier(.16,1,.3,1) both", border: isBrut ? `3px solid ${c.border}` : (isLG ? "1px solid rgba(255,255,255,0.7)" : `1px solid ${c.border}`), ...((isGlass || isLG) ? { backdropFilter: "blur(20px) saturate(150%)", WebkitBackdropFilter: "blur(20px) saturate(150%)" } : {}), margin: isMobile ? "0.5rem" : "0" }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem", paddingBottom: "1rem", borderBottom: `1px solid ${c.border}` }}>
-              <h2 style={{ fontSize: "1.5rem", fontFamily: headingFont, fontWeight: bwh, color: c.textStrong, margin: 0, display: "flex", alignItems: "center", gap: "0.75rem" }}><Settings size={24} /> Settings</h2>
+              <h2 id="settings-title" style={{ fontSize: "1.5rem", fontFamily: headingFont, fontWeight: bwh, color: c.textStrong, margin: 0, display: "flex", alignItems: "center", gap: "0.75rem" }}><Settings size={24} /> Settings</h2>
               <button onClick={() => setShowSettings(false)} style={{ padding: "0.5rem", border: "none", background: "none", cursor: "pointer", color: c.textSec, display: "flex", alignItems: "center" }}><X size={24} /></button>
             </div>
 
