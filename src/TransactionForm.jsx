@@ -171,9 +171,9 @@ export function TransactionForm({
 
         {/* Auto-computed */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.75rem", marginTop: "0.75rem" }}>
-          <div><label style={fLabel}>Cost</label><div style={compStyle}>${cost.toFixed(2)}</div></div>
-          <div><label style={fLabel}>Gross Profit</label><div style={{ ...compStyle, color: isTerm ? c.text : "#f97316" }}>${gross.toFixed(2)}</div></div>
-          <div><label style={fLabel}>Net Profit</label><div style={{ ...compStyle, color: isTerm ? c.text : (net >= 0 ? "#16a34a" : "#ef4444") }}>${net.toFixed(2)}</div></div>
+          <div><label style={fLabel}>Cost</label><div style={compStyle}>MVR {cost.toFixed(2)}</div></div>
+          <div><label style={fLabel}>Gross Profit</label><div style={{ ...compStyle, color: isTerm ? c.text : "#f97316" }}>MVR {gross.toFixed(2)}</div></div>
+          <div><label style={fLabel}>Net Profit</label><div style={{ ...compStyle, color: isTerm ? c.text : (net >= 0 ? "#16a34a" : "#ef4444") }}>MVR {net.toFixed(2)}</div></div>
         </div>
 
         {/* Actions */}
