@@ -239,6 +239,8 @@ function AppInner() {
   // Confirm dialogs
   const [confirmArchive, setConfirmArchive] = useState(false);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  // Edit mode (shows checkboxes + pencil buttons)
+  const [editMode, setEditMode] = useState(false);
   // Chart toggles
   const [profitChartMode, setProfitChartMode] = useState("bar");
   const [ownerChartMode, setOwnerChartMode] = useState("stats");
@@ -788,9 +790,18 @@ function AppInner() {
                   {historyPeriods.map((p) => <option key={p} value={p}>{p}</option>)}
                 </select>
               </div>
-              <button onClick={() => setConfirmArchive(true)} disabled={submitting || selectedPeriod !== "current"} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: submitting ? "not-allowed" : "pointer", fontSize: isCompact ? "0.75rem" : "0.8125rem", fontWeight: bwm, opacity: submitting || selectedPeriod !== "current" ? 0.5 : 1, display: "inline-flex", alignItems: "center", gap: "0.375rem" }}>
-                <Calendar size={isCompact ? 12 : 14} /> {submitting ? "Archiving..." : "Archive & Clear"}
-              </button>
+              <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                <button
+                  onClick={() => { setEditMode((m) => { if (m) setSelectedTxIds(new Set()); return !m; }); }}
+                  disabled={selectedPeriod !== "current"}
+                  aria-pressed={editMode}
+                  style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${editMode ? c.accent : c.border}`, backgroundColor: editMode ? c.accentBg : c.inputBg, color: editMode ? c.accent : c.text, cursor: selectedPeriod !== "current" ? "not-allowed" : "pointer", fontSize: isCompact ? "0.75rem" : "0.8125rem", fontWeight: bwm, opacity: selectedPeriod !== "current" ? 0.4 : 1, display: "inline-flex", alignItems: "center", gap: "0.375rem", transition: "border-color 0.15s, background-color 0.15s, color 0.15s" }}>
+                  <Pencil size={isCompact ? 12 : 14} /> {editMode ? "Done" : "Edit"}
+                </button>
+                <button onClick={() => setConfirmArchive(true)} disabled={submitting || selectedPeriod !== "current"} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: submitting ? "not-allowed" : "pointer", fontSize: isCompact ? "0.75rem" : "0.8125rem", fontWeight: bwm, opacity: submitting || selectedPeriod !== "current" ? 0.5 : 1, display: "inline-flex", alignItems: "center", gap: "0.375rem" }}>
+                  <Calendar size={isCompact ? 12 : 14} /> {submitting ? "Archiving..." : "Archive & Clear"}
+                </button>
+              </div>
             </div>
             {selectedPeriod !== "current" && (
               <div style={{ padding: isCompact ? "0.5rem 0.75rem" : "0.75rem 1rem", backgroundColor: c.accentBg, borderRadius: rSm, marginBottom: isCompact ? "0.625rem" : "1rem", fontSize: isCompact ? "0.75rem" : "0.8125rem", color: c.accent, display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -829,7 +840,7 @@ function AppInner() {
                   {[{ m: "table", icon: List, label: "Table" }, { m: "cards", icon: LayoutGrid, label: "Cards" }].map(({ m, icon: Ic, label }) => (
                     <button key={m} onClick={() => setViewMode(m)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, backgroundColor: viewMode === m ? c.accent : c.inputBg, color: viewMode === m ? "#fff" : c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, flex: isMobile ? 1 : undefined, ...(isBrut && viewMode === m ? { boxShadow: "3px 3px 0 #000" } : {}) }}><Ic size={isCompact ? 14 : 16} /> {label}</button>
                   ))}
-                  {!isHistory && selectedTxIds.size > 0 && (
+                  {editMode && !isHistory && selectedTxIds.size > 0 && (
                     <button onClick={() => setConfirmBulkDelete(true)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "1px solid #ef4444", background: "transparent", color: "#ef4444", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm }}>
                       <Trash2 size={isCompact ? 13 : 15} /> Delete {selectedTxIds.size}
                     </button>
@@ -844,7 +855,7 @@ function AppInner() {
                 <div style={{ overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: isBrut ? "separate" : "collapse", borderSpacing: isBrut ? "0 2px" : "0" }}>
                     <thead><tr>
-                      {!isHistory && (
+                      {editMode && !isHistory && (
                         <th style={{ ...thStyle, width: "36px", textAlign: "center" }}>
                           <input
                             type="checkbox"
@@ -869,7 +880,7 @@ function AppInner() {
                           <div style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", justifyContent: "flex-end" }}>{label} {sortCol === col && <span style={{ fontSize: "0.625rem" }}>{sortDir === "asc" ? "▲" : "▼"}</span>}</div>
                         </th>
                       ))}
-                      {!isHistory && <th style={{ ...thStyle, width: "40px" }}></th>}
+                      {editMode && !isHistory && <th style={{ ...thStyle, width: "40px" }}></th>}
                     </tr></thead>
                     <tbody>
                       {pagedTransactions.map((t) => {
@@ -877,7 +888,7 @@ function AppInner() {
                         const isSelected = selectedTxIds.has(t.id);
                         return (
                           <tr key={t.id} style={isSelected ? { backgroundColor: c.accentBg } : {}}>
-                            {!isHistory && (
+                            {editMode && !isHistory && (
                               <td style={{ ...tdStyle, textAlign: "center", backgroundColor: isSelected ? c.accentBg : c.surface }}>
                                 <input
                                   type="checkbox"
@@ -904,14 +915,14 @@ function AppInner() {
                             <td style={{ ...tdStyle, textAlign: "right", color: isTerm ? c.text : "#f97316", fontWeight: bws }}>${t.grossProfit.toFixed(2)}</td>
                             <td style={{ ...tdStyle, textAlign: "right", color: isTerm ? c.text : "#16a34a", fontWeight: bws }} className={isTerm ? "terminal-glow" : ""}>${t.netProfit.toFixed(2)}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}><span style={mb.style}>{t.profitMargin.toFixed(1)}%</span></td>
-                            {!isHistory && <td style={{ ...tdStyle, textAlign: "center" }}><button onClick={() => editTransaction(t)} aria-label="Edit transaction" style={{ background: "none", border: "none", cursor: "pointer", color: c.accent, padding: "0.25rem", display: "flex", alignItems: "center", opacity: 0.6, transition: "opacity 0.15s" }} onMouseEnter={(e) => e.currentTarget.style.opacity = 1} onMouseLeave={(e) => e.currentTarget.style.opacity = 0.6}><Pencil size={14} /></button></td>}
+                            {editMode && !isHistory && <td style={{ ...tdStyle, textAlign: "center" }}><button onClick={() => editTransaction(t)} aria-label="Edit transaction" style={{ background: "none", border: "none", cursor: "pointer", color: c.accent, padding: "0.25rem", display: "flex", alignItems: "center", opacity: 0.6, transition: "opacity 0.15s" }} onMouseEnter={(e) => e.currentTarget.style.opacity = 1} onMouseLeave={(e) => e.currentTarget.style.opacity = 0.6}><Pencil size={14} /></button></td>}
                           </tr>
                         );
                       })}
                     </tbody>
                     <tfoot>
                       <tr style={{ backgroundColor: c.surfaceAlt, fontWeight: bwx, borderTop: `2px solid ${c.borderStrong}` }}>
-                        <td colSpan={isHistory ? 3 : 4} style={{ ...tdStyle, fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textStrong, textTransform: isBrut ? "uppercase" : "none" }}>TOTALS</td>
+                        <td colSpan={isHistory ? 3 : (editMode ? 4 : 3)} style={{ ...tdStyle, fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textStrong, textTransform: isBrut ? "uppercase" : "none" }}>TOTALS</td>
                         <td colSpan="2" style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Sell Amt:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>${displayFiltered.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0).toFixed(2)}</div></td>
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Avg Sell:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>{displayFiltered.length > 0 ? (displayFiltered.reduce((s, t) => s + (parseFloat(t.sellRate) || 0), 0) / displayFiltered.length).toFixed(2) : "0.00"}</div></td>
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Avg Buy:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>{(() => { const tc2 = displayFiltered.reduce((s, t) => s + (parseFloat(t.cost) || 0), 0); const ts2 = displayFiltered.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0); return (ts2 > 0 ? tc2 / ts2 : 0).toFixed(2); })()}</div></td>
@@ -952,7 +963,7 @@ function AppInner() {
                           <div key={x.l}><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>{x.l}</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.875rem" : "inherit", color: isTerm ? c.text : x.cl }}>${x.v.toFixed(0)}</div></div>
                         ))}
                       </div>
-                      {!isHistory && <button onClick={(e) => { e.stopPropagation(); editTransaction(t); }} style={{ marginTop: isCompact ? "0.5rem" : "0.75rem", width: "100%", padding: "0.375rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), border: `1px solid ${c.border}`, backgroundColor: "transparent", color: c.textSec, cursor: "pointer", fontSize: "0.75rem", fontWeight: bwm, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", transition: "color 0.15s, border-color 0.15s" }} onMouseEnter={(e) => { e.currentTarget.style.color = c.accent; e.currentTarget.style.borderColor = c.accent; }} onMouseLeave={(e) => { e.currentTarget.style.color = c.textSec; e.currentTarget.style.borderColor = c.border; }}><Pencil size={12} /> Edit</button>}
+                      {editMode && !isHistory && <button onClick={(e) => { e.stopPropagation(); editTransaction(t); }} style={{ marginTop: isCompact ? "0.5rem" : "0.75rem", width: "100%", padding: "0.375rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), border: `1px solid ${c.border}`, backgroundColor: "transparent", color: c.textSec, cursor: "pointer", fontSize: "0.75rem", fontWeight: bwm, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", transition: "color 0.15s, border-color 0.15s" }} onMouseEnter={(e) => { e.currentTarget.style.color = c.accent; e.currentTarget.style.borderColor = c.accent; }} onMouseLeave={(e) => { e.currentTarget.style.color = c.textSec; e.currentTarget.style.borderColor = c.border; }}><Pencil size={12} /> Edit</button>}
                     </div>
                   );
                 })}
