@@ -525,7 +525,7 @@ function AppInner() {
             <div style={{ display: "grid", gridTemplateColumns: isBrut ? "1fr" : (isMobile ? "1fr" : (isCompact || isTablet ? "repeat(2, 1fr)" : (L.statCardDir === "row" ? "repeat(2, 1fr)" : "repeat(4, 1fr)"))), gap: isMobile ? "0.625rem" : (isCompact ? "0.75rem" : (isBrut ? "0.5rem" : "1.5rem")), marginBottom: isCompact ? "1rem" : "2rem" }}>
               {[
                 { label: "Net Profit", value: stats.totalNetProfit, icon: TrendingUp, color: "Green", sub: "After costs", prefix: "ރ. " },
-                { label: "Total USDT Sold", value: stats.totalUsdtSold, icon: DollarSign, color: "Teal", sub: "Total sell amount" },
+                { label: "Total USDT Sold", value: stats.totalUsdtSold, icon: DollarSign, color: "Teal", sub: "Total sell amount", prefix: "₮ " },
                 { label: "Gross Profit", value: stats.totalGrossProfit, icon: TrendingUp, color: "Orange", sub: "Total revenue", prefix: "ރ. " },
                 { label: "Total Cost", value: stats.totalCost, icon: DollarSign, color: "Blue", count: transactions.length, prefix: "ރ. " },
                 { label: "Dollar Used", value: stats.totalDollarUsed, icon: DollarSign, color: "Pink", sub: "Total buy amount" },
@@ -710,7 +710,7 @@ function AppInner() {
                                           <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>{parseFloat(t.buyRate).toFixed(2)}</td>
                                           <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>${parseFloat(t.buyAmount).toFixed(2)}</td>
                                           <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>{parseFloat(t.sellRate).toFixed(2)}</td>
-                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>${parseFloat(t.sellAmount).toFixed(2)}</td>
+                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>₮ {parseFloat(t.sellAmount).toFixed(2)}</td>
                                           <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>ރ. {t.cost.toFixed(2)}</td>
                                           <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", color: isTerm ? c.text : "#f97316", fontWeight: bws }}>ރ. {t.grossProfit.toFixed(2)}</td>
                                           <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", color: isTerm ? c.text : (t.netProfit >= 0 ? "#16a34a" : "#ef4444"), fontWeight: bwx }}>ރ. {t.netProfit.toFixed(2)}</td>
@@ -723,7 +723,7 @@ function AppInner() {
                                     <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}></td>
                                     <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>${ownerTx.reduce((s, t) => s + (parseFloat(t.buyAmount) || 0), 0).toFixed(2)}</td>
                                     <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}></td>
-                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>${ownerTx.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0).toFixed(2)}</td>
+                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>₮ {ownerTx.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0).toFixed(2)}</td>
                                     <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>ރ. {ownerTx.reduce((s, t) => s + t.cost, 0).toFixed(2)}</td>
                                     <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx, color: isTerm ? c.text : "#f97316" }}>ރ. {ownerTx.reduce((s, t) => s + t.grossProfit, 0).toFixed(2)}</td>
                                     <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx, color: isTerm ? c.text : "#16a34a" }}>ރ. {ownerTx.reduce((s, t) => s + t.netProfit, 0).toFixed(2)}</td>
@@ -910,7 +910,7 @@ function AppInner() {
                             <td style={{ ...tdStyle, textAlign: "right" }}>{parseFloat(t.buyRate).toFixed(2)}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>${parseFloat(t.buyAmount).toFixed(2)}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>{parseFloat(t.sellRate).toFixed(2)}</td>
-                            <td style={{ ...tdStyle, textAlign: "right" }}>${parseFloat(t.sellAmount).toFixed(2)}</td>
+                            <td style={{ ...tdStyle, textAlign: "right" }}>₮ {parseFloat(t.sellAmount).toFixed(2)}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>ރ. {t.cost.toFixed(2)}</td>
                             <td style={{ ...tdStyle, textAlign: "right", color: isTerm ? c.text : "#f97316", fontWeight: bws }}>ރ. {t.grossProfit.toFixed(2)}</td>
                             <td style={{ ...tdStyle, textAlign: "right", color: isTerm ? c.text : "#16a34a", fontWeight: bws }} className={isTerm ? "terminal-glow" : ""}>ރ. {t.netProfit.toFixed(2)}</td>
@@ -923,7 +923,7 @@ function AppInner() {
                     <tfoot>
                       <tr style={{ backgroundColor: c.surfaceAlt, fontWeight: bwx, borderTop: `2px solid ${c.borderStrong}` }}>
                         <td colSpan={isHistory ? 3 : (editMode ? 4 : 3)} style={{ ...tdStyle, fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textStrong, textTransform: isBrut ? "uppercase" : "none" }}>TOTALS</td>
-                        <td colSpan="2" style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Sell Amt:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>${displayFiltered.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0).toFixed(2)}</div></td>
+                        <td colSpan="2" style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Sell Amt:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>₮ {displayFiltered.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0).toFixed(2)}</div></td>
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Avg Sell:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>{displayFiltered.length > 0 ? (displayFiltered.reduce((s, t) => s + (parseFloat(t.sellRate) || 0), 0) / displayFiltered.length).toFixed(2) : "0.00"}</div></td>
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Avg Buy:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>{(() => { const tc2 = displayFiltered.reduce((s, t) => s + (parseFloat(t.cost) || 0), 0); const ts2 = displayFiltered.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0); return (ts2 > 0 ? tc2 / ts2 : 0).toFixed(2); })()}</div></td>
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Buy Amt:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>${displayFiltered.reduce((s, t) => s + (parseFloat(t.buyAmount) || 0), 0).toFixed(2)}</div></td>
@@ -956,7 +956,7 @@ function AppInner() {
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: isCompact ? "0.5rem" : "1rem", marginBottom: isCompact ? "0.5rem" : "1rem" }}>
                         <div><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>Buy</div><div style={{ fontWeight: bws, fontSize: isCompact ? "0.75rem" : "inherit", color: c.text }}>{parseFloat(t.buyRate).toFixed(2)} × ${parseFloat(t.buyAmount).toFixed(0)}</div></div>
-                        <div><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>Sell</div><div style={{ fontWeight: bws, fontSize: isCompact ? "0.75rem" : "inherit", color: c.text }}>{parseFloat(t.sellRate).toFixed(2)} × ${parseFloat(t.sellAmount).toFixed(0)}</div></div>
+                        <div><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>Sell</div><div style={{ fontWeight: bws, fontSize: isCompact ? "0.75rem" : "inherit", color: c.text }}>{parseFloat(t.sellRate).toFixed(2)} × ₮ {parseFloat(t.sellAmount).toFixed(0)}</div></div>
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: isCompact ? "0.5rem" : "1rem", paddingTop: isCompact ? "0.5rem" : "1rem", borderTop: `1px solid ${c.border}` }}>
                         {[{ l: "Cost", v: t.cost, cl: "#3b82f6" }, { l: "Gross", v: t.grossProfit, cl: "#f97316" }, { l: "Net", v: t.netProfit, cl: "#16a34a" }].map((x) => (
