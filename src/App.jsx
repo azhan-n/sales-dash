@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
   TrendingUp, DollarSign, Filter, User, RefreshCw, LayoutGrid, List,
-  Settings, X, Calendar, Timer, Plus, Pencil, Download, Search, Trash2, ChevronLeft, ChevronRight,
+  Settings, X, Calendar, Timer, Plus, Pencil, Download, Search, Trash2, ChevronLeft, ChevronRight, ChevronDown,
 } from "lucide-react";
 import { supabase } from "./supabaseClient";
 import { FONTS, THEME_OPTIONS, getThemeLayout, getThemeColors } from "./themes";
@@ -59,6 +59,9 @@ function AppInner() {
   const [editingTxId, setEditingTxId] = useState(null);
   const [txForm, setTxForm] = useState({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "" });
   const [monthlyForm, setMonthlyForm] = useState({ month: "", profit: "" });
+  const [editingMonthlyId, setEditingMonthlyId] = useState(null);
+  const [editModeMonthly, setEditModeMonthly] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   const submitTransaction = async () => {
     if (!txForm.owner || !txForm.cardNumber) return;
@@ -100,19 +103,36 @@ function AppInner() {
 
   const submitMonthly = async () => {
     if (!monthlyForm.month || !monthlyForm.profit) return;
-    // Close form immediately
     const formData = { ...monthlyForm };
+    const editId = editingMonthlyId;
     setShowMonthlyForm(false);
     setMonthlyForm({ month: "", profit: "" });
-    // Sync in background
+    setEditingMonthlyId(null);
     try {
-      const { error: err } = await supabase.from("monthly").insert({
-        month: formData.month, profit: parseFloat(formData.profit) || 0,
-      });
-      if (err) throw err;
-      toast.success("Monthly record saved");
+      if (editId) {
+        const { error: err } = await supabase.from("monthly").update({
+          month: formData.month, profit: parseFloat(formData.profit) || 0,
+        }).eq("id", editId);
+        if (err) throw err;
+        toast.success("Monthly record updated");
+      } else {
+        const { error: err } = await supabase.from("monthly").insert({
+          month: formData.month, profit: parseFloat(formData.profit) || 0,
+        });
+        if (err) throw err;
+        toast.success("Monthly record saved");
+      }
       fetchData(true);
-    } catch (err) { toast.error("Failed to add monthly record: " + err.message); setError("Failed to add monthly record: " + err.message); fetchData(true); }
+    } catch (err) { toast.error("Failed to save monthly record: " + err.message); fetchData(true); }
+  };
+
+  const deleteMonthlyRecord = async (id) => {
+    try {
+      const { error: err } = await supabase.from("monthly").delete().eq("id", id);
+      if (err) throw err;
+      toast.success("Monthly record deleted");
+      fetchData(true);
+    } catch (err) { toast.error("Failed to delete: " + err.message); }
   };
 
   // --- Monthly Transaction History ---
@@ -319,7 +339,7 @@ function AppInner() {
       }));
       if (txData.length > 0) processTransactions(txData);
       else { setTransactions([]); setOwners([]); setCards([]); setStats({}); }
-      setMonthly((mRes.data || []).map((r) => ({ month: r.month, profit: parseFloat(r.profit) || 0 })));
+      setMonthly((mRes.data || []).map((r) => ({ id: r.id, month: r.month, profit: parseFloat(r.profit) || 0 })));
     } catch (err) { setError("Failed to load data: " + (err.message || "Check connection")); }
     finally { setLoading(false); }
   };
@@ -780,72 +800,76 @@ function AppInner() {
         {/* ===== TRANSACTIONS TAB ===== */}
         {activeTab === "transactions" && (
           <div>
-            {/* Period Selector */}
-            <div style={{ ...cardBase, marginBottom: isCompact ? "0.625rem" : "1rem", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center", gap: "0.75rem", justifyContent: "space-between" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-                <Calendar size={isCompact ? 14 : 16} style={{ color: c.textSec }} />
-                <span style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, color: c.text }}>{isTerm ? "> Period:" : "Period:"}</span>
-                <select value={selectedPeriod} onChange={(e) => { setSelectedPeriod(e.target.value); if (e.target.value !== "current") fetchHistoryForPeriod(e.target.value); }} style={{ padding: isCompact ? "0.375rem 0.5rem" : "0.5rem 0.75rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.25rem"), fontSize: isCompact ? "0.75rem" : "0.875rem", backgroundColor: c.inputBg, color: c.text }}>
-                  <option value="current">Current Month</option>
-                  {historyPeriods.map((p) => <option key={p} value={p}>{p}</option>)}
-                </select>
-              </div>
-              <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                <button
-                  onClick={() => { setEditMode((m) => { if (m) setSelectedTxIds(new Set()); return !m; }); }}
-                  disabled={selectedPeriod !== "current"}
-                  aria-pressed={editMode}
-                  style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${editMode ? c.accent : c.border}`, backgroundColor: editMode ? c.accentBg : c.inputBg, color: editMode ? c.accent : c.text, cursor: selectedPeriod !== "current" ? "not-allowed" : "pointer", fontSize: isCompact ? "0.75rem" : "0.8125rem", fontWeight: bwm, opacity: selectedPeriod !== "current" ? 0.4 : 1, display: "inline-flex", alignItems: "center", gap: "0.375rem", transition: "border-color 0.15s, background-color 0.15s, color 0.15s" }}>
-                  <Pencil size={isCompact ? 12 : 14} /> {editMode ? "Done" : "Edit"}
-                </button>
-                <button onClick={() => setConfirmArchive(true)} disabled={submitting || selectedPeriod !== "current"} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: submitting ? "not-allowed" : "pointer", fontSize: isCompact ? "0.75rem" : "0.8125rem", fontWeight: bwm, opacity: submitting || selectedPeriod !== "current" ? 0.5 : 1, display: "inline-flex", alignItems: "center", gap: "0.375rem" }}>
-                  <Calendar size={isCompact ? 12 : 14} /> {submitting ? "Archiving..." : "Archive & Clear"}
-                </button>
-              </div>
-            </div>
+            {(() => {
+              const isHistory = selectedPeriod !== "current";
+              const displayTx = isHistory ? historyTransactions : sortedTransactions;
+              const displayFiltered = isHistory ? historyTransactions : filteredTransactions;
+              const activeFilterCount = [filterCardType !== "all", filterOwner !== "all", filterCardNumber !== "all", searchQuery !== "", selectedPeriod !== "current"].filter(Boolean).length;
+              return (<>
             {selectedPeriod !== "current" && (
               <div style={{ padding: isCompact ? "0.5rem 0.75rem" : "0.75rem 1rem", backgroundColor: c.accentBg, borderRadius: rSm, marginBottom: isCompact ? "0.625rem" : "1rem", fontSize: isCompact ? "0.75rem" : "0.8125rem", color: c.accent, display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <Calendar size={14} /> Viewing archived transactions from <strong style={{ marginLeft: "0.25rem" }}>{selectedPeriod}</strong>
               </div>
             )}
-            {(() => {
-              // Use history or current data
-              const isHistory = selectedPeriod !== "current";
-              const displayTx = isHistory ? historyTransactions : sortedTransactions;
-              const displayFiltered = isHistory ? historyTransactions : filteredTransactions;
-              return (<>
             <div style={{ ...cardBase, marginBottom: isCompact ? "0.625rem" : "1rem" }}>
-              <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", flexWrap: "wrap", gap: isCompact ? "0.5rem" : "1rem", alignItems: isMobile ? "stretch" : "center", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", flexWrap: "wrap", gap: isCompact ? "0.5rem" : "1rem", alignItems: isMobile ? "stretch" : "center", flex: isMobile ? "1" : undefined }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><Filter size={isCompact ? 14 : 16} style={{ color: c.textSec }} /><span style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, color: c.text, textTransform: isBrut ? "uppercase" : "none" }}>{isTerm ? "> Filters:" : "Filters:"}</span></div>
-                  {!isHistory && [{val: filterCardType, set: setFilterCardType, opts: [{ v: "all", l: "All Card Types" }, ...cardTypes.map((t) => ({ v: t, l: t }))] }, { val: filterOwner, set: setFilterOwner, opts: [{ v: "all", l: "All Owners" }, ...owners.map((o) => ({ v: o.id, l: o.name }))] }, { val: filterCardNumber, set: setFilterCardNumber, opts: [{ v: "all", l: "All Card Numbers" }, ...availableCardNumbers.map((n) => ({ v: n, l: `Card #${n}` }))] }].map((f, i) => (
-                    <select key={i} style={{ padding: isCompact ? "0.375rem 0.5rem" : "0.5rem 0.75rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.25rem"), fontSize: isCompact ? "0.75rem" : "0.875rem", minWidth: isMobile ? "0" : (isCompact ? "120px" : "150px"), width: isMobile ? "100%" : "auto", backgroundColor: c.inputBg, color: c.text }} value={f.val} onChange={(e) => f.set(e.target.value)}>
-                      {f.opts.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
-                    </select>
-                  ))}
-                  {/* Search */}
-                  <div style={{ position: "relative", width: isMobile ? "100%" : "auto" }}>
-                    <Search size={isCompact ? 12 : 14} style={{ position: "absolute", left: "0.5rem", top: "50%", transform: "translateY(-50%)", color: c.textSec, pointerEvents: "none" }} />
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search..."
-                      aria-label="Search transactions"
-                      style={{ padding: isCompact ? "0.375rem 0.5rem 0.375rem 1.75rem" : "0.5rem 0.75rem 0.5rem 2rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.25rem"), fontSize: isCompact ? "0.75rem" : "0.875rem", backgroundColor: c.inputBg, color: c.text, width: isMobile ? "100%" : (isCompact ? "130px" : "160px"), outline: "none" }}
-                    />
+              <div style={{ display: "flex", flexWrap: "wrap", gap: isCompact ? "0.375rem" : "0.5rem", alignItems: "center", justifyContent: "space-between" }}>
+                {/* Left: Filters dropdown + view toggle */}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: isCompact ? "0.375rem" : "0.5rem", alignItems: "center" }}>
+                  <div style={{ position: "relative" }}>
+                    <button onClick={() => setShowFilters((v) => !v)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 0.875rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: isBrut ? `2px solid ${c.border}` : `1px solid ${showFilters || activeFilterCount > 0 ? c.accent : c.border}`, backgroundColor: showFilters || activeFilterCount > 0 ? c.accentBg : c.inputBg, color: showFilters || activeFilterCount > 0 ? c.accent : c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, transition: "border-color 0.15s, background-color 0.15s, color 0.15s" }}>
+                      <Filter size={isCompact ? 12 : 14} />
+                      {isTerm ? "> Filters" : "Filters"}
+                      {activeFilterCount > 0 && <span style={{ backgroundColor: c.accent, color: "#fff", borderRadius: "999px", fontSize: "0.625rem", padding: "0.1rem 0.4rem", fontWeight: "700", lineHeight: 1.4 }}>{activeFilterCount}</span>}
+                      <ChevronDown size={isCompact ? 12 : 14} style={{ transition: "transform 0.15s", transform: showFilters ? "rotate(180deg)" : "rotate(0deg)" }} />
+                    </button>
+                    {showFilters && (
+                      <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 50, backgroundColor: c.surface, border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "1.5rem" : "0.75rem"), padding: isCompact ? "0.75rem" : "1rem", boxShadow: c.shadow, minWidth: isMobile ? "calc(100vw - 2rem)" : "360px", display: "flex", flexDirection: "column", gap: isCompact ? "0.5rem" : "0.75rem", animation: "slideUp 0.15s cubic-bezier(.16,1,.3,1) both" }}>
+                        {/* Period */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <span style={{ fontSize: isCompact ? "0.6875rem" : "0.75rem", color: c.textSec, fontWeight: bwm, minWidth: "5.5rem" }}>Period</span>
+                          <select value={selectedPeriod} onChange={(e) => { setSelectedPeriod(e.target.value); if (e.target.value !== "current") fetchHistoryForPeriod(e.target.value); }} style={{ flex: 1, padding: isCompact ? "0.3rem 0.5rem" : "0.4rem 0.625rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), fontSize: isCompact ? "0.75rem" : "0.8125rem", backgroundColor: c.inputBg, color: c.text }}>
+                            <option value="current">Current Month</option>
+                            {historyPeriods.map((p) => <option key={p} value={p}>{p}</option>)}
+                          </select>
+                        </div>
+                        {/* Filters (only when not history) */}
+                        {!isHistory && (
+                          <>
+                            {[{ label: "Card Type", val: filterCardType, set: setFilterCardType, opts: [{ v: "all", l: "All Card Types" }, ...cardTypes.map((t) => ({ v: t, l: t }))] }, { label: "Owner", val: filterOwner, set: setFilterOwner, opts: [{ v: "all", l: "All Owners" }, ...owners.map((o) => ({ v: o.id, l: o.name }))] }, { label: "Card No.", val: filterCardNumber, set: setFilterCardNumber, opts: [{ v: "all", l: "All Card Numbers" }, ...availableCardNumbers.map((n) => ({ v: n, l: `Card #${n}` }))] }].map((f, i) => (
+                              <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                <span style={{ fontSize: isCompact ? "0.6875rem" : "0.75rem", color: c.textSec, fontWeight: bwm, minWidth: "5.5rem" }}>{f.label}</span>
+                                <select style={{ flex: 1, padding: isCompact ? "0.3rem 0.5rem" : "0.4rem 0.625rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), fontSize: isCompact ? "0.75rem" : "0.8125rem", backgroundColor: c.inputBg, color: c.text }} value={f.val} onChange={(e) => f.set(e.target.value)}>
+                                  {f.opts.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
+                                </select>
+                              </div>
+                            ))}
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                              <span style={{ fontSize: isCompact ? "0.6875rem" : "0.75rem", color: c.textSec, fontWeight: bwm, minWidth: "5.5rem" }}>Search</span>
+                              <div style={{ flex: 1, position: "relative" }}>
+                                <Search size={isCompact ? 12 : 13} style={{ position: "absolute", left: "0.5rem", top: "50%", transform: "translateY(-50%)", color: c.textSec, pointerEvents: "none" }} />
+                                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search..." aria-label="Search transactions" style={{ width: "100%", padding: isCompact ? "0.3rem 0.5rem 0.3rem 1.625rem" : "0.4rem 0.625rem 0.4rem 1.75rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), fontSize: isCompact ? "0.75rem" : "0.8125rem", backgroundColor: c.inputBg, color: c.text, outline: "none", boxSizing: "border-box" }} />
+                              </div>
+                            </div>
+                            {activeFilterCount > 0 && <button onClick={() => { setFilterCardType("all"); setFilterOwner("all"); setFilterCardNumber("all"); setSearchQuery(""); setSelectedPeriod("current"); }} style={{ alignSelf: "flex-end", padding: "0.25rem 0.625rem", border: `1px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), backgroundColor: "transparent", color: c.textSec, cursor: "pointer", fontSize: isCompact ? "0.625rem" : "0.6875rem", fontWeight: bwm }}>Clear all</button>}
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
-                </div>
-                <div style={{ display: "flex", gap: "0.5rem", width: isMobile ? "100%" : "auto" }}>
                   {[{ m: "table", icon: List, label: "Table" }, { m: "cards", icon: LayoutGrid, label: "Cards" }].map(({ m, icon: Ic, label }) => (
-                    <button key={m} onClick={() => setViewMode(m)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, backgroundColor: viewMode === m ? c.accent : c.inputBg, color: viewMode === m ? "#fff" : c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, flex: isMobile ? 1 : undefined, ...(isBrut && viewMode === m ? { boxShadow: "3px 3px 0 #000" } : {}) }}><Ic size={isCompact ? 14 : 16} /> {label}</button>
+                    <button key={m} onClick={() => setViewMode(m)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, backgroundColor: viewMode === m ? c.accent : c.inputBg, color: viewMode === m ? "#fff" : c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, ...(isBrut && viewMode === m ? { boxShadow: "3px 3px 0 #000" } : {}) }}><Ic size={isCompact ? 14 : 16} /> {label}</button>
                   ))}
+                </div>
+                {/* Right: Edit, Archive, Bulk Delete, Add */}
+                <div style={{ display: "flex", gap: isCompact ? "0.375rem" : "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+                  <button onClick={() => { setEditMode((m) => { if (m) setSelectedTxIds(new Set()); return !m; }); }} disabled={selectedPeriod !== "current"} aria-pressed={editMode} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${editMode ? c.accent : c.border}`, backgroundColor: editMode ? c.accentBg : c.inputBg, color: editMode ? c.accent : c.text, cursor: selectedPeriod !== "current" ? "not-allowed" : "pointer", fontSize: isCompact ? "0.75rem" : "0.8125rem", fontWeight: bwm, opacity: selectedPeriod !== "current" ? 0.4 : 1, display: "inline-flex", alignItems: "center", gap: "0.375rem", transition: "border-color 0.15s, background-color 0.15s, color 0.15s" }}><Pencil size={isCompact ? 12 : 14} /> {editMode ? "Done" : "Edit"}</button>
+                  <button onClick={() => setConfirmArchive(true)} disabled={submitting || selectedPeriod !== "current"} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: submitting ? "not-allowed" : "pointer", fontSize: isCompact ? "0.75rem" : "0.8125rem", fontWeight: bwm, opacity: submitting || selectedPeriod !== "current" ? 0.5 : 1, display: "inline-flex", alignItems: "center", gap: "0.375rem" }}><Calendar size={isCompact ? 12 : 14} /> {submitting ? "Archiving..." : "Archive & Clear"}</button>
                   {editMode && !isHistory && selectedTxIds.size > 0 && (
                     <button onClick={() => setConfirmBulkDelete(true)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "1px solid #ef4444", background: "transparent", color: "#ef4444", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm }}>
                       <Trash2 size={isCompact ? 13 : 15} /> Delete {selectedTxIds.size}
                     </button>
                   )}
-                  {!isHistory && <button onClick={() => { setEditingTxId(null); setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "" }); setShowTxForm(true); }} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "none", background: c.btnGrad, color: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, flex: isMobile ? 1 : undefined, boxShadow: `0 2px 8px ${c.btnGlow}` }}><Plus size={isCompact ? 14 : 16} /> Add</button>}
+                  {!isHistory && <button onClick={() => { setEditingTxId(null); setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "" }); setShowTxForm(true); }} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "none", background: c.btnGrad, color: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, boxShadow: `0 2px 8px ${c.btnGlow}` }}><Plus size={isCompact ? 14 : 16} /> Add</button>}
                 </div>
               </div>
             </div>
@@ -991,9 +1015,6 @@ function AppInner() {
         {/* ===== MONTHLY TAB ===== */}
         {activeTab === "monthly" && (
           <div>
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginBottom: isCompact ? "0.625rem" : "1rem" }}>
-              <button onClick={() => setShowMonthlyForm(true)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "none", background: c.btnGrad, color: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, boxShadow: `0 2px 8px ${c.btnGlow}` }}><Plus size={isCompact ? 14 : 16} /> Add Month</button>
-            </div>
             {monthly.length > 0 && (
               <div style={{ marginBottom: isCompact ? "1rem" : "2rem" }}>
                 <div className={isLG ? "lg-specular" : ""} style={{ padding: isMobile ? "1.25rem" : (isCompact ? "1.5rem" : "2.5rem"), borderRadius: isBrut ? "0" : (isCirc ? "2rem" : r), background: c.profitGrad, color: isLG ? "#1c7a36" : "#ffffff", maxWidth: isMobile ? "100%" : (isCompact ? "400px" : "500px"), margin: "0 auto", textAlign: "center", animation: "slideUp 0.4s cubic-bezier(.16,1,.3,1) both", border: isBrut ? "3px solid #000" : (isLG ? "1px solid rgba(52,199,89,0.25)" : (isCirc ? `2px solid ${c.border}` : "none")), boxShadow: isBrut ? "6px 6px 0 #000" : (isLG ? "0 8px 32px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7)" : c.shadowLg), ...((isGlass || isLG) ? { backdropFilter: "blur(16px) saturate(150%)", WebkitBackdropFilter: "blur(16px) saturate(150%)" } : {}) }}>
@@ -1004,24 +1025,43 @@ function AppInner() {
               </div>
             )}
             <div style={cardBase}>
-              <h2 style={sectionTitleStyle}><Calendar size={isCompact ? 20 : 24} /> Monthly Breakdown</h2>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: sectionTitleStyle.marginBottom }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                  <button onClick={() => { setEditingMonthlyId(null); setMonthlyForm({ month: "", profit: "" }); setShowMonthlyForm(true); }} style={{ padding: isCompact ? "0.25rem 0.5rem" : "0.375rem 0.75rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "none", background: c.btnGrad, color: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.3rem", fontSize: isCompact ? "0.6875rem" : "0.8125rem", fontWeight: bwm, boxShadow: `0 2px 8px ${c.btnGlow}` }}><Plus size={isCompact ? 12 : 14} /> Add Month</button>
+                  <h2 style={{ ...sectionTitleStyle, marginBottom: 0 }}><Calendar size={isCompact ? 20 : 24} /> Monthly Records</h2>
+                </div>
+                <button onClick={() => { setEditModeMonthly((m) => !m); }} aria-pressed={editModeMonthly} style={{ padding: isCompact ? "0.25rem 0.5rem" : "0.375rem 0.75rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${editModeMonthly ? c.accent : c.border}`, backgroundColor: editModeMonthly ? c.accentBg : c.inputBg, color: editModeMonthly ? c.accent : c.text, cursor: "pointer", fontSize: isCompact ? "0.6875rem" : "0.8125rem", fontWeight: bwm, display: "inline-flex", alignItems: "center", gap: "0.3rem", transition: "border-color 0.15s, background-color 0.15s, color 0.15s" }}><Pencil size={isCompact ? 11 : 13} /> {editModeMonthly ? "Done" : "Edit"}</button>
+              </div>
               {monthly.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "3rem", color: c.textSec }}><p style={{ fontSize: "1.125rem", fontWeight: bws }}>No monthly data available</p></div>
               ) : (
                 <div style={{ overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: isBrut ? "separate" : "collapse", borderSpacing: isBrut ? "0 2px" : "0" }}>
-                    <thead><tr><th style={thStyle}>Month</th><th style={{ ...thStyle, textAlign: "right" }}>Profit</th></tr></thead>
+                    <thead><tr>
+                      <th style={thStyle}>Month</th>
+                      <th style={{ ...thStyle, textAlign: "right" }}>Profit</th>
+                      {editModeMonthly && <th style={{ ...thStyle, width: "72px" }}></th>}
+                    </tr></thead>
                     <tbody>
                       {monthly.map((m, idx) => (
                         <tr key={m.id} style={{ backgroundColor: idx % 2 === 0 ? c.surface : c.surfaceAlt }}>
                           <td style={{ ...tdStyle, fontWeight: bws, fontSize: isCompact ? "0.8125rem" : "1rem" }} className={isTerm ? "terminal-glow" : ""}>{isTerm ? `> ${m.month}` : m.month}</td>
                           <td style={{ ...tdStyle, textAlign: "right", color: isTerm ? c.text : "#16a34a", fontWeight: bwx, fontSize: isCompact ? "0.875rem" : "1.125rem" }} className={isTerm ? "terminal-glow" : ""}>ރ. {m.profit.toFixed(2)}</td>
+                          {editModeMonthly && (
+                            <td style={{ ...tdStyle, textAlign: "right" }}>
+                              <div style={{ display: "flex", gap: "0.375rem", justifyContent: "flex-end" }}>
+                                <button onClick={() => { setEditingMonthlyId(m.id); setMonthlyForm({ month: m.month, profit: String(m.profit) }); setShowMonthlyForm(true); }} style={{ padding: "0.25rem", border: `1px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.25rem"), backgroundColor: c.inputBg, color: c.textSec, cursor: "pointer", display: "inline-flex" }} title="Edit"><Pencil size={13} /></button>
+                                <button onClick={() => deleteMonthlyRecord(m.id)} style={{ padding: "0.25rem", border: "1px solid #ef4444", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.25rem"), backgroundColor: "transparent", color: "#ef4444", cursor: "pointer", display: "inline-flex" }} title="Delete"><Trash2 size={13} /></button>
+                              </div>
+                            </td>
+                          )}
                         </tr>
                       ))}
                     </tbody>
                     <tfoot><tr style={{ backgroundColor: c.surfaceAlt, fontWeight: bwx, borderTop: `2px solid ${c.borderStrong}` }}>
                       <td style={{ ...tdStyle, fontWeight: bwx, fontSize: isCompact ? "0.8125rem" : "1rem", color: c.textStrong }}>TOTAL</td>
                       <td style={{ ...tdStyle, textAlign: "right", fontWeight: bwx, color: isTerm ? c.text : "#16a34a", fontSize: isCompact ? "1rem" : "1.25rem" }} className={isTerm ? "terminal-glow" : ""}>ރ. {monthly.reduce((s, m) => s + m.profit, 0).toFixed(2)}</td>
+                      {editModeMonthly && <td style={tdStyle}></td>}
                     </tr></tfoot>
                   </table>
                 </div>
@@ -1055,6 +1095,7 @@ function AppInner() {
         setShowMonthlyForm={setShowMonthlyForm}
         submitting={submitting}
         onSubmit={submitMonthly}
+        editingMonthlyId={editingMonthlyId}
       />
 
       {/* ===== CONFIRM DIALOGS ===== */}

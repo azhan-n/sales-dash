@@ -5,13 +5,14 @@ import React, { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
 export function MonthlyForm({
-  th,              // theme object
+  th,
   monthlyForm,
   setMonthlyForm,
   showMonthlyForm,
   setShowMonthlyForm,
   submitting,
   onSubmit,
+  editingMonthlyId,
 }) {
   const { c, isBrut, isCirc, isGlass, isLG, isMobile, isCompact, headingFont, bwh, bwm, bws } = th;
   const [errors, setErrors] = useState({});
@@ -96,7 +97,7 @@ export function MonthlyForm({
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", paddingBottom: "0.75rem", borderBottom: `1px solid ${c.border}` }}>
           <h2 id="monthly-form-title" style={{ fontSize: "1.25rem", fontFamily: headingFont, fontWeight: bwh, color: c.textStrong, margin: 0 }}>
-            Add Monthly Record
+            {editingMonthlyId ? "Edit Monthly Record" : "Add Monthly Record"}
           </h2>
           <button onClick={resetForm} aria-label="Close dialog" style={{ padding: "0.375rem", border: "none", background: "none", cursor: "pointer", color: c.textSec }}>
             <X size={20} />
