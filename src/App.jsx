@@ -364,8 +364,14 @@ function AppInner() {
   };
   const getCardById = (id) => cards.find((x) => x.id === id);
   const getOwnerById = (id) => owners.find((o) => o.id === id);
-  const OWNER_COLORS = ["#3b82f6", "#f97316", "#16a34a", "#8b5cf6", "#ec4899", "#06b6d4", "#eab308", "#ef4444"];
-  const getOwnerColor = (ownerId) => OWNER_COLORS[((ownerId || 1) - 1) % OWNER_COLORS.length];
+  const OWNER_BADGES = [
+    { bg: "#dbeafe", text: "#1d4ed8" }, { bg: "#ffedd5", text: "#c2410c" },
+    { bg: "#dcfce7", text: "#15803d" }, { bg: "#ede9fe", text: "#6d28d9" },
+    { bg: "#fce7f3", text: "#be185d" }, { bg: "#cffafe", text: "#0e7490" },
+    { bg: "#fef9c3", text: "#a16207" }, { bg: "#fee2e2", text: "#b91c1c" },
+  ];
+  const getOwnerBadge = (ownerId) => OWNER_BADGES[((ownerId || 1) - 1) % OWNER_BADGES.length];
+  const ownerBadgeStyle = (ownerId) => { const { bg, text } = getOwnerBadge(ownerId); return { display: "inline-flex", alignItems: "center", padding: isBrut ? "0.25rem 0.5rem" : "0.2rem 0.6rem", borderRadius: isBrut ? "0" : "9999px", fontSize: "0.75rem", fontWeight: bws, backgroundColor: bg, color: text, border: isBrut ? "2px solid #000" : "none", whiteSpace: "nowrap" }; };
 
   // Reset card number filter when owner changes
   useEffect(() => { setFilterCardNumber("all"); }, [filterOwner]);
@@ -696,8 +702,7 @@ function AppInner() {
                         <div style={{ padding: isCompact ? "1rem" : "1.5rem", backgroundColor: c.surfaceAlt, borderRadius: isBrut ? "0" : (isCirc ? "1.5rem" : rSm), border: isBrut ? `2px solid ${c.border}` : `1px solid ${expandedOwner === o.id ? c.accent : c.border}`, ...(isBrut ? { boxShadow: "3px 3px 0 #000" } : {}), ...((isGlass || isLG) ? { backdropFilter: "blur(16px) saturate(150%)", WebkitBackdropFilter: "blur(16px) saturate(150%)" } : {}), transition: "border-color 0.15s ease" }}>
                           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", marginBottom: isCompact ? "0.625rem" : "1rem", gap: "0.5rem" }}>
                             <span style={{ fontFamily: headingFont, fontWeight: bwh, fontSize: isMobile ? "0.9375rem" : (isCompact ? "1rem" : "1.25rem"), color: c.textStrong, textTransform: isBrut ? "uppercase" : "none", display: "flex", alignItems: "center", gap: "0.5rem" }} className={isTerm ? "terminal-glow" : ""}>
-                              <div style={{ width: "10px", height: "10px", borderRadius: isBrut ? "0" : "50%", backgroundColor: getOwnerColor(o.id), flexShrink: 0 }}></div>
-                              {isTerm ? `> ${o.name}` : o.name}
+                              <span style={ownerBadgeStyle(o.id)}>{isTerm ? `> ${o.name}` : o.name}</span>
                               <span style={{ fontSize: "0.625rem", color: expandedOwner === o.id ? c.accent : c.textSec, transition: "transform 0.2s ease, color 0.15s ease", display: "inline-block", transform: expandedOwner === o.id ? "rotate(180deg)" : "rotate(0)" }}>▼</span>
                             </span>
                             <span style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", color: c.textSec, backgroundColor: c.surface, padding: "0.25rem 0.75rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), fontWeight: bws, border: isBrut ? "1px solid #000" : "none" }}>{os.count} transactions</span>
@@ -933,7 +938,7 @@ function AppInner() {
                             <td style={{ ...tdStyle, fontSize: isCompact ? "0.6875rem" : "0.8125rem", color: c.textSec, whiteSpace: "nowrap" }}>{t.date || "-"}</td>
                             <td style={tdStyle}><div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><div style={{ width: "10px", height: "10px", borderRadius: isBrut ? "0" : "50%", backgroundColor: cc, flexShrink: 0 }}></div><span>{cd?.type || "UNKNOWN"}</span></div></td>
                             <td style={tdStyle}>{cd?.number || "-"}</td>
-                            <td style={{ ...tdStyle, fontWeight: bwm }}><div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}><div style={{ width: "8px", height: "8px", borderRadius: isBrut ? "0" : "50%", backgroundColor: getOwnerColor(t.ownerId), flexShrink: 0 }}></div>{ow?.name}</div></td>
+                            <td style={tdStyle}><span style={ownerBadgeStyle(t.ownerId)}>{ow?.name}</span></td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>{parseFloat(t.buyRate).toFixed(2)}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>${parseFloat(t.buyAmount).toFixed(2)}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>{parseFloat(t.sellRate).toFixed(2)}</td>
@@ -978,7 +983,7 @@ function AppInner() {
                         <span style={mb.style}>{t.profitMargin.toFixed(1)}%</span>
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isCompact ? "0.5rem" : "1rem" }}>
-                        <div><div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textSec }}>Owner</div><div style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontWeight: bws, fontSize: isCompact ? "0.8125rem" : "1rem", color: c.text }}><div style={{ width: "8px", height: "8px", borderRadius: isBrut ? "0" : "50%", backgroundColor: getOwnerColor(t.ownerId), flexShrink: 0 }}></div>{ow?.name}</div></div>
+                        <div><div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textSec, marginBottom: "0.25rem" }}>Owner</div><span style={ownerBadgeStyle(t.ownerId)}>{ow?.name}</span></div>
                         <div style={{ textAlign: "right" }}><div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textSec }}>Date</div><div style={{ fontWeight: bwm, fontSize: isCompact ? "0.75rem" : "0.875rem", color: c.text }}>{t.date || "-"}</div></div>
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: isCompact ? "0.5rem" : "1rem", marginBottom: isCompact ? "0.5rem" : "1rem" }}>
