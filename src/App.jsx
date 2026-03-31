@@ -364,6 +364,8 @@ function AppInner() {
   };
   const getCardById = (id) => cards.find((x) => x.id === id);
   const getOwnerById = (id) => owners.find((o) => o.id === id);
+  const OWNER_COLORS = ["#3b82f6", "#f97316", "#16a34a", "#8b5cf6", "#ec4899", "#06b6d4", "#eab308", "#ef4444"];
+  const getOwnerColor = (ownerId) => OWNER_COLORS[((ownerId || 1) - 1) % OWNER_COLORS.length];
 
   // Reset card number filter when owner changes
   useEffect(() => { setFilterCardNumber("all"); }, [filterOwner]);
@@ -694,6 +696,7 @@ function AppInner() {
                         <div style={{ padding: isCompact ? "1rem" : "1.5rem", backgroundColor: c.surfaceAlt, borderRadius: isBrut ? "0" : (isCirc ? "1.5rem" : rSm), border: isBrut ? `2px solid ${c.border}` : `1px solid ${expandedOwner === o.id ? c.accent : c.border}`, ...(isBrut ? { boxShadow: "3px 3px 0 #000" } : {}), ...((isGlass || isLG) ? { backdropFilter: "blur(16px) saturate(150%)", WebkitBackdropFilter: "blur(16px) saturate(150%)" } : {}), transition: "border-color 0.15s ease" }}>
                           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", marginBottom: isCompact ? "0.625rem" : "1rem", gap: "0.5rem" }}>
                             <span style={{ fontFamily: headingFont, fontWeight: bwh, fontSize: isMobile ? "0.9375rem" : (isCompact ? "1rem" : "1.25rem"), color: c.textStrong, textTransform: isBrut ? "uppercase" : "none", display: "flex", alignItems: "center", gap: "0.5rem" }} className={isTerm ? "terminal-glow" : ""}>
+                              <div style={{ width: "10px", height: "10px", borderRadius: isBrut ? "0" : "50%", backgroundColor: getOwnerColor(o.id), flexShrink: 0 }}></div>
                               {isTerm ? `> ${o.name}` : o.name}
                               <span style={{ fontSize: "0.625rem", color: expandedOwner === o.id ? c.accent : c.textSec, transition: "transform 0.2s ease, color 0.15s ease", display: "inline-block", transform: expandedOwner === o.id ? "rotate(180deg)" : "rotate(0)" }}>▼</span>
                             </span>
@@ -823,7 +826,7 @@ function AppInner() {
                       <ChevronDown size={isCompact ? 12 : 14} style={{ transition: "transform 0.15s", transform: showFilters ? "rotate(180deg)" : "rotate(0deg)" }} />
                     </button>
                     {showFilters && (
-                      <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 200, backgroundColor: c.surface, border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "1.5rem" : "0.75rem"), padding: isCompact ? "0.75rem" : "1rem", boxShadow: c.shadow, minWidth: isMobile ? "calc(100vw - 2rem)" : "360px", display: "flex", flexDirection: "column", gap: isCompact ? "0.5rem" : "0.75rem", animation: "slideUp 0.15s cubic-bezier(.16,1,.3,1) both" }}>
+                      <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 200, backgroundColor: isGlass ? "rgba(20,14,48,0.95)" : (isLG ? "rgba(255,255,255,0.85)" : c.surface), border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "1.5rem" : "0.75rem"), padding: isCompact ? "0.75rem" : "1rem", boxShadow: c.shadow, minWidth: isMobile ? "calc(100vw - 2rem)" : "360px", display: "flex", flexDirection: "column", gap: isCompact ? "0.5rem" : "0.75rem", animation: "slideUp 0.15s cubic-bezier(.16,1,.3,1) both", ...((isGlass || isLG) ? { backdropFilter: "blur(20px) saturate(150%)", WebkitBackdropFilter: "blur(20px) saturate(150%)" } : {}) }}>
                         {/* Period */}
                         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                           <span style={{ fontSize: isCompact ? "0.6875rem" : "0.75rem", color: c.textSec, fontWeight: bwm, minWidth: "5.5rem" }}>Period</span>
@@ -930,7 +933,7 @@ function AppInner() {
                             <td style={{ ...tdStyle, fontSize: isCompact ? "0.6875rem" : "0.8125rem", color: c.textSec, whiteSpace: "nowrap" }}>{t.date || "-"}</td>
                             <td style={tdStyle}><div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><div style={{ width: "10px", height: "10px", borderRadius: isBrut ? "0" : "50%", backgroundColor: cc, flexShrink: 0 }}></div><span>{cd?.type || "UNKNOWN"}</span></div></td>
                             <td style={tdStyle}>{cd?.number || "-"}</td>
-                            <td style={{ ...tdStyle, fontWeight: bwm }}>{ow?.name}</td>
+                            <td style={{ ...tdStyle, fontWeight: bwm }}><div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}><div style={{ width: "8px", height: "8px", borderRadius: isBrut ? "0" : "50%", backgroundColor: getOwnerColor(t.ownerId), flexShrink: 0 }}></div>{ow?.name}</div></td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>{parseFloat(t.buyRate).toFixed(2)}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>${parseFloat(t.buyAmount).toFixed(2)}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>{parseFloat(t.sellRate).toFixed(2)}</td>
@@ -975,7 +978,7 @@ function AppInner() {
                         <span style={mb.style}>{t.profitMargin.toFixed(1)}%</span>
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isCompact ? "0.5rem" : "1rem" }}>
-                        <div><div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textSec }}>Owner</div><div style={{ fontWeight: bws, fontSize: isCompact ? "0.8125rem" : "1rem", color: c.text }}>{ow?.name}</div></div>
+                        <div><div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textSec }}>Owner</div><div style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontWeight: bws, fontSize: isCompact ? "0.8125rem" : "1rem", color: c.text }}><div style={{ width: "8px", height: "8px", borderRadius: isBrut ? "0" : "50%", backgroundColor: getOwnerColor(t.ownerId), flexShrink: 0 }}></div>{ow?.name}</div></div>
                         <div style={{ textAlign: "right" }}><div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textSec }}>Date</div><div style={{ fontWeight: bwm, fontSize: isCompact ? "0.75rem" : "0.875rem", color: c.text }}>{t.date || "-"}</div></div>
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: isCompact ? "0.5rem" : "1rem", marginBottom: isCompact ? "0.5rem" : "1rem" }}>
