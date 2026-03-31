@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { supabase } from "./supabaseClient";
 import { FONTS, THEME_OPTIONS, getThemeLayout, getThemeColors } from "./themes";
-import { normalizeCardType, CARD_TYPES, getCardTypeColor, getTodayDate, exportToCSV, exportMonthlyToCSV, exportTransactionsPDF, exportMonthlyPDF } from "./utils";
+import { normalizeCardType, CARD_TYPES, getCardTypeColor, getCardTypeBadge, getTodayDate, exportToCSV, exportMonthlyToCSV, exportTransactionsPDF, exportMonthlyPDF } from "./utils";
 import { SimplePieChart, ChartToggle, StatIcon } from "./Charts";
 import { ToastProvider, useToast } from "./Toast";
 import { StatCardsSkeleton, ChartSkeleton, TableSkeleton, SKELETON_CSS } from "./Skeleton";
@@ -43,6 +43,7 @@ function AppInner() {
   const [selectedFont, setSelectedFont] = useState(() => localStorage.getItem("font") || "Poppins");
   const [titleFont, setTitleFont] = useState(() => localStorage.getItem("titleFont") || "Poppins");
   const [fontSize, setFontSize] = useState(() => parseInt(localStorage.getItem("fontSize")) || 20);
+  const [titleFontSize, setTitleFontSize] = useState(() => parseInt(localStorage.getItem("titleFontSize")) || 40);
   const [boldText, setBoldText] = useState(() => localStorage.getItem("boldText") === "true");
 
   // Sort
@@ -276,6 +277,7 @@ function AppInner() {
   useEffect(() => { localStorage.setItem("font", selectedFont); }, [selectedFont]);
   useEffect(() => { localStorage.setItem("titleFont", titleFont); }, [titleFont]);
   useEffect(() => { localStorage.setItem("fontSize", fontSize.toString()); }, [fontSize]);
+  useEffect(() => { localStorage.setItem("titleFontSize", titleFontSize.toString()); }, [titleFontSize]);
 
   // Apply font size to root HTML element so all rem units scale
   useEffect(() => {
@@ -374,6 +376,8 @@ function AppInner() {
   ];
   const getOwnerBadge = (ownerId) => OWNER_BADGES[((ownerId || 1) - 1) % OWNER_BADGES.length];
   const ownerBadgeStyle = (ownerId) => { const { bg, text } = getOwnerBadge(ownerId); return { display: "inline-flex", alignItems: "center", padding: isBrut ? "0.25rem 0.5rem" : "0.2rem 0.6rem", borderRadius: isBrut ? "0" : "9999px", fontSize: "0.75rem", fontWeight: bws, backgroundColor: bg, color: text, border: isBrut ? "2px solid #000" : "none", whiteSpace: "nowrap" }; };
+  const cardBadgeStyle = (type) => { const { bg, text } = getCardTypeBadge(type); return { display: "inline-flex", alignItems: "center", padding: isBrut ? "0.25rem 0.5rem" : "0.2rem 0.6rem", borderRadius: isBrut ? "0" : "9999px", fontSize: "0.75rem", fontWeight: bws, backgroundColor: bg, color: text, border: isBrut ? "2px solid #000" : "none", whiteSpace: "nowrap" }; };
+  const selectBg = isGlass ? "rgba(20,14,48,0.85)" : (isLG ? "rgba(255,255,255,0.92)" : c.inputBg);
 
   // Reset card number filter when owner changes
   useEffect(() => { setFilterCardNumber("all"); }, [filterOwner]);
@@ -432,8 +436,8 @@ function AppInner() {
 
   // -- Shared styles --
   const cardBase = { backgroundColor: c.surface, borderRadius: isCirc ? "2rem" : r, padding: isCompact ? "1rem" : "2rem", boxShadow: c.cardGlow ? `${c.shadow}, ${c.cardGlow}` : c.shadow, marginBottom: isCompact ? "1rem" : "2rem", border: isBrut ? `3px solid ${c.border}` : `1px solid ${c.border}`, ...(c.cardBackdrop ? { backdropFilter: c.cardBackdrop, WebkitBackdropFilter: c.cardBackdrop } : {}), animation: "fadeIn 0.35s cubic-bezier(.16,1,.3,1) both" };
-  const thStyle = { padding: isCompact ? "0.5rem 0.625rem" : "0.75rem 1rem", textAlign: "left", fontSize: isCompact ? "0.6875rem" : "0.75rem", fontWeight: bws, color: c.textSec, backgroundColor: c.surfaceAlt, borderBottom: isBrut ? `3px solid ${c.border}` : `1px solid ${c.border}`, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.1em" : "normal" };
-  const tdStyle = { padding: isCompact ? "0.375rem 0.625rem" : "0.75rem 1rem", fontSize: isCompact ? "0.75rem" : "0.875rem", borderBottom: isBrut ? `2px solid ${c.border}` : isTerm ? `1px dashed ${c.border}` : `1px solid ${c.border}`, color: c.text, backgroundColor: c.surface };
+  const thStyle = { padding: isCompact ? "0.5rem 0.5rem" : "0.75rem 0.625rem", textAlign: "left", fontSize: isCompact ? "0.6875rem" : "0.75rem", fontWeight: bws, color: c.textSec, backgroundColor: c.surfaceAlt, borderBottom: isBrut ? `3px solid ${c.border}` : `1px solid ${c.border}`, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.1em" : "normal" };
+  const tdStyle = { padding: isCompact ? "0.375rem 0.5rem" : "0.625rem 0.625rem", fontSize: isCompact ? "0.75rem" : "0.875rem", borderBottom: isBrut ? `2px solid ${c.border}` : isTerm ? `1px dashed ${c.border}` : `1px solid ${c.border}`, color: c.text, backgroundColor: c.surface };
   const sectionTitleStyle = { fontSize: isMobile ? "1rem" : (isCompact ? "1.125rem" : "1.5rem"), fontFamily: headingFont, fontWeight: bwh, marginBottom: isCompact ? "1rem" : "1.5rem", display: "flex", alignItems: "center", gap: isCompact ? "0.5rem" : "0.75rem", color: c.textStrong, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" };
 
   // Compute even grid columns for card type stats
@@ -474,7 +478,7 @@ function AppInner() {
       <div style={{ backgroundColor: (isGlass || isLG) ? (isLG ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.04)") : c.surface, boxShadow: isLG ? "0 1px 0 rgba(0,0,0,0.04)" : c.shadow, borderBottom: c.headerBorderBottom || `1px solid ${c.border}`, padding: isMobile ? "0.75rem 0.625rem" : (isCompact ? "0.875rem 1rem" : "1.5rem 1rem"), ...((isGlass || isLG) ? { backdropFilter: "blur(20px) saturate(150%)", WebkitBackdropFilter: "blur(20px) saturate(150%)" } : {}), position: "relative", zIndex: 10 }}>
         <div style={{ maxWidth: "80rem", margin: "0 auto", display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? "0.75rem" : "0" }}>
           <div>
-            <h1 key={theme} style={{ fontSize: isBrut ? "3rem" : (isMobile ? "1.5rem" : (isCompact ? "1.75rem" : "2.5rem")), fontFamily: titleFontFamily, fontWeight: isBrut ? "900" : bwh, background: c.titleGrad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", color: "transparent", display: "inline-block", width: "fit-content", margin: 0, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>Sales Dashboard</h1>
+            <h1 key={theme} style={{ fontSize: isBrut ? "3rem" : (isMobile ? "1.5rem" : `${titleFontSize}px`), fontFamily: titleFontFamily, fontWeight: isBrut ? "900" : bwh, background: c.titleGrad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", color: "transparent", display: "inline-block", width: "fit-content", margin: 0, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>Sales Dashboard</h1>
             <p style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", color: c.textSec, marginTop: "0.25rem", display: "flex", alignItems: "center", gap: "0.75rem" }} className={isTerm ? "terminal-glow" : ""}>
               {isTerm ? "> " : ""}{lastSync ? `Last updated: ${lastSync.toLocaleTimeString()}` : "Loading data..."}
               {autoRefresh > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "0.6875rem", color: c.accent, backgroundColor: c.accentBg, padding: "0.125rem 0.5rem", borderRadius: "999px" }}><Timer size={10} />{autoRefresh}s</span>}
@@ -837,7 +841,7 @@ function AppInner() {
                         {/* Period */}
                         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                           <span style={{ fontSize: isCompact ? "0.6875rem" : "0.75rem", color: c.textSec, fontWeight: bwm, minWidth: "5.5rem" }}>Period</span>
-                          <select value={selectedPeriod} onChange={(e) => { setSelectedPeriod(e.target.value); if (e.target.value !== "current") fetchHistoryForPeriod(e.target.value); }} style={{ flex: 1, padding: isCompact ? "0.3rem 0.5rem" : "0.4rem 0.625rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), fontSize: isCompact ? "0.75rem" : "0.8125rem", backgroundColor: c.inputBg, color: c.text }}>
+                          <select value={selectedPeriod} onChange={(e) => { setSelectedPeriod(e.target.value); if (e.target.value !== "current") fetchHistoryForPeriod(e.target.value); }} style={{ flex: 1, padding: isCompact ? "0.3rem 0.5rem" : "0.4rem 0.625rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), fontSize: isCompact ? "0.75rem" : "0.8125rem", backgroundColor: selectBg, color: c.text }}>
                             <option value="current">Current Month</option>
                             {historyPeriods.map((p) => <option key={p} value={p}>{p}</option>)}
                           </select>
@@ -848,7 +852,7 @@ function AppInner() {
                             {[{ label: "Card Type", val: filterCardType, set: setFilterCardType, opts: [{ v: "all", l: "All Card Types" }, ...cardTypes.map((t) => ({ v: t, l: t }))] }, { label: "Owner", val: filterOwner, set: setFilterOwner, opts: [{ v: "all", l: "All Owners" }, ...owners.map((o) => ({ v: o.id, l: o.name }))] }, { label: "Card No.", val: filterCardNumber, set: setFilterCardNumber, opts: [{ v: "all", l: "All Card Numbers" }, ...availableCardNumbers.map((n) => ({ v: n, l: `Card #${n}` }))] }].map((f, i) => (
                               <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                                 <span style={{ fontSize: isCompact ? "0.6875rem" : "0.75rem", color: c.textSec, fontWeight: bwm, minWidth: "5.5rem" }}>{f.label}</span>
-                                <select style={{ flex: 1, padding: isCompact ? "0.3rem 0.5rem" : "0.4rem 0.625rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), fontSize: isCompact ? "0.75rem" : "0.8125rem", backgroundColor: c.inputBg, color: c.text }} value={f.val} onChange={(e) => f.set(e.target.value)}>
+                                <select style={{ flex: 1, padding: isCompact ? "0.3rem 0.5rem" : "0.4rem 0.625rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), fontSize: isCompact ? "0.75rem" : "0.8125rem", backgroundColor: selectBg, color: c.text }} value={f.val} onChange={(e) => f.set(e.target.value)}>
                                   {f.opts.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
                                 </select>
                               </div>
@@ -940,7 +944,7 @@ function AppInner() {
                               </td>
                             )}
                             <td style={{ ...tdStyle, fontSize: isCompact ? "0.6875rem" : "0.8125rem", color: c.textSec, whiteSpace: "nowrap" }}>{t.date || "-"}</td>
-                            <td style={tdStyle}><div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><div style={{ width: "10px", height: "10px", borderRadius: isBrut ? "0" : "50%", backgroundColor: cc, flexShrink: 0 }}></div><span>{t.cardType || "UNKNOWN"}</span></div></td>
+                            <td style={tdStyle}><span style={cardBadgeStyle(t.cardType)}>{t.cardType || "UNKNOWN"}</span></td>
                             <td style={tdStyle}>{t.cardNumber || "-"}</td>
                             <td style={tdStyle}><span style={ownerBadgeStyle(ownerColorId)}>{t.owner}</span></td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>{parseFloat(t.buyRate).toFixed(2)}</td>
@@ -982,8 +986,7 @@ function AppInner() {
                       onMouseEnter={() => setHoveredCard(`tx-${idx}`)} onMouseLeave={() => setHoveredCard(null)}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: isCompact ? "0.5rem" : "1rem" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: isCompact ? "0.5rem" : "0.75rem" }}>
-                          <div style={{ width: isCompact ? "12px" : "16px", height: isCompact ? "12px" : "16px", borderRadius: isBrut ? "0" : "50%", backgroundColor: cc, flexShrink: 0 }}></div>
-                          <div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.9375rem" : "1.125rem", color: c.textStrong }}>{t.cardType || "UNKNOWN"}</div><div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textSec }}>Card #{t.cardNumber || "-"}</div></div>
+                          <div><span style={cardBadgeStyle(t.cardType)}>{t.cardType || "UNKNOWN"}</span><div style={{ fontSize: isCompact ? "0.6875rem" : "0.8125rem", color: c.textSec, marginTop: "0.25rem" }}>Card #{t.cardNumber || "-"}</div></div>
                         </div>
                         <span style={mb.style}>{(t.profitMargin || 0).toFixed(1)}%</span>
                       </div>
@@ -1172,7 +1175,7 @@ function AppInner() {
             {/* Font */}
             <div style={{ marginBottom: "2rem" }}>
               <label style={{ display: "block", fontSize: "0.875rem", fontWeight: bws, marginBottom: "0.75rem", color: c.text }}>Body Font</label>
-              <select value={selectedFont} onChange={(e) => setSelectedFont(e.target.value)} style={{ padding: "0.75rem", border: `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), fontSize: "0.9375rem", width: "100%", backgroundColor: c.inputBg, color: c.text, cursor: "pointer" }}>
+              <select value={selectedFont} onChange={(e) => setSelectedFont(e.target.value)} style={{ padding: "0.75rem", border: `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), fontSize: "0.9375rem", width: "100%", backgroundColor: selectBg, color: c.text, cursor: "pointer" }}>
                 {FONTS.map((f) => <option key={f.value} value={f.value}>{f.name}</option>)}
               </select>
             </div>
@@ -1180,7 +1183,7 @@ function AppInner() {
             {/* Title Font */}
             <div style={{ marginBottom: "2rem" }}>
               <label style={{ display: "block", fontSize: "0.875rem", fontWeight: bws, marginBottom: "0.75rem", color: c.text }}>Title Font</label>
-              <select value={titleFont} onChange={(e) => setTitleFont(e.target.value)} style={{ padding: "0.75rem", border: `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), fontSize: "0.9375rem", width: "100%", backgroundColor: c.inputBg, color: c.text, cursor: "pointer" }}>
+              <select value={titleFont} onChange={(e) => setTitleFont(e.target.value)} style={{ padding: "0.75rem", border: `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), fontSize: "0.9375rem", width: "100%", backgroundColor: selectBg, color: c.text, cursor: "pointer" }}>
                 {FONTS.map((f) => <option key={f.value} value={f.value}>{f.name}</option>)}
               </select>
               <div style={{ marginTop: "0.5rem", fontFamily: `"${titleFont}", sans-serif`, fontSize: "1.25rem", fontWeight: bwh, background: c.titleGrad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Sales Dashboard</div>
@@ -1192,6 +1195,15 @@ function AppInner() {
               <input type="range" min="12" max="40" value={fontSize} onChange={(e) => setFontSize(parseInt(e.target.value))} style={{ width: "100%", height: "8px", borderRadius: "4px", background: c.toggleBg, outline: "none" }} />
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.5rem", fontSize: "0.875rem", color: c.textSec }}>
                 <span>Small (12px)</span><span style={{ fontSize: "1.125rem", fontWeight: bwx, color: c.textStrong }}>{fontSize}px</span><span>Large (40px)</span>
+              </div>
+            </div>
+
+            {/* Title Font Size */}
+            <div style={{ marginBottom: "2rem" }}>
+              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: bws, marginBottom: "0.75rem", color: c.text }}>Heading Size</label>
+              <input type="range" min="16" max="72" value={titleFontSize} onChange={(e) => setTitleFontSize(parseInt(e.target.value))} style={{ width: "100%", height: "8px", borderRadius: "4px", background: c.toggleBg, outline: "none" }} />
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.5rem", fontSize: "0.875rem", color: c.textSec }}>
+                <span>16px</span><span style={{ fontFamily: titleFontFamily, fontSize: "1.125rem", fontWeight: bwx, color: c.textStrong, background: c.titleGrad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{titleFontSize}px</span><span>72px</span>
               </div>
             </div>
 

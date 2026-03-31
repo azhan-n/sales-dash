@@ -16,6 +16,16 @@ export const normalizeCardType = (type) => {
 
 export const CARD_TYPES = ["VISA DEBIT", "VISA CREDIT", "AMEX", "SELLER", "MASTERCARD"];
 
+export const cardTypeBadgeColors = {
+  "VISA DEBIT":   { bg: "#dbeafe", text: "#1d4ed8" },
+  "VISA CREDIT":  { bg: "#d1fae5", text: "#065f46" },
+  AMEX:           { bg: "#ede9fe", text: "#6d28d9" },
+  SELLER:         { bg: "#f1f5f9", text: "#334155" },
+  MASTERCARD:     { bg: "#fef3c7", text: "#92400e" },
+  UNKNOWN:        { bg: "#f1f5f9", text: "#475569" },
+};
+export const getCardTypeBadge = (type) => cardTypeBadgeColors[normalizeCardType(type)] || cardTypeBadgeColors["UNKNOWN"];
+
 export const cardTypeColors = {
   "VISA DEBIT": "#3b82f6",
   "VISA CREDIT": "#10b981",
