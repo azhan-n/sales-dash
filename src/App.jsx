@@ -1203,7 +1203,10 @@ function AppInner() {
               <label style={{ display: "block", fontSize: "0.875rem", fontWeight: bws, marginBottom: "0.75rem", color: c.text }}>Heading Size</label>
               <input type="range" min="16" max="72" value={titleFontSize} onChange={(e) => setTitleFontSize(parseInt(e.target.value))} style={{ width: "100%", height: "8px", borderRadius: "4px", background: c.toggleBg, outline: "none" }} />
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.5rem", fontSize: "0.875rem", color: c.textSec }}>
-                <span>16px</span><span style={{ fontFamily: titleFontFamily, fontSize: "1.125rem", fontWeight: bwx, color: c.textStrong, background: c.titleGrad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{titleFontSize}px</span><span>72px</span>
+                <span>16px</span><span style={{ fontWeight: bwx, color: c.textStrong }}>{titleFontSize}px</span><span>72px</span>
+              </div>
+              <div style={{ marginTop: "0.75rem", padding: "0.75rem", backgroundColor: c.surfaceAlt, borderRadius: isBrut ? "0" : rSm, overflow: "hidden" }}>
+                <div style={{ fontFamily: titleFontFamily, fontSize: `${titleFontSize}px`, fontWeight: bwh, background: c.titleGrad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Sales Dashboard</div>
               </div>
             </div>
 
