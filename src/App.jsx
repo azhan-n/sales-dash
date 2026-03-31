@@ -156,7 +156,9 @@ function AppInner() {
       setHistoryTransactions(data.map((r) => ({
         id: r.id, cardType: r.card_type, cardNumber: r.card_number, owner: r.owner,
         buyRate: r.buy_rate, buyAmount: r.buy_amount, sellRate: r.sell_rate, sellAmount: r.sell_amount,
-        cost: r.cost, grossProfit: r.gross_profit, netProfit: r.net_profit, date: r.date || "",
+        cost: parseFloat(r.cost) || 0, grossProfit: parseFloat(r.gross_profit) || 0,
+        netProfit: parseFloat(r.net_profit) || 0, date: r.date || "",
+        profitMargin: (parseFloat(r.cost) || 0) > 0 ? ((parseFloat(r.net_profit) || 0) / (parseFloat(r.cost) || 0)) * 100 : 0,
       })));
     }
     setLoadingHistory(false);
@@ -915,8 +917,10 @@ function AppInner() {
                       {editMode && !isHistory && <th style={{ ...thStyle, width: "40px" }}></th>}
                     </tr></thead>
                     <tbody>
-                      {pagedTransactions.map((t) => {
-                        const cd = getCardById(t.cardId); const ow = getOwnerById(t.ownerId); const cc = getCardTypeColor(cd?.type); const mb = getProfitMarginBadge(t.profitMargin);
+                      {(isHistory ? displayFiltered : pagedTransactions).map((t) => {
+                        const cc = getCardTypeColor(t.cardType);
+                        const mb = getProfitMarginBadge(t.profitMargin || 0);
+                        const ownerColorId = t.ownerId || (owners.findIndex((o) => o.name === t.owner) + 1) || 1;
                         const isSelected = selectedTxIds.has(t.id);
                         return (
                           <tr key={t.id} style={isSelected ? { backgroundColor: c.accentBg } : {}}>
@@ -936,9 +940,9 @@ function AppInner() {
                               </td>
                             )}
                             <td style={{ ...tdStyle, fontSize: isCompact ? "0.6875rem" : "0.8125rem", color: c.textSec, whiteSpace: "nowrap" }}>{t.date || "-"}</td>
-                            <td style={tdStyle}><div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><div style={{ width: "10px", height: "10px", borderRadius: isBrut ? "0" : "50%", backgroundColor: cc, flexShrink: 0 }}></div><span>{cd?.type || "UNKNOWN"}</span></div></td>
-                            <td style={tdStyle}>{cd?.number || "-"}</td>
-                            <td style={tdStyle}><span style={ownerBadgeStyle(t.ownerId)}>{ow?.name}</span></td>
+                            <td style={tdStyle}><div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><div style={{ width: "10px", height: "10px", borderRadius: isBrut ? "0" : "50%", backgroundColor: cc, flexShrink: 0 }}></div><span>{t.cardType || "UNKNOWN"}</span></div></td>
+                            <td style={tdStyle}>{t.cardNumber || "-"}</td>
+                            <td style={tdStyle}><span style={ownerBadgeStyle(ownerColorId)}>{t.owner}</span></td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>{parseFloat(t.buyRate).toFixed(2)}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>${parseFloat(t.buyAmount).toFixed(2)}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>{parseFloat(t.sellRate).toFixed(2)}</td>
@@ -946,7 +950,7 @@ function AppInner() {
                             <td style={{ ...tdStyle, textAlign: "right" }}>ރ.{t.cost.toFixed(2)}</td>
                             <td style={{ ...tdStyle, textAlign: "right", color: isTerm ? c.text : "#f97316", fontWeight: bws }}>ރ.{t.grossProfit.toFixed(2)}</td>
                             <td style={{ ...tdStyle, textAlign: "right", color: isTerm ? c.text : "#16a34a", fontWeight: bws }} className={isTerm ? "terminal-glow" : ""}>ރ.{t.netProfit.toFixed(2)}</td>
-                            <td style={{ ...tdStyle, textAlign: "right" }}><span style={mb.style}>{t.profitMargin.toFixed(1)}%</span></td>
+                            <td style={{ ...tdStyle, textAlign: "right" }}><span style={mb.style}>{(t.profitMargin || 0).toFixed(1)}%</span></td>
                             {editMode && !isHistory && <td style={{ ...tdStyle, textAlign: "center" }}><button onClick={() => editTransaction(t)} aria-label="Edit transaction" style={{ background: "none", border: "none", cursor: "pointer", color: c.accent, padding: "0.25rem", display: "flex", alignItems: "center", opacity: 0.6, transition: "opacity 0.15s" }} onMouseEnter={(e) => e.currentTarget.style.opacity = 1} onMouseLeave={(e) => e.currentTarget.style.opacity = 0.6}><Pencil size={14} /></button></td>}
                           </tr>
                         );
@@ -970,20 +974,21 @@ function AppInner() {
               </div>
             ) : (
               <div style={{ display: "grid", gridTemplateColumns: (isBrut || isMobile) ? "1fr" : "repeat(2, 1fr)", gap: isCompact ? "0.625rem" : "1rem" }}>
-                {pagedTransactions.map((t, idx) => {
-                  const cd = getCardById(t.cardId); const ow = getOwnerById(t.ownerId); const cc = getCardTypeColor(cd?.type); const mb = getProfitMarginBadge(t.profitMargin);
+                {(isHistory ? displayFiltered : pagedTransactions).map((t, idx) => {
+                  const cc = getCardTypeColor(t.cardType); const mb = getProfitMarginBadge(t.profitMargin || 0);
+                  const ownerColorId = t.ownerId || (owners.findIndex((o) => o.name === t.owner) + 1) || 1;
                   return (
                     <div key={t.id} className={isLG ? "lg-specular" : ""} style={{ backgroundColor: c.surface, borderRadius: isLG ? r : (isCirc ? "2rem" : rSm), padding: isCompact ? "0.875rem" : "1.5rem", border: isBrut ? `3px solid ${c.border}` : (isLG ? "1px solid rgba(255,255,255,0.6)" : `1px solid ${c.border}`), ...((isGlass || isLG) ? { backdropFilter: "blur(16px) saturate(150%)", WebkitBackdropFilter: "blur(16px) saturate(150%)" } : {}), ...(isBrut ? { boxShadow: "4px 4px 0 #000" } : {}), cursor: "pointer", animation: `slideUp 0.35s cubic-bezier(.16,1,.3,1) ${Math.min(idx, 10) * 0.04}s both`, transform: hoveredCard === `tx-${idx}` ? "translateY(-4px)" : "translateY(0)", boxShadow: hoveredCard === `tx-${idx}` ? c.cardHoverShadow : (isLG ? "0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7)" : (c.cardGlow || "none")), transition: "transform 0.2s cubic-bezier(.4,0,.2,1), box-shadow 0.2s cubic-bezier(.4,0,.2,1)" }}
                       onMouseEnter={() => setHoveredCard(`tx-${idx}`)} onMouseLeave={() => setHoveredCard(null)}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: isCompact ? "0.5rem" : "1rem" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: isCompact ? "0.5rem" : "0.75rem" }}>
                           <div style={{ width: isCompact ? "12px" : "16px", height: isCompact ? "12px" : "16px", borderRadius: isBrut ? "0" : "50%", backgroundColor: cc, flexShrink: 0 }}></div>
-                          <div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.9375rem" : "1.125rem", color: c.textStrong }}>{cd?.type || "UNKNOWN"}</div><div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textSec }}>Card #{cd?.number || "-"}</div></div>
+                          <div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.9375rem" : "1.125rem", color: c.textStrong }}>{t.cardType || "UNKNOWN"}</div><div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textSec }}>Card #{t.cardNumber || "-"}</div></div>
                         </div>
-                        <span style={mb.style}>{t.profitMargin.toFixed(1)}%</span>
+                        <span style={mb.style}>{(t.profitMargin || 0).toFixed(1)}%</span>
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isCompact ? "0.5rem" : "1rem" }}>
-                        <div><div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textSec, marginBottom: "0.25rem" }}>Owner</div><span style={ownerBadgeStyle(t.ownerId)}>{ow?.name}</span></div>
+                        <div><div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textSec, marginBottom: "0.25rem" }}>Owner</div><span style={ownerBadgeStyle(ownerColorId)}>{t.owner}</span></div>
                         <div style={{ textAlign: "right" }}><div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textSec }}>Date</div><div style={{ fontWeight: bwm, fontSize: isCompact ? "0.75rem" : "0.875rem", color: c.text }}>{t.date || "-"}</div></div>
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: isCompact ? "0.5rem" : "1rem", marginBottom: isCompact ? "0.5rem" : "1rem" }}>
