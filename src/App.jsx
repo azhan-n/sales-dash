@@ -59,6 +59,7 @@ function AppInner() {
   const [submitting, setSubmitting] = useState(false);
   const [editingTxId, setEditingTxId] = useState(null);
   const [txForm, setTxForm] = useState({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "" });
+  const [ownerInfoMap, setOwnerInfoMap] = useState({});
   const [monthlyForm, setMonthlyForm] = useState({ month: "", profit: "" });
   const [editingMonthlyId, setEditingMonthlyId] = useState(null);
   const [editModeMonthly, setEditModeMonthly] = useState(false);
@@ -328,13 +329,22 @@ function AppInner() {
     if (!silent) setLoading(true);
     setError(null);
     try {
-      const [txRes, mRes] = await Promise.all([
+      const [txRes, mRes, oiRes] = await Promise.all([
         supabase.from("transactions").select("*").order("created_at", { ascending: false }),
         supabase.from("monthly").select("*").order("id", { ascending: true }),
+        supabase.from("owner_info").select("owner_name, type, card_number"),
       ]);
       if (txRes.error) throw txRes.error;
       if (mRes.error) throw mRes.error;
       setLastSync(new Date());
+      // Build ownerInfoMap: { "AZHAN": [{type, cardNumber}, ...], ... }
+      const oiMap = {};
+      (oiRes.data || []).forEach((r) => {
+        const key = r.owner_name.toUpperCase();
+        if (!oiMap[key]) oiMap[key] = [];
+        oiMap[key].push({ type: r.type, cardNumber: r.card_number.trim() });
+      });
+      setOwnerInfoMap(oiMap);
       // Map snake_case DB columns to camelCase frontend fields
       const txData = (txRes.data || []).map((r, i) => ({
         id: r.id, cardType: r.card_type, cardNumber: r.card_number, owner: r.owner,
@@ -1099,6 +1109,7 @@ function AppInner() {
         setShowTxForm={setShowTxForm}
         submitting={submitting}
         cardTypes={cardTypes}
+        ownerInfoMap={ownerInfoMap}
         onSubmit={submitTransaction}
       />
 

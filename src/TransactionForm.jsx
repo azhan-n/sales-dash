@@ -14,6 +14,7 @@ export function TransactionForm({
   setShowTxForm,
   submitting,
   cardTypes,
+  ownerInfoMap, // { "AZHAN": [{type, cardNumber}, ...], ... }
   onSubmit,  // async (formData) => void — called with validated form
 }) {
   const { c, isBrut, isCirc, isGlass, isLG, isTerm, isMobile, isCompact, headingFont, bwh, bwm, bws, bwx, r, rSm } = th;
@@ -28,6 +29,33 @@ export function TransactionForm({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [showTxForm]);
+
+  const ownerList = Object.keys(ownerInfoMap || {}).sort();
+
+  const handleOwnerChange = (name) => {
+    const key = name.toUpperCase();
+    const cards = (ownerInfoMap || {})[key] || [];
+    if (cards.length === 1) {
+      setTxForm((f) => ({ ...f, owner: name, cardNumber: cards[0].cardNumber, cardType: cards[0].type }));
+    } else {
+      setTxForm((f) => ({ ...f, owner: name, cardNumber: "", cardType: "VISA DEBIT" }));
+    }
+    if (errors.owner) setErrors((p) => ({ ...p, owner: null }));
+    if (errors.cardNumber) setErrors((p) => ({ ...p, cardNumber: null }));
+  };
+
+  const handleCardSelect = (cardNumber) => {
+    const key = (txForm.owner || "").toUpperCase();
+    const cards = (ownerInfoMap || {})[key] || [];
+    const match = cards.find((c) => c.cardNumber === cardNumber);
+    setTxForm((f) => ({ ...f, cardNumber, cardType: match ? match.type : f.cardType }));
+    if (errors.cardNumber) setErrors((p) => ({ ...p, cardNumber: null }));
+  };
+
+  const ownerKey = (txForm.owner || "").toUpperCase();
+  const ownerCards = (ownerInfoMap || {})[ownerKey] || [];
+  const cardIsLocked = ownerCards.length === 1;
+  const cardIsDropdown = ownerCards.length > 1;
 
   const resetForm = () => {
     setErrors({});
@@ -132,20 +160,59 @@ export function TransactionForm({
         {/* Fields */}
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "0.75rem" }}>
           <div>
-            <label style={fLabel}>Card Type</label>
-            <select value={txForm.cardType} onChange={(e) => setTxForm({ ...txForm, cardType: e.target.value })} style={fInput("cardType")}>
-              {cardTypes.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
+            <label style={fLabel}>Owner *</label>
+            {ownerList.length > 0 ? (
+              <select
+                ref={firstInputRef}
+                value={txForm.owner}
+                onChange={(e) => handleOwnerChange(e.target.value)}
+                style={fInput("owner")}
+              >
+                <option value="">Select owner...</option>
+                {ownerList.map((name) => <option key={name} value={name}>{name}</option>)}
+              </select>
+            ) : (
+              <input
+                ref={firstInputRef}
+                type="text"
+                value={txForm.owner}
+                onChange={(e) => { setTxForm({ ...txForm, owner: e.target.value }); if (errors.owner) setErrors((p) => ({ ...p, owner: null })); }}
+                placeholder="Name"
+                style={fInput("owner")}
+              />
+            )}
+            {errMsg("owner")}
           </div>
           <div>
             <label style={fLabel}>Card Number *</label>
-            <input ref={firstInputRef} type="text" value={txForm.cardNumber} onChange={(e) => { setTxForm({ ...txForm, cardNumber: e.target.value }); if (errors.cardNumber) setErrors((p) => ({ ...p, cardNumber: null })); }} placeholder="e.g. 2581" style={fInput("cardNumber")} />
+            {cardIsDropdown ? (
+              <select
+                value={txForm.cardNumber}
+                onChange={(e) => handleCardSelect(e.target.value)}
+                style={fInput("cardNumber")}
+              >
+                <option value="">Select card...</option>
+                {ownerCards.map((c) => (
+                  <option key={c.cardNumber} value={c.cardNumber}>{c.cardNumber} ({c.type})</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                value={txForm.cardNumber}
+                onChange={(e) => { if (!cardIsLocked) { setTxForm({ ...txForm, cardNumber: e.target.value }); if (errors.cardNumber) setErrors((p) => ({ ...p, cardNumber: null })); } }}
+                placeholder="e.g. 2581"
+                readOnly={cardIsLocked}
+                style={{ ...fInput("cardNumber"), backgroundColor: cardIsLocked ? c.surfaceAlt : c.inputBg, cursor: cardIsLocked ? "default" : "text" }}
+              />
+            )}
             {errMsg("cardNumber")}
           </div>
           <div>
-            <label style={fLabel}>Owner *</label>
-            <input type="text" value={txForm.owner} onChange={(e) => { setTxForm({ ...txForm, owner: e.target.value }); if (errors.owner) setErrors((p) => ({ ...p, owner: null })); }} placeholder="Name" style={fInput("owner")} />
-            {errMsg("owner")}
+            <label style={fLabel}>Card Type</label>
+            <select value={txForm.cardType} onChange={(e) => setTxForm({ ...txForm, cardType: e.target.value })} style={{ ...fInput("cardType"), backgroundColor: (cardIsLocked || cardIsDropdown) ? c.surfaceAlt : c.inputBg }} disabled={cardIsLocked || cardIsDropdown}>
+              {cardTypes.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
           </div>
           <div>
             <label style={fLabel}>Buy Rate *</label>
