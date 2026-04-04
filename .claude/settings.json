@@ -1,5 +1,20 @@
 {
   "instructions": [
     "Always push commits directly to main only. Never create feature branches or push to any branch other than main."
-  ]
+  ],
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r 'select(.tool_input.command | test(\"git push.*(origin )?main\")) | \"deploying\"' | grep -q deploying && npx vercel --prod --yes 2>&1 || true",
+            "timeout": 120,
+            "statusMessage": "Deploying to Vercel production..."
+          }
+        ]
+      }
+    ]
+  }
 }
