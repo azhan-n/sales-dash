@@ -531,6 +531,19 @@ function AppInner() {
                 {isTerm ? `[${tab.toUpperCase()}]` : tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
             ))}
+            {activeTab === "dashboard" && (
+              <div style={{ display: "flex", alignItems: "center", gap: "2px", marginLeft: isMobile ? "auto" : "1.5rem", borderLeft: isMobile ? "none" : `1px solid ${c.border}`, paddingLeft: isMobile ? 0 : "1.5rem" }}>
+                {[1, 2, 3, 4].map((n) => (
+                  <button key={n} onClick={() => setStatCardCols(n)} title={`${n} column${n > 1 ? "s" : ""}`} style={{ padding: "0.25rem", width: isMobile ? "1.75rem" : "2rem", height: isMobile ? "1.75rem" : "2rem", border: statCardCols === n ? `1.5px solid ${c.accent}` : `1px solid ${c.border}`, borderRadius: isBrut ? "0" : "0.375rem", backgroundColor: statCardCols === n ? c.accentBg : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "border-color 0.15s, background-color 0.15s" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: `repeat(${n}, 1fr)`, gap: "1.5px", width: isMobile ? "12px" : "14px" }}>
+                      {Array.from({ length: n * 2 }).map((_, i) => (
+                        <div key={i} style={{ height: isMobile ? "4px" : "5px", borderRadius: "1px", backgroundColor: statCardCols === n ? c.accent : c.textSec, opacity: statCardCols === n ? 0.9 : 0.4 }} />
+                      ))}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
             {(activeTab === "transactions" || activeTab === "monthly") && (
               <div style={{ marginLeft: "auto", position: "relative" }}>
                 <button onClick={() => setShowExportMenu(!showExportMenu)} style={{
@@ -1204,23 +1217,6 @@ function AppInner() {
                   <div key={o.k} onClick={() => setViewStyle(o.k)} style={{ flex: 1, padding: "0.75rem", border: viewStyle === o.k ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "2rem" : "0.75rem"), backgroundColor: viewStyle === o.k ? c.accentBg : c.surfaceAlt, cursor: "pointer", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", color: viewStyle === o.k ? c.accent : c.text }}>
                     <o.i size={24} /><span>{o.l}</span><div style={{ fontSize: "0.6875rem", opacity: 0.7 }}>{o.d}</div>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Stat Card Columns */}
-            <div style={{ marginBottom: "2rem" }}>
-              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: bws, marginBottom: "0.75rem", color: c.text }}>Stat Card Columns</label>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.5rem" }}>
-                {[1, 2, 3, 4].map((n) => (
-                  <button key={n} onClick={() => setStatCardCols(n)} style={{ padding: "0.625rem 0.5rem", border: statCardCols === n ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.625rem"), backgroundColor: statCardCols === n ? c.accentBg : c.surfaceAlt, color: statCardCols === n ? c.accent : c.text, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.375rem" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: `repeat(${n}, 1fr)`, gap: "2px", width: "100%", maxWidth: "44px" }}>
-                      {Array.from({ length: n === 1 ? 2 : (n === 2 ? 4 : (n === 3 ? 6 : 8)) }).map((_, i) => (
-                        <div key={i} style={{ height: "10px", borderRadius: "2px", backgroundColor: statCardCols === n ? c.accent : c.textSec, opacity: statCardCols === n ? 0.8 : 0.35 }} />
-                      ))}
-                    </div>
-                    <span style={{ fontSize: "0.75rem", fontWeight: bws }}>{n} col{n > 1 ? "s" : ""}</span>
-                  </button>
                 ))}
               </div>
             </div>
