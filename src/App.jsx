@@ -492,16 +492,16 @@ function AppInner() {
       {isTerm && <div className="terminal-scanline"></div>}
       {isMid && <div className="midnight-stars"></div>}
       {isCirc && <>
-        <div className="circ-blob" style={{ width: "400px", height: "400px", background: "#8b5cf6", top: "-100px", left: "-100px" }}></div>
-        <div className="circ-blob" style={{ width: "300px", height: "300px", background: "#e879f9", bottom: "10%", right: "-80px" }}></div>
-        <div className="circ-blob" style={{ width: "250px", height: "250px", background: "#6366f1", top: "40%", left: "30%" }}></div>
+        <div className="circ-blob" style={{ width: "min(400px,60vw)", height: "min(400px,60vw)", background: "#8b5cf6", top: "-100px", left: "-100px" }}></div>
+        <div className="circ-blob" style={{ width: "min(300px,50vw)", height: "min(300px,50vw)", background: "#e879f9", bottom: "10%", right: "-80px" }}></div>
+        <div className="circ-blob" style={{ width: "min(250px,40vw)", height: "min(250px,40vw)", background: "#6366f1", top: "40%", left: "30%" }}></div>
       </>}
 
       {/* HEADER */}
       <div style={{ backgroundColor: isSky ? "transparent" : ((isGlass || isLG) ? (isLG ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.04)") : c.surface), background: isSky ? "linear-gradient(135deg, #0284c7 0%, #0ea5e9 60%, #38bdf8 100%)" : undefined, boxShadow: isSky ? "0 4px 20px rgba(14,165,233,0.25)" : (isLG ? "0 1px 0 rgba(0,0,0,0.04)" : c.shadow), borderBottom: isSky ? "none" : (c.headerBorderBottom || `1px solid ${c.border}`), padding: isMobile ? "0.75rem 0.625rem" : (isCompact ? "0.875rem 1rem" : "1.5rem 1rem"), ...((isGlass || isLG) ? { backdropFilter: "blur(20px) saturate(150%)", WebkitBackdropFilter: "blur(20px) saturate(150%)" } : {}), position: "relative", zIndex: 10 }}>
         <div style={{ maxWidth: "80rem", margin: "0 auto", display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? "0.75rem" : "0" }}>
           <div>
-            <h1 key={theme} style={{ fontSize: isBrut ? "3rem" : `${titleFontSize}px`, fontFamily: titleFontFamily, fontWeight: isBrut ? "900" : bwh, background: isSky ? "none" : c.titleGrad, WebkitBackgroundClip: isSky ? "unset" : "text", WebkitTextFillColor: isSky ? "#ffffff" : "transparent", backgroundClip: isSky ? "unset" : "text", color: isSky ? "#ffffff" : "transparent", display: "inline-block", width: "fit-content", margin: 0, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>Sales Dashboard</h1>
+            <h1 key={theme} style={{ fontSize: isBrut ? "3rem" : `${titleFontSize}px`, fontFamily: titleFontFamily, fontWeight: isBrut ? "900" : bwh, background: isSky ? "none" : c.titleGrad, WebkitBackgroundClip: isSky ? "unset" : "text", WebkitTextFillColor: isSky ? "#ffffff" : "transparent", backgroundClip: isSky ? "unset" : "text", color: isSky ? "#ffffff" : "transparent", display: "inline-block", width: "fit-content", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>Sales Dashboard</h1>
             <p style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", color: isSky ? "rgba(255,255,255,0.85)" : c.textSec, marginTop: "0.25rem", display: "flex", alignItems: "center", gap: "0.75rem" }} className={isTerm ? "terminal-glow" : ""}>
               {isTerm ? "> " : ""}{lastSync ? `Last updated: ${lastSync.toLocaleTimeString()}` : "Loading data..."}
               {autoRefresh > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "0.6875rem", color: isSky ? "#ffffff" : c.accent, backgroundColor: isSky ? "rgba(255,255,255,0.2)" : c.accentBg, padding: "0.125rem 0.5rem", borderRadius: "999px" }}><Timer size={10} />{autoRefresh}s</span>}
@@ -659,7 +659,7 @@ function AppInner() {
                   </div>
                   <div style={{ position: "relative", height: `${chartH}px`, display: "flex", alignItems: "flex-end", gap: isMobile ? "4px" : "8px", paddingBottom: "2rem", paddingLeft: "3rem" }}>
                     {[0, 0.25, 0.5, 0.75, 1].map((pct) => (
-                      <div key={pct} style={{ position: "absolute", left: 0, bottom: `${2 + pct * (chartH - 32) / chartH * 100}%`, fontSize: isCompact ? "0.5625rem" : "0.625rem", color: c.textMuted, width: "2.75rem", textAlign: "right", paddingRight: "0.5rem", transform: "translateY(50%)" }}>${Math.round(maxProfit * pct)}</div>
+                      <div key={pct} style={{ position: "absolute", left: 0, bottom: `${2 + pct * (chartH - 32) / chartH * 100}%`, fontSize: isMobile ? "0.6875rem" : (isCompact ? "0.5625rem" : "0.625rem"), color: c.textMuted, width: "2.75rem", textAlign: "right", paddingRight: "0.5rem", transform: "translateY(50%)" }}>${Math.round(maxProfit * pct)}</div>
                     ))}
                     {[0, 0.25, 0.5, 0.75, 1].map((pct) => (
                       <div key={`g${pct}`} style={{ position: "absolute", left: "3rem", right: 0, bottom: `${2 + pct * (chartH - 32) / chartH * 100}%`, height: "1px", backgroundColor: c.border, opacity: 0.5 }}></div>
@@ -682,7 +682,7 @@ function AppInner() {
                               opacity: hoveredBar === null || hoveredBar === i ? 1 : 0.5,
                               transform: hoveredBar === i ? "scaleY(1.03)" : "scaleY(1)", transformOrigin: "bottom",
                             }}></div>
-                            <div style={{ fontSize: isMobile ? "0.5rem" : (isCompact ? "0.5625rem" : "0.6875rem"), color: c.textMuted, marginTop: "0.375rem", textAlign: "center", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>
+                            <div style={{ fontSize: isMobile ? "0.6875rem" : (isCompact ? "0.5625rem" : "0.6875rem"), color: c.textMuted, marginTop: "0.375rem", textAlign: "center", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>
                               {isMobile ? m.month.slice(0, 3) : m.month}
                             </div>
                           </div>
@@ -706,7 +706,7 @@ function AppInner() {
                     {profitChartMode === "line" && (
                       <div style={{ position: "absolute", left: "3rem", right: 0, bottom: 0, display: "flex", justifyContent: "space-between", zIndex: 3 }}>
                         {monthly.map((m, i) => (
-                          <div key={i} style={{ fontSize: isMobile ? "0.5rem" : (isCompact ? "0.5625rem" : "0.6875rem"), color: c.textMuted, textAlign: "center" }}
+                          <div key={i} style={{ fontSize: isMobile ? "0.6875rem" : (isCompact ? "0.5625rem" : "0.6875rem"), color: c.textMuted, textAlign: "center" }}
                             onMouseEnter={() => setHoveredBar(i)} onMouseLeave={() => setHoveredBar(null)}>
                             {isMobile ? m.month.slice(0, 3) : m.month}
                           </div>
@@ -900,7 +900,7 @@ function AppInner() {
                   {/* Persistent search bar */}
                   <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
                     <Search size={isCompact ? 12 : 13} style={{ position: "absolute", left: "0.5rem", color: c.textSec, pointerEvents: "none" }} />
-                    <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search..." aria-label="Search transactions" style={{ padding: isCompact ? "0.375rem 0.5rem 0.375rem 1.625rem" : "0.5rem 0.625rem 0.5rem 1.75rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${searchQuery ? c.accent : c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), fontSize: isCompact ? "0.75rem" : "0.8125rem", backgroundColor: c.inputBg, color: c.text, outline: "none", width: isMobile ? "8rem" : "13rem", transition: "border-color 0.15s, width 0.2s" }} />
+                    <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search..." aria-label="Search transactions" style={{ padding: isCompact ? "0.375rem 0.5rem 0.375rem 1.625rem" : "0.5rem 0.625rem 0.5rem 1.75rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${searchQuery ? c.accent : c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), fontSize: isCompact ? "0.75rem" : "0.8125rem", backgroundColor: c.inputBg, color: c.text, outline: "none", width: isMobile ? "11rem" : "13rem", transition: "border-color 0.15s, width 0.2s" }} />
                     {searchQuery && <button onClick={() => setSearchQuery("")} style={{ position: "absolute", right: "0.375rem", background: "none", border: "none", cursor: "pointer", color: c.textSec, display: "flex", alignItems: "center", padding: 0 }}><X size={13} /></button>}
                   </div>
                   {[{ m: "table", icon: List, label: "Table" }, { m: "cards", icon: LayoutGrid, label: "Cards" }].map(({ m, icon: Ic, label }) => (
@@ -1047,10 +1047,10 @@ function AppInner() {
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: isCompact ? "0.75rem" : "1.25rem", padding: isCompact ? "0.5rem 0.75rem" : "0.75rem 1rem", backgroundColor: c.surface, borderRadius: isCirc ? "2rem" : rSm, border: `1px solid ${c.border}` }}>
                 <span style={{ fontSize: isCompact ? "0.6875rem" : "0.8125rem", color: c.textSec }}>{sortedTransactions.length} result{sortedTransactions.length !== 1 ? "s" : ""} &nbsp;·&nbsp; Page {currentPage} of {totalPages}</span>
                 <div style={{ display: "flex", gap: "0.375rem" }}>
-                  <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} aria-label="Previous page" style={{ padding: isCompact ? "0.25rem 0.5rem" : "0.375rem 0.625rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: currentPage === 1 ? c.textSec : c.text, cursor: currentPage === 1 ? "not-allowed" : "pointer", opacity: currentPage === 1 ? 0.4 : 1, display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: isCompact ? "0.6875rem" : "0.8125rem", fontWeight: bwm }}>
+                  <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} aria-label="Previous page" style={{ padding: isMobile ? "0.625rem 1rem" : (isCompact ? "0.25rem 0.5rem" : "0.375rem 0.625rem"), borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: currentPage === 1 ? c.textSec : c.text, cursor: currentPage === 1 ? "not-allowed" : "pointer", opacity: currentPage === 1 ? 0.4 : 1, display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: isCompact ? "0.6875rem" : "0.8125rem", fontWeight: bwm }}>
                     <ChevronLeft size={isCompact ? 13 : 15} /> Prev
                   </button>
-                  <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} aria-label="Next page" style={{ padding: isCompact ? "0.25rem 0.5rem" : "0.375rem 0.625rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: currentPage === totalPages ? c.textSec : c.text, cursor: currentPage === totalPages ? "not-allowed" : "pointer", opacity: currentPage === totalPages ? 0.4 : 1, display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: isCompact ? "0.6875rem" : "0.8125rem", fontWeight: bwm }}>
+                  <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} aria-label="Next page" style={{ padding: isMobile ? "0.625rem 1rem" : (isCompact ? "0.25rem 0.5rem" : "0.375rem 0.625rem"), borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: currentPage === totalPages ? c.textSec : c.text, cursor: currentPage === totalPages ? "not-allowed" : "pointer", opacity: currentPage === totalPages ? 0.4 : 1, display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: isCompact ? "0.6875rem" : "0.8125rem", fontWeight: bwm }}>
                     Next <ChevronRight size={isCompact ? 13 : 15} />
                   </button>
                 </div>
@@ -1261,7 +1261,7 @@ function AppInner() {
             {/* Auto-Refresh */}
             <div style={{ marginBottom: "2rem" }}>
               <label style={{ display: "block", fontSize: "0.875rem", fontWeight: bws, marginBottom: "0.75rem", color: c.text }}>Auto-Refresh</label>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.5rem" }}>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: "0.5rem" }}>
                 {[{ v: 0, l: "Off" }, { v: 30, l: "30s" }, { v: 60, l: "1m" }, { v: 300, l: "5m" }].map((opt) => (
                   <button key={opt.v} onClick={() => setAutoRefresh(opt.v)} style={{ padding: "0.625rem", border: autoRefresh === opt.v ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), backgroundColor: autoRefresh === opt.v ? c.accentBg : c.surfaceAlt, color: autoRefresh === opt.v ? c.accent : c.text, cursor: "pointer", fontSize: "0.8125rem", fontWeight: bws, textAlign: "center" }}>
                     {opt.l}
@@ -1280,6 +1280,7 @@ function AppInner() {
         *, *::before, *::after { font-family: inherit; box-sizing: border-box; }
         html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
         button, select, input { font-family: inherit; }
+        @media (max-width: 640px) { button { min-height: 2.75rem; } input:not([type="checkbox"]):not([type="radio"]), select { min-height: 2.75rem; } }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { opacity: 0; transform: translate3d(0, 12px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
