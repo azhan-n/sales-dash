@@ -1,0 +1,5 @@
+{
+  "instructions": [
+    "Always push commits directly to main only. Never create feature branches or push to any branch other than main."
+  ]
+}
