@@ -513,7 +513,7 @@ function AppInner() {
       </div>
 
       {/* TABS */}
-      <div style={{ backgroundColor: isSky ? "#ffffff" : ((isGlass || isLG) ? (isLG ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.02)") : c.surface), borderBottom: isBrut ? `3px solid ${c.border}` : `1px solid ${isSky ? "#c8e4f5" : c.border}`, boxShadow: isSky ? "0 2px 8px rgba(14,165,233,0.08)" : "none", ...((isGlass || isLG) ? { backdropFilter: "blur(16px) saturate(150%)", WebkitBackdropFilter: "blur(16px) saturate(150%)" } : {}), position: "relative", zIndex: 10 }}>
+      <div style={{ backgroundColor: isSky ? "rgba(255,255,255,0.45)" : ((isGlass || isLG) ? (isLG ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.02)") : c.surface), borderBottom: isBrut ? `3px solid ${c.border}` : `1px solid ${isSky ? "rgba(255,255,255,0.5)" : c.border}`, boxShadow: isSky ? "0 2px 12px rgba(14,165,233,0.1)" : "none", ...((isGlass || isLG || isSky) ? { backdropFilter: "blur(20px) saturate(160%)", WebkitBackdropFilter: "blur(20px) saturate(160%)" } : {}), position: "relative", zIndex: 10 }}>
         <div style={{ maxWidth: "80rem", margin: "0 auto", padding: "0 1rem" }}>
           <nav style={{ display: "flex", gap: isBrut ? "0" : (isMobile ? "1rem" : "2rem"), alignItems: "center" }}>
             {["dashboard", "transactions", "monthly"].map((tab) => (
