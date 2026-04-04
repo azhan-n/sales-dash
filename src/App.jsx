@@ -45,6 +45,7 @@ function AppInner() {
   const [fontSize, setFontSize] = useState(() => parseInt(localStorage.getItem("fontSize")) || 20);
   const [titleFontSize, setTitleFontSize] = useState(() => parseInt(localStorage.getItem("titleFontSize")) || 40);
   const [boldText, setBoldText] = useState(() => localStorage.getItem("boldText") === "true");
+  const [statCardCols, setStatCardCols] = useState(() => parseInt(localStorage.getItem("statCardCols")) || 4);
 
   // Sort
   const [sortCol, setSortCol] = useState(null);
@@ -321,6 +322,7 @@ function AppInner() {
   useEffect(() => { localStorage.setItem("viewStyle", viewStyle); }, [viewStyle]);
   useEffect(() => { localStorage.setItem("boldText", boldText.toString()); }, [boldText]);
   useEffect(() => { localStorage.setItem("autoRefresh", autoRefresh.toString()); }, [autoRefresh]);
+  useEffect(() => { localStorage.setItem("statCardCols", statCardCols.toString()); }, [statCardCols]);
 
   // Auto-refresh timer
   useEffect(() => {
@@ -579,7 +581,7 @@ function AppInner() {
         {activeTab === "dashboard" && (
           <div>
             {/* STAT CARDS */}
-            <div style={{ display: "grid", gridTemplateColumns: isBrut ? "1fr" : (isMobile ? "1fr" : (isCompact || isTablet ? "repeat(2, 1fr)" : (L.statCardDir === "row" ? "repeat(2, 1fr)" : "repeat(4, 1fr)"))), gap: isMobile ? "0.625rem" : (isCompact ? "0.75rem" : (isBrut ? "0.5rem" : "1.5rem")), marginBottom: isCompact ? "1rem" : "2rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: isBrut ? "1fr" : `repeat(${isMobile ? Math.min(statCardCols, 2) : statCardCols}, 1fr)`, gap: isMobile ? "0.625rem" : (isCompact ? "0.75rem" : (isBrut ? "0.5rem" : "1.5rem")), marginBottom: isCompact ? "1rem" : "2rem" }}>
               {[
                 { label: "Net Profit", value: stats.totalNetProfit, icon: TrendingUp, color: "Green", sub: "After costs", prefix: "ރ." },
                 { label: "Total USDT Sold", value: stats.totalUsdtSold, icon: DollarSign, color: "Teal", sub: "Total sell amount", prefix: "₮ " },
@@ -1202,6 +1204,23 @@ function AppInner() {
                   <div key={o.k} onClick={() => setViewStyle(o.k)} style={{ flex: 1, padding: "0.75rem", border: viewStyle === o.k ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "2rem" : "0.75rem"), backgroundColor: viewStyle === o.k ? c.accentBg : c.surfaceAlt, cursor: "pointer", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", color: viewStyle === o.k ? c.accent : c.text }}>
                     <o.i size={24} /><span>{o.l}</span><div style={{ fontSize: "0.6875rem", opacity: 0.7 }}>{o.d}</div>
                   </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Stat Card Columns */}
+            <div style={{ marginBottom: "2rem" }}>
+              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: bws, marginBottom: "0.75rem", color: c.text }}>Stat Card Columns</label>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.5rem" }}>
+                {[1, 2, 3, 4].map((n) => (
+                  <button key={n} onClick={() => setStatCardCols(n)} style={{ padding: "0.625rem 0.5rem", border: statCardCols === n ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.625rem"), backgroundColor: statCardCols === n ? c.accentBg : c.surfaceAlt, color: statCardCols === n ? c.accent : c.text, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.375rem" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: `repeat(${n}, 1fr)`, gap: "2px", width: "100%", maxWidth: "44px" }}>
+                      {Array.from({ length: n === 1 ? 2 : (n === 2 ? 4 : (n === 3 ? 6 : 8)) }).map((_, i) => (
+                        <div key={i} style={{ height: "10px", borderRadius: "2px", backgroundColor: statCardCols === n ? c.accent : c.textSec, opacity: statCardCols === n ? 0.8 : 0.35 }} />
+                      ))}
+                    </div>
+                    <span style={{ fontSize: "0.75rem", fontWeight: bws }}>{n} col{n > 1 ? "s" : ""}</span>
+                  </button>
                 ))}
               </div>
             </div>
