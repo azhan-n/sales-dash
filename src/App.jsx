@@ -992,7 +992,7 @@ function AppInner() {
                         <td style={tdStyle}></td>
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Gross:</div><div style={{ color: isTerm ? c.text : "#f97316", fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem" }}>ރ.{displayFiltered.reduce((s, t) => s + t.grossProfit, 0).toFixed(2)}</div></td>
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Net:</div><div style={{ color: isTerm ? c.text : "#16a34a", fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem" }} className={isTerm ? "terminal-glow" : ""}>ރ.{displayFiltered.reduce((s, t) => s + t.netProfit, 0).toFixed(2)}</div></td>
-                        <td style={tdStyle}></td>
+                        {(() => { const totCost = displayFiltered.reduce((s, t) => s + t.cost, 0); const totNet = displayFiltered.reduce((s, t) => s + t.netProfit, 0); const avgMargin = totCost > 0 ? (totNet / totCost) * 100 : 0; const mb = getProfitMarginBadge(avgMargin); return <td style={{ ...tdStyle, textAlign: "center" }}><div style={{ fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid, marginBottom: "0.2rem" }}>Avg:</div><span style={mb.style}>{avgMargin.toFixed(1)}%</span></td>; })()}
                       </tr>
                     </tfoot>
                   </table>
