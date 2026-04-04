@@ -594,6 +594,7 @@ function AppInner() {
                 const txtColor = sc.text || null;
                 const iconSz = isCompact ? L.statIconSizeSm : L.statIconSize;
                 const isRow = L.statCardDir === "row";
+                const isGlassy = isGlass || isLG || isSky;
                 return (
                   <div key={idx} className={isLG ? "lg-specular" : ""} style={{
                     padding: isMobile ? "1rem" : (isCompact ? "0.875rem" : (isBrut ? "1.5rem" : "2rem")),
@@ -602,7 +603,8 @@ function AppInner() {
                     boxShadow: isBrut ? "4px 4px 0 #000" : (isLG ? "0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7)" : (isCompact ? c.shadowLgCompact : c.shadowLg)),
                     ...((isGlass || isLG) ? { backdropFilter: "blur(16px) saturate(150%)", WebkitBackdropFilter: "blur(16px) saturate(150%)" } : {}),
                     cursor: "pointer", willChange: "transform, box-shadow, opacity",
-                    display: isRow ? "flex" : "block", alignItems: isRow ? "center" : undefined, gap: isRow ? "1.25rem" : undefined,
+                    display: (isRow && !isGlassy) ? "flex" : "block", alignItems: (isRow && !isGlassy) ? "center" : undefined, gap: (isRow && !isGlassy) ? "1.25rem" : undefined,
+                    textAlign: isGlassy ? "center" : undefined,
                     transform: hoveredStat === idx ? (isBrut ? "translate(-2px,-2px)" : "translateY(-6px)") : "translateY(0)",
                     transition: "transform 0.2s cubic-bezier(.4,0,.2,1), box-shadow 0.2s cubic-bezier(.4,0,.2,1)",
                     animation: `slideUp 0.4s cubic-bezier(.16,1,.3,1) ${idx * 0.06}s both`,
@@ -610,7 +612,16 @@ function AppInner() {
                     ...(isBrut ? { marginBottom: "0.5rem" } : {}),
                   }}
                     onMouseEnter={() => setHoveredStat(idx)} onMouseLeave={() => setHoveredStat(null)}>
-                    {isRow ? (
+                    {isGlassy ? (
+                      <>
+                        <div style={{ display: "flex", justifyContent: "center", marginBottom: "0.75rem" }}>
+                          <StatIcon Icon={stat.icon} size={isCompact ? 24 : 32} layout={L} c={c} />
+                        </div>
+                        <div style={{ fontSize: isCompact ? "0.8125rem" : "0.9375rem", fontWeight: bwm, opacity: 0.85, color: txtColor || undefined, marginBottom: "0.375rem", letterSpacing: "0.02em" }}>{stat.label}</div>
+                        <div style={{ fontSize: isMobile ? "2rem" : (isCompact ? "1.75rem" : "2.75rem"), fontWeight: "800", color: txtColor || undefined, lineHeight: 1.1, letterSpacing: "-0.02em" }}>{stat.noPrefix ? "" : (stat.prefix || "$")}{stat.value?.toFixed(2) || 0}</div>
+                        <div style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", opacity: 0.75, marginTop: "0.5rem", color: txtColor || undefined }}>{stat.count ? `${stat.count} transactions` : stat.sub}</div>
+                      </>
+                    ) : isRow ? (
                       <>
                         <StatIcon Icon={stat.icon} size={iconSz} layout={L} c={c} />
                         <div style={{ flex: 1 }}>
