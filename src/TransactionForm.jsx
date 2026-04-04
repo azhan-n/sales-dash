@@ -30,6 +30,18 @@ export function TransactionForm({
     return () => window.removeEventListener("keydown", onKey);
   }, [showTxForm]);
 
+  // Date format conversion: dd/mm/yy ↔ yyyy-mm-dd (for input[type=date])
+  const toInputDate = (ddmmyy) => {
+    if (!ddmmyy) return "";
+    const [dd, mm, yy] = ddmmyy.split("/");
+    return dd && mm && yy ? `20${yy}-${mm}-${dd}` : "";
+  };
+  const fromInputDate = (yyyymmdd) => {
+    if (!yyyymmdd) return "";
+    const [yyyy, mm, dd] = yyyymmdd.split("-");
+    return dd && mm && yyyy ? `${dd}/${mm}/${yyyy.slice(-2)}` : "";
+  };
+
   const ownerList = Object.keys(ownerInfoMap || {}).sort();
 
   const handleOwnerChange = (name) => {
@@ -61,7 +73,7 @@ export function TransactionForm({
     setErrors({});
     setShowTxForm(false);
     setEditingTxId(null);
-    setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "" });
+    setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "15.42", buyAmount: "", sellRate: "", sellAmount: "", date: fromInputDate(new Date().toISOString().split("T")[0]) });
   };
 
   const validate = () => {
@@ -213,6 +225,10 @@ export function TransactionForm({
             <select value={txForm.cardType} onChange={(e) => setTxForm({ ...txForm, cardType: e.target.value })} style={{ ...fInput("cardType"), backgroundColor: (cardIsLocked || cardIsDropdown) ? c.surfaceAlt : c.inputBg }} disabled={cardIsLocked || cardIsDropdown}>
               {cardTypes.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
+          </div>
+          <div>
+            <label style={fLabel}>Date</label>
+            <input type="date" value={toInputDate(txForm.date)} onChange={(e) => setTxForm({ ...txForm, date: fromInputDate(e.target.value) })} style={{ ...fInput("date"), colorScheme: "auto" }} />
           </div>
           <div>
             <label style={fLabel}>Buy Rate *</label>

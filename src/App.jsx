@@ -58,8 +58,9 @@ function AppInner() {
   const [showMonthlyForm, setShowMonthlyForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [editingTxId, setEditingTxId] = useState(null);
-  const [txForm, setTxForm] = useState({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "" });
+  const [txForm, setTxForm] = useState({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "15.42", buyAmount: "", sellRate: "", sellAmount: "", date: getTodayDate() });
   const [ownerInfoMap, setOwnerInfoMap] = useState({});
+  const [pendingDelete, setPendingDelete] = useState(null); // { ids: Set }
   const [monthlyForm, setMonthlyForm] = useState({ month: "", profit: "" });
   const [editingMonthlyId, setEditingMonthlyId] = useState(null);
   const [editModeMonthly, setEditModeMonthly] = useState(false);
@@ -70,15 +71,14 @@ function AppInner() {
     const br = parseFloat(txForm.buyRate) || 0, ba = parseFloat(txForm.buyAmount) || 0;
     const sr = parseFloat(txForm.sellRate) || 0, sa = parseFloat(txForm.sellAmount) || 0;
     const cost = br * ba, gross = sr * sa, net = gross - cost;
-    const dateStr = getTodayDate();
     const row = {
       card_type: txForm.cardType, card_number: txForm.cardNumber, owner: txForm.owner,
       buy_rate: br, buy_amount: ba, sell_rate: sr, sell_amount: sa,
-      cost, gross_profit: gross, net_profit: net, date: dateStr,
+      cost, gross_profit: gross, net_profit: net, date: txForm.date || getTodayDate(),
     };
     // Close form immediately (optimistic)
     setShowTxForm(false);
-    setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "" });
+    setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "15.42", buyAmount: "", sellRate: "", sellAmount: "", date: getTodayDate() });
     const wasEditing = editingTxId;
     setEditingTxId(null);
     // Sync in background
@@ -98,6 +98,7 @@ function AppInner() {
       cardType: cd?.type || "VISA DEBIT", cardNumber: cd?.number || "", owner: ow?.name || "",
       buyRate: String(parseFloat(t.buyRate) || ""), buyAmount: String(parseFloat(t.buyAmount) || ""),
       sellRate: String(parseFloat(t.sellRate) || ""), sellAmount: String(parseFloat(t.sellAmount) || ""),
+      date: t.date || getTodayDate(),
     });
     setEditingTxId(t.id);
     setShowTxForm(true);
@@ -200,18 +201,28 @@ function AppInner() {
     finally { setSubmitting(false); }
   };
 
-  const deleteSelectedTransactions = async () => {
+  const deleteSelectedTransactions = () => {
     if (selectedTxIds.size === 0) return;
-    setSubmitting(true);
-    try {
-      const ids = [...selectedTxIds];
-      const { error: err } = await supabase.from("transactions").delete().in("id", ids);
-      if (err) throw err;
-      toast.success(`Deleted ${ids.length} transaction${ids.length > 1 ? "s" : ""}`);
-      setSelectedTxIds(new Set());
-      fetchData(true);
-    } catch (err) { toast.error("Failed to delete: " + err.message); }
-    finally { setSubmitting(false); }
+    const ids = [...selectedTxIds];
+    const count = ids.length;
+    // Optimistically hide rows
+    setPendingDelete({ ids: new Set(ids) });
+    setSelectedTxIds(new Set());
+    // Schedule actual DB delete after 5s
+    const timer = setTimeout(async () => {
+      setPendingDelete(null);
+      try {
+        const { error: err } = await supabase.from("transactions").delete().in("id", ids);
+        if (err) throw err;
+        fetchData(true);
+      } catch (err) { toast.error("Failed to delete: " + err.message); fetchData(true); }
+    }, 5000);
+    // Show undo toast
+    toast.info(
+      `Deleted ${count} transaction${count > 1 ? "s" : ""}`,
+      5000,
+      { label: "Undo", onClick: () => { clearTimeout(timer); setPendingDelete(null); } }
+    );
   };
 
   // Auto-archive check on the 1st of the month
@@ -405,6 +416,7 @@ function AppInner() {
   const filteredTransactions = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return transactions.filter((t) => {
+      if (pendingDelete?.ids.has(t.id)) return false;
       const cd = getCardById(t.cardId);
       const ow = getOwnerById(t.ownerId);
       if (filterCardType !== "all" && cd?.type !== filterCardType) return false;
@@ -416,7 +428,7 @@ function AppInner() {
       }
       return true;
     });
-  }, [transactions, filterCardType, filterOwner, filterCardNumber, searchQuery, cards, owners]);
+  }, [transactions, filterCardType, filterOwner, filterCardNumber, searchQuery, cards, owners, pendingDelete]);
 
   // Sort
   const sortedTransactions = useMemo(() => [...filteredTransactions].sort((a, b) => {
@@ -867,18 +879,17 @@ function AppInner() {
                                 </select>
                               </div>
                             ))}
-                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                              <span style={{ fontSize: isCompact ? "0.6875rem" : "0.75rem", color: c.textSec, fontWeight: bwm, minWidth: "5.5rem" }}>Search</span>
-                              <div style={{ flex: 1, position: "relative" }}>
-                                <Search size={isCompact ? 12 : 13} style={{ position: "absolute", left: "0.5rem", top: "50%", transform: "translateY(-50%)", color: c.textSec, pointerEvents: "none" }} />
-                                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search..." aria-label="Search transactions" style={{ width: "100%", padding: isCompact ? "0.3rem 0.5rem 0.3rem 1.625rem" : "0.4rem 0.625rem 0.4rem 1.75rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), fontSize: isCompact ? "0.75rem" : "0.8125rem", backgroundColor: c.inputBg, color: c.text, outline: "none", boxSizing: "border-box" }} />
-                              </div>
-                            </div>
                             {activeFilterCount > 0 && <button onClick={() => { setFilterCardType("all"); setFilterOwner("all"); setFilterCardNumber("all"); setSearchQuery(""); setSelectedPeriod("current"); }} style={{ alignSelf: "flex-end", padding: "0.25rem 0.625rem", border: `1px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), backgroundColor: "transparent", color: c.textSec, cursor: "pointer", fontSize: isCompact ? "0.625rem" : "0.6875rem", fontWeight: bwm }}>Clear all</button>}
                           </>
                         )}
                       </div>
                     )}
+                  </div>
+                  {/* Persistent search bar */}
+                  <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                    <Search size={isCompact ? 12 : 13} style={{ position: "absolute", left: "0.5rem", color: c.textSec, pointerEvents: "none" }} />
+                    <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search..." aria-label="Search transactions" style={{ padding: isCompact ? "0.375rem 0.5rem 0.375rem 1.625rem" : "0.5rem 0.625rem 0.5rem 1.75rem", border: isBrut ? `2px solid ${c.border}` : `1px solid ${searchQuery ? c.accent : c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), fontSize: isCompact ? "0.75rem" : "0.8125rem", backgroundColor: c.inputBg, color: c.text, outline: "none", width: isMobile ? "8rem" : "13rem", transition: "border-color 0.15s, width 0.2s" }} />
+                    {searchQuery && <button onClick={() => setSearchQuery("")} style={{ position: "absolute", right: "0.375rem", background: "none", border: "none", cursor: "pointer", color: c.textSec, display: "flex", alignItems: "center", padding: 0 }}><X size={13} /></button>}
                   </div>
                   {[{ m: "table", icon: List, label: "Table" }, { m: "cards", icon: LayoutGrid, label: "Cards" }].map(({ m, icon: Ic, label }) => (
                     <button key={m} onClick={() => setViewMode(m)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, backgroundColor: viewMode === m ? c.accent : c.inputBg, color: viewMode === m ? "#fff" : c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, ...(isBrut && viewMode === m ? { boxShadow: "3px 3px 0 #000" } : {}) }}><Ic size={isCompact ? 14 : 16} /> {label}</button>
@@ -893,7 +904,7 @@ function AppInner() {
                       <Trash2 size={isCompact ? 13 : 15} /> Delete {selectedTxIds.size}
                     </button>
                   )}
-                  {!isHistory && <button onClick={() => { setEditingTxId(null); setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "", buyAmount: "", sellRate: "", sellAmount: "" }); setShowTxForm(true); }} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "none", background: c.btnGrad, color: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, boxShadow: `0 2px 8px ${c.btnGlow}` }}><Plus size={isCompact ? 14 : 16} /> Add</button>}
+                  {!isHistory && <button onClick={() => { setEditingTxId(null); setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "15.42", buyAmount: "", sellRate: "", sellAmount: "", date: getTodayDate() }); setShowTxForm(true); }} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "none", background: c.btnGrad, color: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, boxShadow: `0 2px 8px ${c.btnGlow}` }}><Plus size={isCompact ? 14 : 16} /> Add</button>}
                 </div>
               </div>
             </div>

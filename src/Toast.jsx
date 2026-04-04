@@ -11,9 +11,9 @@ let toastId = 0;
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
-  const addToast = useCallback((message, type = "info", duration = 3000) => {
+  const addToast = useCallback((message, type = "info", duration = 3000, action = null) => {
     const id = ++toastId;
-    setToasts((prev) => [...prev, { id, message, type }]);
+    setToasts((prev) => [...prev, { id, message, type, action }]);
     if (duration > 0) {
       setTimeout(() => removeToast(id), duration);
     }
@@ -25,9 +25,9 @@ export function ToastProvider({ children }) {
   }, []);
 
   const toast = {
-    success: (msg, duration) => addToast(msg, "success", duration),
-    error: (msg, duration) => addToast(msg, "error", duration ?? 5000),
-    info: (msg, duration) => addToast(msg, "info", duration),
+    success: (msg, duration, action) => addToast(msg, "success", duration, action),
+    error:   (msg, duration, action) => addToast(msg, "error", duration ?? 5000, action),
+    info:    (msg, duration, action) => addToast(msg, "info", duration, action),
   };
 
   return (
@@ -46,7 +46,6 @@ function ToastItem({ toast, onRemove }) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // Trigger enter animation
     requestAnimationFrame(() => setVisible(true));
   }, []);
 
@@ -72,7 +71,7 @@ function ToastItem({ toast, onRemove }) {
         fontSize: "0.875rem",
         fontWeight: "500",
         minWidth: "260px",
-        maxWidth: "380px",
+        maxWidth: "420px",
         transform: visible ? "translateX(0)" : "translateX(120%)",
         opacity: visible ? 1 : 0,
         transition: "transform 0.3s cubic-bezier(.16,1,.3,1), opacity 0.3s cubic-bezier(.16,1,.3,1)",
@@ -81,6 +80,14 @@ function ToastItem({ toast, onRemove }) {
     >
       <Icon size={18} style={{ flexShrink: 0 }} />
       <span style={{ flex: 1, lineHeight: "1.4" }}>{toast.message}</span>
+      {toast.action && (
+        <button
+          onClick={() => { toast.action.onClick(); onRemove(toast.id); }}
+          style={{ background: "rgba(255,255,255,0.25)", border: "1px solid rgba(255,255,255,0.4)", cursor: "pointer", color: text, padding: "0.2rem 0.6rem", borderRadius: "0.25rem", fontSize: "0.8125rem", fontWeight: "700", flexShrink: 0, whiteSpace: "nowrap" }}
+        >
+          {toast.action.label}
+        </button>
+      )}
       <button
         onClick={() => onRemove(toast.id)}
         style={{ background: "none", border: "none", cursor: "pointer", color: text, opacity: 0.8, padding: "0.125rem", display: "flex", alignItems: "center", flexShrink: 0 }}
