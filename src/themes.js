@@ -19,6 +19,7 @@ export const FONTS = [
 export const THEME_OPTIONS = [
   { key: "auto", label: "Auto", preview: ["#94a3b8", "#667eea", "#84fab0", "#64748b"] },
   { key: "sunset", label: "Sunset", preview: ["#fff7ed", "#f97316", "#e11d48", "#fbbf24"] },
+  { key: "sky", label: "Sky", preview: ["#e0f5ff", "#0ea5e9", "#00c9a7", "#6366f1"] },
   { key: "glass", label: "Glass", preview: ["#1a1a2e", "#e0e7ff", "#818cf8", "#312e81"] },
   { key: "terminal", label: "Terminal", preview: ["#0a0a0a", "#00ff41", "#003b00", "#1a1a1a"] },
   { key: "brutalist", label: "Brutalist", preview: ["#f5f5f0", "#000000", "#ff3333", "#ffffff"] },
@@ -165,11 +166,39 @@ const themeLayouts = {
     tableStyle: "default",
     extraCss: `.circ-blob { position: fixed; border-radius: 50%; pointer-events: none; z-index: 0; filter: blur(80px); opacity: 0.12; }`,
   },
+  sky: {
+    statCardDir: "row",
+    statIconSize: 32,
+    statIconSizeSm: 22,
+    statIconBg: true,
+    statIconBgStyle: (variant) => {
+      const map = {
+        Green:  "linear-gradient(135deg, #00c9a7, #00e4bf)",
+        Teal:   "linear-gradient(135deg, #0ea5e9, #38bdf8)",
+        Orange: "linear-gradient(135deg, #f59e0b, #fbbf24)",
+        Blue:   "linear-gradient(135deg, #6366f1, #818cf8)",
+        Pink:   "linear-gradient(135deg, #ec4899, #f472b6)",
+        Purple: "linear-gradient(135deg, #7c3aed, #a78bfa)",
+      };
+      return {
+        width: "48px", height: "48px", borderRadius: "12px",
+        background: map[variant] || map.Teal,
+        boxShadow: "0 4px 12px rgba(14,165,233,0.2)",
+        display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+      };
+    },
+    statGridMin: "260px",
+    statGridMinSm: "200px",
+    ownerLayout: "grid",
+    cardTypeLayout: "grid",
+    tableStyle: "default",
+    extraCss: `.sky-header-bar { background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 60%, #38bdf8 100%); }`,
+  },
 };
 
 export const getThemeLayout = (name) => {
   const map = { auto: "default", sunset: "default",
-    glass: "glass", terminal: "terminal", brutalist: "brutalist", midnight: "midnight", liquid_glass: "liquid_glass", circular: "circular" };
+    sky: "sky", glass: "glass", terminal: "terminal", brutalist: "brutalist", midnight: "midnight", liquid_glass: "liquid_glass", circular: "circular" };
   return themeLayouts[map[name] || "default"];
 };
 
@@ -298,6 +327,34 @@ export const getThemeColors = (themeName) => {
       bgPattern: "radial-gradient(ellipse at 25% 0%, rgba(174,198,255,0.35) 0%, transparent 50%), radial-gradient(ellipse at 75% 100%, rgba(255,200,220,0.2) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(200,210,255,0.15) 0%, transparent 60%)",
       cardBackdrop: "blur(16px) saturate(150%)",
       cardGlow: "inset 0 1px 0 rgba(255,255,255,0.7), 0 1px 0 rgba(0,0,0,0.04)",
+    },
+    sky: {
+      ...base, isDark: false, radius: "0.75rem", radiusSm: "0.625rem", radiusCompact: "0.5rem", radiusCompactSm: "0.375rem",
+      bg: "#f0f8ff", bgAlt: "#e4f3fc", surface: "#ffffff", surfaceAlt: "#f4faff", surfaceDeep: "#e8f5fd",
+      text: "#0c2340", textSec: "#3d7099", textMuted: "#6b9ab8", textLight: "#ffffff", textMid: "#1e4d78", textStrong: "#071828",
+      border: "#c8e4f5", borderAlt: "#b0d6ef", borderStrong: "#7bb8de", borderHover: "#0ea5e9",
+      accent: "#0ea5e9", accentBg: "#e0f5ff", accentDark: "#0369a1",
+      inputBg: "#ffffff", inputBorder: "#c8e4f5",
+      titleGrad: "linear-gradient(135deg, #0284c7 0%, #0ea5e9 40%, #00c9a7 100%)",
+      btnGrad: "linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%)", btnGlow: "rgba(14,165,233,0.3)",
+      statCards: {
+        Green:  { bg: "linear-gradient(135deg, #00c9a7 0%, #00e4bf 100%)", text: "#003d30" },
+        Teal:   { bg: "linear-gradient(135deg, #0284c7 0%, #38bdf8 100%)", text: "#ffffff" },
+        Orange: { bg: "linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)", text: "#451a03" },
+        Blue:   { bg: "linear-gradient(135deg, #6366f1 0%, #818cf8 100%)", text: "#ffffff" },
+        Pink:   { bg: "linear-gradient(135deg, #ec4899 0%, #f472b6 100%)", text: "#ffffff" },
+        Purple: { bg: "linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)", text: "#ffffff" },
+      },
+      profitGrad: "linear-gradient(135deg, #00c9a7 0%, #00e4bf 100%)",
+      errorBg: "#fef2f2", errorBorder: "#ef4444", errorText: "#991b1b",
+      badgeGreen: { bg: "#d1fae5", text: "#065f46" }, badgeYellow: { bg: "#fef3c7", text: "#92400e" }, badgeRed: { bg: "#fee2e2", text: "#991b1b" },
+      shadow: "0 2px 8px rgba(14,165,233,0.07), 0 1px 2px rgba(0,0,0,0.04)",
+      shadowCompact: "0 1px 4px rgba(14,165,233,0.06)",
+      shadowLg: "0 12px 32px rgba(14,165,233,0.1)", shadowLgCompact: "0 4px 16px rgba(14,165,233,0.07)",
+      hoverShadow: "0 16px 40px rgba(14,165,233,0.15)",
+      cardHoverShadow: "0 8px 24px rgba(14,165,233,0.1)", modalShadow: "0 25px 60px rgba(14,165,233,0.15)", toggleBg: "#c8e4f5",
+      headerBorderBottom: "1px solid #c8e4f5",
+      bgPattern: "radial-gradient(ellipse at 85% 0%, rgba(14,165,233,0.07) 0%, transparent 50%), radial-gradient(ellipse at 15% 100%, rgba(0,201,167,0.05) 0%, transparent 50%)",
     },
     circular: {
       ...base, isDark: false, radius: "999px", radiusSm: "2rem", radiusCompact: "999px", radiusCompactSm: "1.5rem",

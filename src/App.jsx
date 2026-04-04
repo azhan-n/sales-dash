@@ -251,6 +251,7 @@ function AppInner() {
   const isMid = theme === "midnight";
   const isLG = theme === "liquid_glass";
   const isCirc = theme === "circular";
+  const isSky = theme === "sky";
 
   // Responsive breakpoints
   const [winW, setWinW] = useState(() => typeof window !== 'undefined' ? window.innerWidth : 1200);
@@ -497,22 +498,22 @@ function AppInner() {
       </>}
 
       {/* HEADER */}
-      <div style={{ backgroundColor: (isGlass || isLG) ? (isLG ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.04)") : c.surface, boxShadow: isLG ? "0 1px 0 rgba(0,0,0,0.04)" : c.shadow, borderBottom: c.headerBorderBottom || `1px solid ${c.border}`, padding: isMobile ? "0.75rem 0.625rem" : (isCompact ? "0.875rem 1rem" : "1.5rem 1rem"), ...((isGlass || isLG) ? { backdropFilter: "blur(20px) saturate(150%)", WebkitBackdropFilter: "blur(20px) saturate(150%)" } : {}), position: "relative", zIndex: 10 }}>
+      <div style={{ backgroundColor: isSky ? "transparent" : ((isGlass || isLG) ? (isLG ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.04)") : c.surface), background: isSky ? "linear-gradient(135deg, #0284c7 0%, #0ea5e9 60%, #38bdf8 100%)" : undefined, boxShadow: isSky ? "0 4px 20px rgba(14,165,233,0.25)" : (isLG ? "0 1px 0 rgba(0,0,0,0.04)" : c.shadow), borderBottom: isSky ? "none" : (c.headerBorderBottom || `1px solid ${c.border}`), padding: isMobile ? "0.75rem 0.625rem" : (isCompact ? "0.875rem 1rem" : "1.5rem 1rem"), ...((isGlass || isLG) ? { backdropFilter: "blur(20px) saturate(150%)", WebkitBackdropFilter: "blur(20px) saturate(150%)" } : {}), position: "relative", zIndex: 10 }}>
         <div style={{ maxWidth: "80rem", margin: "0 auto", display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? "0.75rem" : "0" }}>
           <div>
-            <h1 key={theme} style={{ fontSize: isBrut ? "3rem" : `${titleFontSize}px`, fontFamily: titleFontFamily, fontWeight: isBrut ? "900" : bwh, background: c.titleGrad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", color: "transparent", display: "inline-block", width: "fit-content", margin: 0, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>Sales Dashboard</h1>
-            <p style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", color: c.textSec, marginTop: "0.25rem", display: "flex", alignItems: "center", gap: "0.75rem" }} className={isTerm ? "terminal-glow" : ""}>
+            <h1 key={theme} style={{ fontSize: isBrut ? "3rem" : `${titleFontSize}px`, fontFamily: titleFontFamily, fontWeight: isBrut ? "900" : bwh, background: isSky ? "none" : c.titleGrad, WebkitBackgroundClip: isSky ? "unset" : "text", WebkitTextFillColor: isSky ? "#ffffff" : "transparent", backgroundClip: isSky ? "unset" : "text", color: isSky ? "#ffffff" : "transparent", display: "inline-block", width: "fit-content", margin: 0, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>Sales Dashboard</h1>
+            <p style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", color: isSky ? "rgba(255,255,255,0.85)" : c.textSec, marginTop: "0.25rem", display: "flex", alignItems: "center", gap: "0.75rem" }} className={isTerm ? "terminal-glow" : ""}>
               {isTerm ? "> " : ""}{lastSync ? `Last updated: ${lastSync.toLocaleTimeString()}` : "Loading data..."}
-              {autoRefresh > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "0.6875rem", color: c.accent, backgroundColor: c.accentBg, padding: "0.125rem 0.5rem", borderRadius: "999px" }}><Timer size={10} />{autoRefresh}s</span>}
-              <button onClick={fetchData} disabled={loading} style={{ padding: "0.5rem", borderRadius: isBrut ? "0" : (isCirc || isLG ? "50%" : "0.5rem"), border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: loading ? "not-allowed" : "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", opacity: loading ? 0.6 : 1 }} title="Refresh"><RefreshCw size={16} style={loading ? { animation: "spin 1s linear infinite" } : {}} /></button>
-              <button onClick={() => setShowSettings(true)} style={{ padding: "0.5rem", borderRadius: isBrut ? "0" : (isCirc || isLG ? "50%" : "0.5rem"), border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }} title="Settings"><Settings size={16} /></button>
+              {autoRefresh > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "0.6875rem", color: isSky ? "#ffffff" : c.accent, backgroundColor: isSky ? "rgba(255,255,255,0.2)" : c.accentBg, padding: "0.125rem 0.5rem", borderRadius: "999px" }}><Timer size={10} />{autoRefresh}s</span>}
+              <button onClick={fetchData} disabled={loading} style={{ padding: "0.5rem", borderRadius: isBrut ? "0" : (isCirc || isLG ? "50%" : "0.5rem"), border: isSky ? "1px solid rgba(255,255,255,0.3)" : (isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`), backgroundColor: isSky ? "rgba(255,255,255,0.15)" : c.inputBg, color: isSky ? "#ffffff" : c.text, cursor: loading ? "not-allowed" : "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", opacity: loading ? 0.6 : 1 }} title="Refresh"><RefreshCw size={16} style={loading ? { animation: "spin 1s linear infinite" } : {}} /></button>
+              <button onClick={() => setShowSettings(true)} style={{ padding: "0.5rem", borderRadius: isBrut ? "0" : (isCirc || isLG ? "50%" : "0.5rem"), border: isSky ? "1px solid rgba(255,255,255,0.3)" : (isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`), backgroundColor: isSky ? "rgba(255,255,255,0.15)" : c.inputBg, color: isSky ? "#ffffff" : c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }} title="Settings"><Settings size={16} /></button>
             </p>
           </div>
         </div>
       </div>
 
       {/* TABS */}
-      <div style={{ backgroundColor: (isGlass || isLG) ? (isLG ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.02)") : c.surface, borderBottom: isBrut ? `3px solid ${c.border}` : `1px solid ${c.border}`, ...((isGlass || isLG) ? { backdropFilter: "blur(16px) saturate(150%)", WebkitBackdropFilter: "blur(16px) saturate(150%)" } : {}), position: "relative", zIndex: 10 }}>
+      <div style={{ backgroundColor: isSky ? "#ffffff" : ((isGlass || isLG) ? (isLG ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.02)") : c.surface), borderBottom: isBrut ? `3px solid ${c.border}` : `1px solid ${isSky ? "#c8e4f5" : c.border}`, boxShadow: isSky ? "0 2px 8px rgba(14,165,233,0.08)" : "none", ...((isGlass || isLG) ? { backdropFilter: "blur(16px) saturate(150%)", WebkitBackdropFilter: "blur(16px) saturate(150%)" } : {}), position: "relative", zIndex: 10 }}>
         <div style={{ maxWidth: "80rem", margin: "0 auto", padding: "0 1rem" }}>
           <nav style={{ display: "flex", gap: isBrut ? "0" : (isMobile ? "1rem" : "2rem"), alignItems: "center" }}>
             {["dashboard", "transactions", "monthly"].map((tab) => (
