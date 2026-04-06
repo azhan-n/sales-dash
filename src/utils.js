@@ -181,11 +181,10 @@ export const exportTransactionsPDF = (transactions, getCardById, getOwnerById, t
   </body></html>`;
 
   const win = window.open("", "_blank");
+  if (!win) { alert("Please allow pop-ups to export PDF."); return; }
   win.document.write(html);
   win.document.close();
 };
-
-// --- Export Monthly to PDF ---
 export const exportMonthlyPDF = (monthly) => {
   const today = getTodayDate();
   const total = monthly.reduce((s, m) => s + m.profit, 0);
@@ -236,6 +235,7 @@ export const exportMonthlyPDF = (monthly) => {
   </body></html>`;
 
   const win = window.open("", "_blank");
+  if (!win) { alert("Please allow pop-ups to export PDF."); return; }
   win.document.write(html);
   win.document.close();
 };

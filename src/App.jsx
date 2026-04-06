@@ -1,4 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
+
+// Safe localStorage wrapper (throws in some private-browsing contexts)
+const lsGet = (key) => { try { return localStorage.getItem(key); } catch { return null; } };
+const lsSet = (key, val) => { try { localStorage.setItem(key, val); } catch {} };
 import {
   TrendingUp, DollarSign, Filter, User, RefreshCw, LayoutGrid, List,
   Settings, X, Calendar, Timer, Plus, Pencil, Download, Search, Trash2, ChevronLeft, ChevronRight, ChevronDown,
@@ -34,24 +38,24 @@ function AppInner() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastSync, setLastSync] = useState(null);
-  const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "sunset");
+  const [theme, setTheme] = useState(() => lsGet("theme") || "sunset");
   const [viewMode, setViewMode] = useState("table");
-  const [viewStyle, setViewStyle] = useState(() => localStorage.getItem("viewStyle") || "normal");
+  const [viewStyle, setViewStyle] = useState(() => lsGet("viewStyle") || "normal");
   const [hoveredCard, setHoveredCard] = useState(null);
   const [hoveredStat, setHoveredStat] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [selectedFont, setSelectedFont] = useState(() => localStorage.getItem("font") || "Poppins");
-  const [titleFont, setTitleFont] = useState(() => localStorage.getItem("titleFont") || "Poppins");
-  const [fontSize, setFontSize] = useState(() => parseInt(localStorage.getItem("fontSize")) || 20);
-  const [titleFontSize, setTitleFontSize] = useState(() => parseInt(localStorage.getItem("titleFontSize")) || 40);
-  const [boldText, setBoldText] = useState(() => localStorage.getItem("boldText") === "true");
-  const [statCardCols, setStatCardCols] = useState(() => parseInt(localStorage.getItem("statCardCols")) || 4);
+  const [selectedFont, setSelectedFont] = useState(() => lsGet("font") || "Poppins");
+  const [titleFont, setTitleFont] = useState(() => lsGet("titleFont") || "Poppins");
+  const [fontSize, setFontSize] = useState(() => parseInt(lsGet("fontSize")) || 20);
+  const [titleFontSize, setTitleFontSize] = useState(() => parseInt(lsGet("titleFontSize")) || 40);
+  const [boldText, setBoldText] = useState(() => lsGet("boldText") === "true");
+  const [statCardCols, setStatCardCols] = useState(() => parseInt(lsGet("statCardCols")) || 4);
 
   // Sort
   const [sortCol, setSortCol] = useState(null);
   const [sortDir, setSortDir] = useState("asc");
   // Auto-refresh
-  const [autoRefresh, setAutoRefresh] = useState(() => parseInt(localStorage.getItem("autoRefresh")) || 0);
+  const [autoRefresh, setAutoRefresh] = useState(() => parseInt(lsGet("autoRefresh")) || 0);
   const [hoveredBar, setHoveredBar] = useState(null);
 
   // Add form states
@@ -146,26 +150,32 @@ function AppInner() {
   const [loadingHistory, setLoadingHistory] = useState(false);
 
   const fetchHistoryPeriods = async () => {
-    const { data } = await supabase.from("transaction_history").select("period").order("period", { ascending: false });
-    if (data) {
-      const unique = [...new Set(data.map((r) => r.period))];
-      setHistoryPeriods(unique);
-    }
+    try {
+      const { data, error } = await supabase.from("transaction_history").select("period").order("period", { ascending: false });
+      if (error) throw error;
+      if (data) {
+        const unique = [...new Set(data.map((r) => r.period))];
+        setHistoryPeriods(unique);
+      }
+    } catch (err) { console.error("fetchHistoryPeriods:", err.message); }
   };
 
   const fetchHistoryForPeriod = async (period) => {
     setLoadingHistory(true);
-    const { data } = await supabase.from("transaction_history").select("*").eq("period", period).order("id", { ascending: true });
-    if (data) {
-      setHistoryTransactions(data.map((r) => ({
-        id: r.id, cardType: r.card_type, cardNumber: r.card_number, owner: r.owner,
-        buyRate: r.buy_rate, buyAmount: r.buy_amount, sellRate: r.sell_rate, sellAmount: r.sell_amount,
-        cost: parseFloat(r.cost) || 0, grossProfit: parseFloat(r.gross_profit) || 0,
-        netProfit: parseFloat(r.net_profit) || 0, date: r.date || "",
-        profitMargin: (parseFloat(r.cost) || 0) > 0 ? ((parseFloat(r.net_profit) || 0) / (parseFloat(r.cost) || 0)) * 100 : 0,
-      })));
-    }
-    setLoadingHistory(false);
+    try {
+      const { data, error } = await supabase.from("transaction_history").select("*").eq("period", period).order("id", { ascending: true });
+      if (error) throw error;
+      if (data) {
+        setHistoryTransactions(data.map((r) => ({
+          id: r.id, cardType: r.card_type, cardNumber: r.card_number, owner: r.owner,
+          buyRate: r.buy_rate, buyAmount: r.buy_amount, sellRate: r.sell_rate, sellAmount: r.sell_amount,
+          cost: parseFloat(r.cost) || 0, grossProfit: parseFloat(r.gross_profit) || 0,
+          netProfit: parseFloat(r.net_profit) || 0, date: r.date || "",
+          profitMargin: (parseFloat(r.cost) || 0) > 0 ? ((parseFloat(r.net_profit) || 0) / (parseFloat(r.cost) || 0)) * 100 : 0,
+        })));
+      }
+    } catch (err) { console.error("fetchHistoryForPeriod:", err.message); toast.error("Failed to load history."); }
+    finally { setLoadingHistory(false); }
   };
 
   const archiveTransactions = async () => {
@@ -287,11 +297,11 @@ function AppInner() {
 
   const font = selectedFont;
 
-  useEffect(() => { localStorage.setItem("theme", theme); }, [theme]);
-  useEffect(() => { localStorage.setItem("font", selectedFont); }, [selectedFont]);
-  useEffect(() => { localStorage.setItem("titleFont", titleFont); }, [titleFont]);
-  useEffect(() => { localStorage.setItem("fontSize", fontSize.toString()); }, [fontSize]);
-  useEffect(() => { localStorage.setItem("titleFontSize", titleFontSize.toString()); }, [titleFontSize]);
+  useEffect(() => { lsSet("theme", theme); }, [theme]);
+  useEffect(() => { lsSet("font", selectedFont); }, [selectedFont]);
+  useEffect(() => { lsSet("titleFont", titleFont); }, [titleFont]);
+  useEffect(() => { lsSet("fontSize", fontSize.toString()); }, [fontSize]);
+  useEffect(() => { lsSet("titleFontSize", titleFontSize.toString()); }, [titleFontSize]);
 
   // Apply font size to root HTML element so all rem units scale
   useEffect(() => {
@@ -319,10 +329,10 @@ function AppInner() {
     if (vp && !vp.content.includes("viewport-fit")) vp.content += ", viewport-fit=cover";
     return () => { document.body.style.backgroundColor = ""; };
   }, [c.bg]);
-  useEffect(() => { localStorage.setItem("viewStyle", viewStyle); }, [viewStyle]);
-  useEffect(() => { localStorage.setItem("boldText", boldText.toString()); }, [boldText]);
-  useEffect(() => { localStorage.setItem("autoRefresh", autoRefresh.toString()); }, [autoRefresh]);
-  useEffect(() => { localStorage.setItem("statCardCols", statCardCols.toString()); }, [statCardCols]);
+  useEffect(() => { lsSet("viewStyle", viewStyle); }, [viewStyle]);
+  useEffect(() => { lsSet("boldText", boldText.toString()); }, [boldText]);
+  useEffect(() => { lsSet("autoRefresh", autoRefresh.toString()); }, [autoRefresh]);
+  useEffect(() => { lsSet("statCardCols", statCardCols.toString()); }, [statCardCols]);
 
   // Auto-refresh timer
   useEffect(() => {
