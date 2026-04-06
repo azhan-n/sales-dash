@@ -284,7 +284,6 @@ function AppInner() {
   const PAGE_SIZE = 25;
   const [currentPage, setCurrentPage] = useState(1);
   // Confirm dialogs
-  const [confirmArchive, setConfirmArchive] = useState(false);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   // Edit mode (shows checkboxes + pencil buttons)
   const [editMode, setEditMode] = useState(false);
@@ -932,10 +931,9 @@ function AppInner() {
                     <button key={m} onClick={() => setViewMode(m)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, backgroundColor: viewMode === m ? c.accent : c.inputBg, color: viewMode === m ? "#fff" : c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, ...(isBrut && viewMode === m ? { boxShadow: "3px 3px 0 #000" } : {}) }}><Ic size={isCompact ? 14 : 16} /> {label}</button>
                   ))}
                 </div>
-                {/* Right: Edit, Archive, Bulk Delete, Add */}
+                {/* Right: Edit, Bulk Delete, Add */}
                 <div style={{ display: "flex", gap: isCompact ? "0.375rem" : "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
                   <button onClick={() => { setEditMode((m) => { if (m) setSelectedTxIds(new Set()); return !m; }); }} disabled={selectedPeriod !== "current"} aria-pressed={editMode} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${editMode ? c.accent : c.border}`, backgroundColor: editMode ? c.accentBg : c.inputBg, color: editMode ? c.accent : c.text, cursor: selectedPeriod !== "current" ? "not-allowed" : "pointer", fontSize: isCompact ? "0.75rem" : "0.8125rem", fontWeight: bwm, opacity: selectedPeriod !== "current" ? 0.4 : 1, display: "inline-flex", alignItems: "center", gap: "0.375rem", transition: "border-color 0.15s, background-color 0.15s, color 0.15s" }}><Pencil size={isCompact ? 12 : 14} /> {editMode ? "Done" : "Edit"}</button>
-                  <button onClick={() => setConfirmArchive(true)} disabled={submitting || selectedPeriod !== "current"} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${c.border}`, backgroundColor: c.inputBg, color: c.text, cursor: submitting ? "not-allowed" : "pointer", fontSize: isCompact ? "0.75rem" : "0.8125rem", fontWeight: bwm, opacity: submitting || selectedPeriod !== "current" ? 0.5 : 1, display: "inline-flex", alignItems: "center", gap: "0.375rem" }}><Calendar size={isCompact ? 12 : 14} /> {submitting ? "Archiving..." : "Archive & Clear"}</button>
                   {editMode && !isHistory && selectedTxIds.size > 0 && (
                     <button onClick={() => setConfirmBulkDelete(true)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 1rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "1px solid #ef4444", background: "transparent", color: "#ef4444", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm }}>
                       <Trash2 size={isCompact ? 13 : 15} /> Delete {selectedTxIds.size}
@@ -1174,16 +1172,6 @@ function AppInner() {
       />
 
       {/* ===== CONFIRM DIALOGS ===== */}
-      <ConfirmDialog
-        open={confirmArchive}
-        title="Archive & Clear Transactions"
-        message="This will move all current transactions to history and clear the table. This cannot be undone."
-        confirmLabel="Archive"
-        danger
-        th={{ c, isBrut, isCirc, isGlass, isLG, isMobile, headingFont, bwh, bwm, bws }}
-        onConfirm={() => { setConfirmArchive(false); archiveTransactions(); }}
-        onCancel={() => setConfirmArchive(false)}
-      />
       <ConfirmDialog
         open={confirmBulkDelete}
         title={`Delete ${selectedTxIds.size} transaction${selectedTxIds.size !== 1 ? "s" : ""}?`}
