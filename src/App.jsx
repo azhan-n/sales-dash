@@ -151,19 +151,18 @@ function AppInner() {
 
   const fetchHistoryPeriods = async () => {
     try {
-      const { data, error } = await supabase.from("transaction_history").select("period").order("period", { ascending: false });
+      const { data, error } = await supabase.rpc("get_archive_periods");
       if (error) throw error;
-      if (data) {
-        const unique = [...new Set(data.map((r) => r.period))];
-        setHistoryPeriods(unique);
-      }
+      setHistoryPeriods((data || []).map((r) => r.period));
     } catch (err) { console.error("fetchHistoryPeriods:", err.message); }
   };
 
   const fetchHistoryForPeriod = async (period) => {
     setLoadingHistory(true);
     try {
-      const { data, error } = await supabase.from("transaction_history").select("*").eq("period", period).order("id", { ascending: true });
+      const { data, error } = await supabase.from("transaction_history")
+        .select("id, card_type, card_number, owner, buy_rate, buy_amount, sell_rate, sell_amount, cost, gross_profit, net_profit, date")
+        .eq("period", period).order("id", { ascending: true });
       if (error) throw error;
       if (data) {
         setHistoryTransactions(data.map((r) => ({
@@ -182,30 +181,13 @@ function AppInner() {
     if (submitting) return;
     setSubmitting(true);
     try {
-      // Get all current transactions
-      const { data: txns, error: readErr } = await supabase.from("transactions").select("*");
-      if (readErr) throw readErr;
-      if (!txns || txns.length === 0) { setSubmitting(false); return; }
-      // Determine period label (previous month)
       const now = new Date();
       const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       const period = prev.toLocaleString("default", { month: "long", year: "numeric" });
-      // Check if already archived
-      const { data: existing } = await supabase.from("transaction_history").select("id").eq("period", period).limit(1);
-      if (existing && existing.length > 0) { setSubmitting(false); return; }
-      // Copy to history
-      const historyRows = txns.map((r) => ({
-        period, card_type: r.card_type, card_number: r.card_number, owner: r.owner,
-        buy_rate: r.buy_rate, buy_amount: r.buy_amount, sell_rate: r.sell_rate, sell_amount: r.sell_amount,
-        cost: r.cost, gross_profit: r.gross_profit, net_profit: r.net_profit, date: r.date || "",
-      }));
-      const { error: insertErr } = await supabase.from("transaction_history").insert(historyRows);
-      if (insertErr) throw insertErr;
-      // Clear transactions table
-      const { error: delErr } = await supabase.from("transactions").delete().neq("id", 0);
-      if (delErr) throw delErr;
+      // Single atomic RPC — copies to history and clears transactions in one DB transaction
+      const { error } = await supabase.rpc("archive_transactions", { p_period: period });
+      if (error) throw error;
       toast.success("Transactions archived successfully");
-      // Refresh
       fetchData(true);
       fetchHistoryPeriods();
     } catch (err) { toast.error("Failed to archive: " + err.message); setError("Failed to archive: " + err.message); }
@@ -353,8 +335,11 @@ function AppInner() {
     setError(null);
     try {
       const [txRes, mRes, oiRes] = await Promise.all([
-        supabase.from("transactions").select("*").order("created_at", { ascending: false }),
-        supabase.from("monthly").select("*").order("id", { ascending: true }),
+        supabase.from("transactions")
+          .select("id, card_type, card_number, owner, buy_rate, buy_amount, sell_rate, sell_amount, cost, gross_profit, net_profit, date, created_at")
+          .order("created_at", { ascending: false })
+          .limit(1000),
+        supabase.from("monthly").select("id, month, profit").order("id", { ascending: true }),
         supabase.from("owner_info").select("owner_name, type, card_number"),
       ]);
       if (txRes.error) throw txRes.error;
