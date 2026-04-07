@@ -49,6 +49,7 @@ function AppInner() {
   const [fontSize, setFontSize] = useState(() => parseInt(lsGet("fontSize")) || 20);
   const [titleFontSize, setTitleFontSize] = useState(() => parseInt(lsGet("titleFontSize")) || 40);
   const [boldText, setBoldText] = useState(() => lsGet("boldText") === "true");
+  const [pillTags, setPillTags] = useState(() => lsGet("pillTags") === "true");
   const [statCardCols, setStatCardCols] = useState(() => parseInt(lsGet("statCardCols")) || 4);
 
   // Sort
@@ -312,6 +313,7 @@ function AppInner() {
   }, [c.bg]);
   useEffect(() => { lsSet("viewStyle", viewStyle); }, [viewStyle]);
   useEffect(() => { lsSet("boldText", boldText.toString()); }, [boldText]);
+  useEffect(() => { lsSet("pillTags", pillTags.toString()); }, [pillTags]);
   useEffect(() => { lsSet("autoRefresh", autoRefresh.toString()); }, [autoRefresh]);
   useEffect(() => { lsSet("statCardCols", statCardCols.toString()); }, [statCardCols]);
 
@@ -395,6 +397,7 @@ function AppInner() {
   const getOwnerBadge = (ownerId) => OWNER_BADGES[((ownerId || 1) - 1) % OWNER_BADGES.length];
   const ownerBadgeStyle = (ownerId) => { const { bg, text } = getOwnerBadge(ownerId); return { display: "inline-flex", alignItems: "center", padding: isBrut ? "0.25rem 0.5rem" : "0.2rem 0.6rem", borderRadius: isBrut ? "0" : "9999px", fontSize: "0.75rem", fontWeight: bws, backgroundColor: bg, color: text, border: isBrut ? "2px solid #000" : "none", whiteSpace: "nowrap" }; };
   const cardBadgeStyle = (type) => { const { bg, text } = getCardTypeBadge(type); return { display: "inline-flex", alignItems: "center", padding: isBrut ? "0.25rem 0.5rem" : "0.2rem 0.6rem", borderRadius: isBrut ? "0" : "9999px", fontSize: "0.75rem", fontWeight: bws, backgroundColor: bg, color: text, border: isBrut ? "2px solid #000" : "none", whiteSpace: "nowrap" }; };
+  const pill = (content) => pillTags ? <span style={{ display: "inline-flex", alignItems: "center", padding: isBrut ? "0.15rem 0.4rem" : "0.15rem 0.55rem", borderRadius: isBrut ? "0" : "9999px", fontSize: "inherit", fontWeight: "inherit", backgroundColor: c.surfaceAlt, color: c.text, border: `1px solid ${c.border}`, whiteSpace: "nowrap" }}>{content}</span> : content;
   const selectBg = isGlass ? "rgba(20,14,48,0.85)" : (isLG ? "rgba(255,255,255,0.92)" : c.inputBg);
 
   // Reset card number filter when owner changes
@@ -984,17 +987,17 @@ function AppInner() {
                                 />
                               </td>
                             )}
-                            <td style={{ ...tdStyle, fontSize: isCompact ? "0.6875rem" : "0.8125rem", color: c.textSec, whiteSpace: "nowrap" }}>{t.date || "-"}</td>
+                            <td style={{ ...tdStyle, fontSize: isCompact ? "0.6875rem" : "0.8125rem", color: c.textSec, whiteSpace: "nowrap" }}>{pill(t.date || "-")}</td>
                             <td style={tdStyle}><span style={cardBadgeStyle(t.cardType)}>{t.cardType || "UNKNOWN"}</span></td>
-                            <td style={tdStyle}>{t.cardNumber || "-"}</td>
+                            <td style={tdStyle}>{pill(t.cardNumber || "-")}</td>
                             <td style={tdStyle}><span style={ownerBadgeStyle(ownerColorId)}>{t.owner}</span></td>
-                            <td style={{ ...tdStyle, textAlign: "right" }}>{parseFloat(t.buyRate).toFixed(2)}</td>
-                            <td style={{ ...tdStyle, textAlign: "right" }}>${parseFloat(t.buyAmount).toFixed(2)}</td>
-                            <td style={{ ...tdStyle, textAlign: "right" }}>{parseFloat(t.sellRate).toFixed(2)}</td>
-                            <td style={{ ...tdStyle, textAlign: "right" }}>₮ {parseFloat(t.sellAmount).toFixed(2)}</td>
-                            <td style={{ ...tdStyle, textAlign: "right" }}>ރ.{t.cost.toFixed(2)}</td>
-                            <td style={{ ...tdStyle, textAlign: "right", color: isTerm ? c.text : "#f97316", fontWeight: bws }}>ރ.{t.grossProfit.toFixed(2)}</td>
-                            <td style={{ ...tdStyle, textAlign: "right", color: isTerm ? c.text : "#16a34a", fontWeight: bws }} className={isTerm ? "terminal-glow" : ""}>ރ.{t.netProfit.toFixed(2)}</td>
+                            <td style={{ ...tdStyle, textAlign: "right" }}>{pill(parseFloat(t.buyRate).toFixed(2))}</td>
+                            <td style={{ ...tdStyle, textAlign: "right" }}>{pill(`$${parseFloat(t.buyAmount).toFixed(2)}`)}</td>
+                            <td style={{ ...tdStyle, textAlign: "right" }}>{pill(parseFloat(t.sellRate).toFixed(2))}</td>
+                            <td style={{ ...tdStyle, textAlign: "right" }}>{pill(`₮ ${parseFloat(t.sellAmount).toFixed(2)}`)}</td>
+                            <td style={{ ...tdStyle, textAlign: "right" }}>{pill(`ރ.${t.cost.toFixed(2)}`)}</td>
+                            <td style={{ ...tdStyle, textAlign: "right", color: isTerm ? c.text : "#f97316", fontWeight: bws }}>{pill(`ރ.${t.grossProfit.toFixed(2)}`)}</td>
+                            <td style={{ ...tdStyle, textAlign: "right", color: isTerm ? c.text : "#16a34a", fontWeight: bws }} className={isTerm ? "terminal-glow" : ""}>{pill(`ރ.${t.netProfit.toFixed(2)}`)}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}><span style={mb.style}>{(t.profitMargin || 0).toFixed(1)}%</span></td>
                             {editMode && !isHistory && <td style={{ ...tdStyle, textAlign: "center" }}><button onClick={() => editTransaction(t)} aria-label="Edit transaction" style={{ background: "none", border: "none", cursor: "pointer", color: c.accent, padding: "0.25rem", display: "flex", alignItems: "center", opacity: 0.6, transition: "opacity 0.15s" }} onMouseEnter={(e) => e.currentTarget.style.opacity = 1} onMouseLeave={(e) => e.currentTarget.style.opacity = 0.6}><Pencil size={14} /></button></td>}
                           </tr>
@@ -1027,21 +1030,21 @@ function AppInner() {
                       onMouseEnter={() => setHoveredCard(`tx-${idx}`)} onMouseLeave={() => setHoveredCard(null)}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: isCompact ? "0.5rem" : "1rem" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: isCompact ? "0.5rem" : "0.75rem" }}>
-                          <div><span style={cardBadgeStyle(t.cardType)}>{t.cardType || "UNKNOWN"}</span><div style={{ fontSize: isCompact ? "0.6875rem" : "0.8125rem", color: c.textSec, marginTop: "0.25rem" }}>Card #{t.cardNumber || "-"}</div></div>
+                          <div><span style={cardBadgeStyle(t.cardType)}>{t.cardType || "UNKNOWN"}</span><div style={{ fontSize: isCompact ? "0.6875rem" : "0.8125rem", color: c.textSec, marginTop: "0.25rem" }}>Card #{pill(t.cardNumber || "-")}</div></div>
                         </div>
                         <span style={mb.style}>{(t.profitMargin || 0).toFixed(1)}%</span>
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isCompact ? "0.5rem" : "1rem" }}>
                         <div><div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textSec, marginBottom: "0.25rem" }}>Owner</div><span style={ownerBadgeStyle(ownerColorId)}>{t.owner}</span></div>
-                        <div style={{ textAlign: "right" }}><div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textSec }}>Date</div><div style={{ fontWeight: bwm, fontSize: isCompact ? "0.75rem" : "0.875rem", color: c.text }}>{t.date || "-"}</div></div>
+                        <div style={{ textAlign: "right" }}><div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", color: c.textSec }}>Date</div><div style={{ fontWeight: bwm, fontSize: isCompact ? "0.75rem" : "0.875rem", color: c.text }}>{pill(t.date || "-")}</div></div>
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: isCompact ? "0.5rem" : "1rem", marginBottom: isCompact ? "0.5rem" : "1rem" }}>
-                        <div><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>Buy</div><div style={{ fontWeight: bws, fontSize: isCompact ? "0.75rem" : "inherit", color: c.text }}>{parseFloat(t.buyRate).toFixed(2)} × ${parseFloat(t.buyAmount).toFixed(0)}</div></div>
-                        <div><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>Sell</div><div style={{ fontWeight: bws, fontSize: isCompact ? "0.75rem" : "inherit", color: c.text }}>{parseFloat(t.sellRate).toFixed(2)} × ₮ {parseFloat(t.sellAmount).toFixed(0)}</div></div>
+                        <div><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>Buy</div><div style={{ fontWeight: bws, fontSize: isCompact ? "0.75rem" : "inherit", color: c.text }}>{pill(`${parseFloat(t.buyRate).toFixed(2)} × $${parseFloat(t.buyAmount).toFixed(0)}`)}</div></div>
+                        <div><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>Sell</div><div style={{ fontWeight: bws, fontSize: isCompact ? "0.75rem" : "inherit", color: c.text }}>{pill(`${parseFloat(t.sellRate).toFixed(2)} × ₮ ${parseFloat(t.sellAmount).toFixed(0)}`)}</div></div>
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: isCompact ? "0.5rem" : "1rem", paddingTop: isCompact ? "0.5rem" : "1rem", borderTop: `1px solid ${c.border}` }}>
                         {[{ l: "Cost", v: t.cost, cl: "#3b82f6" }, { l: "Gross", v: t.grossProfit, cl: "#f97316" }, { l: "Net", v: t.netProfit, cl: "#16a34a" }].map((x) => (
-                          <div key={x.l}><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>{x.l}</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.875rem" : "inherit", color: isTerm ? c.text : x.cl }}>ރ.{x.v.toFixed(0)}</div></div>
+                          <div key={x.l}><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>{x.l}</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.875rem" : "inherit", color: isTerm ? c.text : x.cl }}>{pill(`ރ.${x.v.toFixed(0)}`)}</div></div>
                         ))}
                       </div>
                       {editMode && !isHistory && <button onClick={(e) => { e.stopPropagation(); editTransaction(t); }} style={{ marginTop: isCompact ? "0.5rem" : "0.75rem", width: "100%", padding: "0.375rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), border: `1px solid ${c.border}`, backgroundColor: "transparent", color: c.textSec, cursor: "pointer", fontSize: "0.75rem", fontWeight: bwm, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", transition: "color 0.15s, border-color 0.15s" }} onMouseEnter={(e) => { e.currentTarget.style.color = c.accent; e.currentTarget.style.borderColor = c.accent; }} onMouseLeave={(e) => { e.currentTarget.style.color = c.textSec; e.currentTarget.style.borderColor = c.border; }}><Pencil size={12} /> Edit</button>}
@@ -1252,6 +1255,20 @@ function AppInner() {
                 </div>
                 <div style={{ width: "44px", height: "24px", borderRadius: "12px", backgroundColor: boldText ? c.accent : c.toggleBg, position: "relative", flexShrink: 0 }}>
                   <div style={{ width: "20px", height: "20px", borderRadius: "50%", backgroundColor: "#ffffff", position: "absolute", top: "2px", left: boldText ? "22px" : "2px", transition: "left 0.2s cubic-bezier(.4,0,.2,1)", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }}></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Pill Tags */}
+            <div style={{ marginBottom: "2rem" }}>
+              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: bws, marginBottom: "0.75rem", color: c.text }}>Display</label>
+              <div onClick={() => setPillTags(!pillTags)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem", border: pillTags ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "2rem" : "0.75rem"), backgroundColor: pillTags ? c.accentBg : c.surfaceAlt, cursor: "pointer" }}>
+                <div>
+                  <div style={{ fontWeight: bws, fontSize: "0.9375rem", color: c.textStrong }}>Pill Tags</div>
+                  <div style={{ fontSize: "0.75rem", opacity: 0.7, marginTop: "0.25rem", color: c.textSec }}>Wrap all field values in pill-shaped tags</div>
+                </div>
+                <div style={{ width: "44px", height: "24px", borderRadius: "12px", backgroundColor: pillTags ? c.accent : c.toggleBg, position: "relative", flexShrink: 0 }}>
+                  <div style={{ width: "20px", height: "20px", borderRadius: "50%", backgroundColor: "#ffffff", position: "absolute", top: "2px", left: pillTags ? "22px" : "2px", transition: "left 0.2s cubic-bezier(.4,0,.2,1)", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }}></div>
                 </div>
               </div>
             </div>
