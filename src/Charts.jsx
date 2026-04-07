@@ -66,9 +66,9 @@ export const ChartToggle = ({ mode, setMode, opt1, opt2, c, isBrut, isCompact, b
 );
 
 // --- Stat Card Icon Wrapper ---
-export const StatIcon = ({ Icon, size, layout, c }) => {
+export const StatIcon = ({ Icon, size, layout, c, variant }) => {
   if (layout.statIconBg && layout.statIconBgStyle) {
-    const bgStyle = layout.statIconBgStyle(c.isDark);
+    const bgStyle = layout.statIconBgStyle(variant || c.isDark);
     return (
       <div style={bgStyle}>
         <Icon size={size} style={{ opacity: 0.9, color: "inherit" }} />

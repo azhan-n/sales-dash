@@ -639,7 +639,7 @@ function AppInner() {
                     {isGlassy ? (
                       <>
                         <div style={{ display: "flex", justifyContent: "center", marginBottom: "0.75rem" }}>
-                          <StatIcon Icon={stat.icon} size={isCompact ? 24 : 32} layout={L} c={c} />
+                          <StatIcon Icon={stat.icon} size={isCompact ? 24 : 32} layout={L} c={c} variant={stat.color} />
                         </div>
                         <div style={{ fontSize: isCompact ? "0.8125rem" : "0.9375rem", fontWeight: bwm, opacity: 0.85, color: txtColor || undefined, marginBottom: "0.375rem", letterSpacing: "0.02em" }}>{stat.label}</div>
                         <div style={{ fontSize: isMobile ? "2rem" : (isCompact ? "1.75rem" : "2.75rem"), fontWeight: "800", color: txtColor || undefined, lineHeight: 1.1, letterSpacing: "-0.02em" }}>{stat.noPrefix ? "" : (stat.prefix || "$")}{stat.value?.toFixed(2) || 0}</div>
@@ -647,7 +647,7 @@ function AppInner() {
                       </>
                     ) : isRow ? (
                       <>
-                        <StatIcon Icon={stat.icon} size={iconSz} layout={L} c={c} />
+                        <StatIcon Icon={stat.icon} size={iconSz} layout={L} c={c} variant={stat.color} />
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", opacity: 0.9, fontWeight: bws, color: txtColor || undefined, marginBottom: "0.25rem" }}>{isTerm ? `> ${stat.label}` : stat.label}</div>
                           <div style={{ fontSize: isCompact ? "1.5rem" : "2rem", fontWeight: bwx, color: txtColor || undefined }} className={isTerm ? "terminal-glow" : ""}>{stat.noPrefix ? "" : (stat.prefix || "$")}{stat.value?.toFixed(2) || 0}</div>
@@ -656,10 +656,10 @@ function AppInner() {
                       </>
                     ) : (
                       <>
-                        {(isMid || isCirc) && L.statIconBg && <div style={{ display: "flex", justifyContent: "center" }}><StatIcon Icon={stat.icon} size={iconSz} layout={L} c={c} /></div>}
+                        {(isMid || isCirc) && L.statIconBg && <div style={{ display: "flex", justifyContent: "center" }}><StatIcon Icon={stat.icon} size={iconSz} layout={L} c={c} variant={stat.color} /></div>}
                         <div style={{ display: isCirc ? "block" : "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isCompact ? "0.5rem" : "1rem", textAlign: isCirc ? "center" : undefined }}>
                           <div style={{ fontSize: isCompact ? "0.75rem" : "1rem", opacity: 0.9, fontWeight: bws, color: txtColor || undefined, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>{stat.label}</div>
-                          {!isMid && !isCirc && <StatIcon Icon={stat.icon} size={iconSz} layout={L} c={c} />}
+                          {!isMid && !isCirc && <StatIcon Icon={stat.icon} size={iconSz} layout={L} c={c} variant={stat.color} />}
                         </div>
                         <div style={{ fontSize: isMobile ? "1.75rem" : (isCompact ? "1.5rem" : "2.7rem"), fontWeight: bwx, color: txtColor || undefined, textAlign: (isMid || isCirc) ? "center" : undefined }} className={isTerm ? "terminal-glow" : ""}>{stat.noPrefix ? "" : (stat.prefix || "$")}{stat.value?.toFixed(2) || 0}</div>
                         <div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", opacity: 0.8, marginTop: "0.5rem", color: txtColor || undefined, textAlign: (isMid || isCirc) ? "center" : undefined }}>{stat.count ? `${stat.count} transactions` : stat.sub}</div>
