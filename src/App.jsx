@@ -76,6 +76,8 @@ function AppInner() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [monthlyTarget, setMonthlyTarget] = useState(() => parseFloat(lsGet("monthlyTarget")) || 0);
   const [deleteCountdown, setDeleteCountdown] = useState(0);
+  // Bulk select (declared here so deleteSelectedTransactions useCallback can reference it)
+  const [selectedTxIds, setSelectedTxIds] = useState(new Set());
 
   const submitTransaction = async () => {
     if (!txForm.owner || !txForm.cardNumber) return;
@@ -273,8 +275,6 @@ function AppInner() {
   const [filterCardNumber, setFilterCardNumber] = useState("all");
   // Search
   const [searchQuery, setSearchQuery] = useState("");
-  // Bulk select
-  const [selectedTxIds, setSelectedTxIds] = useState(new Set());
   // Pagination
   const PAGE_SIZE = 25;
   const [currentPage, setCurrentPage] = useState(1);
