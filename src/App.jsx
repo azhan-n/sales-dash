@@ -834,8 +834,8 @@ function AppInner() {
                           const ownerTx = transactions.filter((t) => t.ownerId === o.id);
                           if (ownerTx.length === 0) return <div style={{ padding: "1rem", color: c.textSec, fontSize: "0.8125rem" }}>No transactions</div>;
                           return (
-                            <div style={{ marginTop: isCompact ? "0.5rem" : "0.75rem", borderRadius: isBrut ? "0" : (isCirc ? "1rem" : rSm), overflow: "hidden", border: `1px solid ${c.border}`, animation: "slideUp 0.25s cubic-bezier(.16,1,.3,1) both" }}>
-                              <div style={{ overflowX: "auto" }}>
+                            <div style={{ marginTop: isCompact ? "0.5rem" : "0.75rem", borderRadius: isBrut ? "0" : (isCirc ? "1rem" : rSm), overflowX: "auto", border: `1px solid ${c.border}`, animation: "slideUp 0.25s cubic-bezier(.16,1,.3,1) both" }}>
+                              <div>
                                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: isCompact ? "0.6875rem" : "0.8125rem" }}>
                                   <thead><tr>
                                     {["Date", "Card", "Buy Rate", "Buy Amt", "Sell Rate", "Sell Amt", "Cost", "Gross", "Net"].map((h) => (
@@ -853,7 +853,7 @@ function AppInner() {
                                           <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>${parseFloat(t.buyAmount).toFixed(2)}</td>
                                           <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>{parseFloat(t.sellRate).toFixed(2)}</td>
                                           <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>₮ {parseFloat(t.sellAmount).toFixed(2)}</td>
-                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>ރ.{t.cost.toFixed(2)}</td>
+                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", color: isTerm ? c.text : "#3b82f6", fontWeight: bws }}>ރ.{t.cost.toFixed(2)}</td>
                                           <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", color: isTerm ? c.text : "#f97316", fontWeight: bws }}>ރ.{t.grossProfit.toFixed(2)}</td>
                                           <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", color: isTerm ? c.text : (t.netProfit >= 0 ? "#16a34a" : "#ef4444"), fontWeight: bwx }}>ރ.{t.netProfit.toFixed(2)}</td>
                                         </tr>
@@ -1126,7 +1126,7 @@ function AppInner() {
                             <td style={{ ...tdStyle, textAlign: "right" }}>{pill(`$${parseFloat(t.buyAmount).toFixed(2)}`)}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>{pill(parseFloat(t.sellRate).toFixed(2))}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>{pill(`₮ ${parseFloat(t.sellAmount).toFixed(2)}`)}</td>
-                            <td style={{ ...tdStyle, textAlign: "right" }}>{pill(`ރ.${t.cost.toFixed(2)}`, isTerm ? undefined : "#3b82f6")}</td>
+                            <td style={{ ...tdStyle, textAlign: "right", fontWeight: bws }}>{pill(`ރ.${t.cost.toFixed(2)}`, isTerm ? undefined : "#3b82f6")}</td>
                             <td style={{ ...tdStyle, textAlign: "right", fontWeight: bws }}>{pill(`ރ.${t.grossProfit.toFixed(2)}`, isTerm ? undefined : "#f97316")}</td>
                             <td style={{ ...tdStyle, textAlign: "right", fontWeight: bws }} className={isTerm ? "terminal-glow" : ""}>{pill(`ރ.${t.netProfit.toFixed(2)}`, isTerm ? undefined : "#16a34a")}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}><span style={mb.style}>{(t.profitMargin || 0).toFixed(1)}%</span></td>
