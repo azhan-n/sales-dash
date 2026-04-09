@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 
 // Safe localStorage wrapper (throws in some private-browsing contexts)
 const lsGet = (key) => { try { return localStorage.getItem(key); } catch { return null; } };
@@ -64,13 +64,18 @@ function AppInner() {
   const [showMonthlyForm, setShowMonthlyForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [editingTxId, setEditingTxId] = useState(null);
-  const [txForm, setTxForm] = useState({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "15.42", buyAmount: "", sellRate: "", sellAmount: "", date: getTodayDate() });
+  const [txForm, setTxForm] = useState({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "15.42", buyAmount: "", sellRate: "", sellAmount: "", date: getTodayDate(), status: "settled" });
   const [ownerInfoMap, setOwnerInfoMap] = useState({});
   const [pendingDelete, setPendingDelete] = useState(null); // { ids: Set }
   const [monthlyForm, setMonthlyForm] = useState({ month: "", profit: "" });
   const [editingMonthlyId, setEditingMonthlyId] = useState(null);
   const [editModeMonthly, setEditModeMonthly] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [filterDateFrom, setFilterDateFrom] = useState(() => lsGet("filterDateFrom") || "");
+  const [filterDateTo, setFilterDateTo] = useState(() => lsGet("filterDateTo") || "");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [monthlyTarget, setMonthlyTarget] = useState(() => parseFloat(lsGet("monthlyTarget")) || 0);
+  const [deleteCountdown, setDeleteCountdown] = useState(0);
 
   const submitTransaction = async () => {
     if (!txForm.owner || !txForm.cardNumber) return;
@@ -81,10 +86,11 @@ function AppInner() {
       card_type: txForm.cardType, card_number: txForm.cardNumber, owner: txForm.owner,
       buy_rate: br, buy_amount: ba, sell_rate: sr, sell_amount: sa,
       cost, gross_profit: gross, net_profit: net, date: txForm.date || getTodayDate(),
+      status: txForm.status || "settled",
     };
     // Close form immediately (optimistic)
     setShowTxForm(false);
-    setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "15.42", buyAmount: "", sellRate: "", sellAmount: "", date: getTodayDate() });
+    setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "15.42", buyAmount: "", sellRate: "", sellAmount: "", date: getTodayDate(), status: "settled" });
     const wasEditing = editingTxId;
     setEditingTxId(null);
     // Sync in background
@@ -98,17 +104,17 @@ function AppInner() {
     } catch (err) { toast.error("Failed to save: " + err.message); setError("Failed to save: " + err.message); fetchData(true); }
   };
 
-  const editTransaction = (t) => {
+  const editTransaction = useCallback((t) => {
     const cd = getCardById(t.cardId); const ow = getOwnerById(t.ownerId);
     setTxForm({
       cardType: cd?.type || "VISA DEBIT", cardNumber: cd?.number || "", owner: ow?.name || "",
       buyRate: String(parseFloat(t.buyRate) || ""), buyAmount: String(parseFloat(t.buyAmount) || ""),
       sellRate: String(parseFloat(t.sellRate) || ""), sellAmount: String(parseFloat(t.sellAmount) || ""),
-      date: t.date || getTodayDate(),
+      date: t.date || getTodayDate(), status: t.status || "settled",
     });
     setEditingTxId(t.id);
     setShowTxForm(true);
-  };
+  }, [cards, owners]);
 
   const submitMonthly = async () => {
     if (!monthlyForm.month || !monthlyForm.profit) return;
@@ -150,19 +156,19 @@ function AppInner() {
   const [historyTransactions, setHistoryTransactions] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
-  const fetchHistoryPeriods = async () => {
+  const fetchHistoryPeriods = useCallback(async () => {
     try {
       const { data, error } = await supabase.rpc("get_archive_periods");
       if (error) throw error;
       setHistoryPeriods((data || []).map((r) => r.period));
     } catch (err) { console.error("fetchHistoryPeriods:", err.message); }
-  };
+  }, []);
 
-  const fetchHistoryForPeriod = async (period) => {
+  const fetchHistoryForPeriod = useCallback(async (period) => {
     setLoadingHistory(true);
     try {
       const { data, error } = await supabase.from("transaction_history")
-        .select("id, card_type, card_number, owner, buy_rate, buy_amount, sell_rate, sell_amount, cost, gross_profit, net_profit, date")
+        .select("id, card_type, card_number, owner, buy_rate, buy_amount, sell_rate, sell_amount, cost, gross_profit, net_profit, date, status")
         .eq("period", period).order("id", { ascending: true });
       if (error) throw error;
       if (data) {
@@ -171,21 +177,21 @@ function AppInner() {
           buyRate: r.buy_rate, buyAmount: r.buy_amount, sellRate: r.sell_rate, sellAmount: r.sell_amount,
           cost: parseFloat(r.cost) || 0, grossProfit: parseFloat(r.gross_profit) || 0,
           netProfit: parseFloat(r.net_profit) || 0, date: r.date || "",
+          status: r.status || "settled",
           profitMargin: (parseFloat(r.cost) || 0) > 0 ? ((parseFloat(r.net_profit) || 0) / (parseFloat(r.cost) || 0)) * 100 : 0,
         })));
       }
     } catch (err) { console.error("fetchHistoryForPeriod:", err.message); toast.error("Failed to load history."); }
     finally { setLoadingHistory(false); }
-  };
+  }, []);
 
-  const archiveTransactions = async () => {
+  const archiveTransactions = useCallback(async () => {
     if (submitting) return;
     setSubmitting(true);
     try {
       const now = new Date();
       const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       const period = prev.toLocaleString("default", { month: "long", year: "numeric" });
-      // Single atomic RPC — copies to history and clears transactions in one DB transaction
       const { error } = await supabase.rpc("archive_transactions", { p_period: period });
       if (error) throw error;
       toast.success("Transactions archived successfully");
@@ -193,17 +199,24 @@ function AppInner() {
       fetchHistoryPeriods();
     } catch (err) { toast.error("Failed to archive: " + err.message); setError("Failed to archive: " + err.message); }
     finally { setSubmitting(false); }
-  };
+  }, [submitting]);
 
-  const deleteSelectedTransactions = () => {
+  const deleteSelectedTransactions = useCallback(() => {
     if (selectedTxIds.size === 0) return;
     const ids = [...selectedTxIds];
     const count = ids.length;
-    // Optimistically hide rows
     setPendingDelete({ ids: new Set(ids) });
     setSelectedTxIds(new Set());
-    // Schedule actual DB delete after 5s
+    setDeleteCountdown(5);
+    const countInterval = setInterval(() => {
+      setDeleteCountdown((prev) => {
+        if (prev <= 1) { clearInterval(countInterval); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
     const timer = setTimeout(async () => {
+      clearInterval(countInterval);
+      setDeleteCountdown(0);
       setPendingDelete(null);
       try {
         const { error: err } = await supabase.from("transactions").delete().in("id", ids);
@@ -211,13 +224,12 @@ function AppInner() {
         fetchData(true);
       } catch (err) { toast.error("Failed to delete: " + err.message); fetchData(true); }
     }, 5000);
-    // Show undo toast
     toast.info(
       `Deleted ${count} transaction${count > 1 ? "s" : ""}`,
       5000,
-      { label: "Undo", onClick: () => { clearTimeout(timer); setPendingDelete(null); } }
+      { label: `Undo`, onClick: () => { clearTimeout(timer); clearInterval(countInterval); setPendingDelete(null); setDeleteCountdown(0); } }
     );
-  };
+  }, [selectedTxIds]);
 
   // Auto-archive check on the 1st of the month
   useEffect(() => {
@@ -316,6 +328,9 @@ function AppInner() {
   useEffect(() => { lsSet("pillTags", pillTags.toString()); }, [pillTags]);
   useEffect(() => { lsSet("autoRefresh", autoRefresh.toString()); }, [autoRefresh]);
   useEffect(() => { lsSet("statCardCols", statCardCols.toString()); }, [statCardCols]);
+  useEffect(() => { lsSet("filterDateFrom", filterDateFrom); }, [filterDateFrom]);
+  useEffect(() => { lsSet("filterDateTo", filterDateTo); }, [filterDateTo]);
+  useEffect(() => { lsSet("monthlyTarget", monthlyTarget.toString()); }, [monthlyTarget]);
 
   // Auto-refresh timer
   useEffect(() => {
@@ -332,13 +347,13 @@ function AppInner() {
     return mkBadge(c.badgeRed.bg, c.badgeRed.text);
   };
 
-  const fetchData = async (silent = false) => {
+  const fetchData = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     setError(null);
     try {
       const [txRes, mRes, oiRes] = await Promise.all([
         supabase.from("transactions")
-          .select("id, card_type, card_number, owner, buy_rate, buy_amount, sell_rate, sell_amount, cost, gross_profit, net_profit, date, created_at")
+          .select("id, card_type, card_number, owner, buy_rate, buy_amount, sell_rate, sell_amount, cost, gross_profit, net_profit, date, created_at, status")
           .order("created_at", { ascending: false })
           .limit(1000),
         supabase.from("monthly").select("id, month, profit").order("id", { ascending: true }),
@@ -347,7 +362,6 @@ function AppInner() {
       if (txRes.error) throw txRes.error;
       if (mRes.error) throw mRes.error;
       setLastSync(new Date());
-      // Build ownerInfoMap: { "AZHAN": [{type, cardNumber}, ...], ... }
       const oiMap = {};
       (oiRes.data || []).forEach((r) => {
         const key = r.owner_name.toUpperCase();
@@ -355,18 +369,18 @@ function AppInner() {
         oiMap[key].push({ type: r.type, cardNumber: r.card_number.trim() });
       });
       setOwnerInfoMap(oiMap);
-      // Map snake_case DB columns to camelCase frontend fields
       const txData = (txRes.data || []).map((r, i) => ({
         id: r.id, cardType: r.card_type, cardNumber: r.card_number, owner: r.owner,
         buyRate: r.buy_rate, buyAmount: r.buy_amount, sellRate: r.sell_rate, sellAmount: r.sell_amount,
         cost: r.cost, grossProfit: r.gross_profit, netProfit: r.net_profit, date: r.date || "",
+        status: r.status || "settled",
       }));
       if (txData.length > 0) processTransactions(txData);
       else { setTransactions([]); setOwners([]); setCards([]); setStats({}); }
       setMonthly((mRes.data || []).map((r) => ({ id: r.id, month: r.month, profit: parseFloat(r.profit) || 0 })));
     } catch (err) { setError("Failed to load data: " + (err.message || "Check connection")); }
     finally { setLoading(false); }
-  };
+  }, []);
   useEffect(() => { fetchData(); }, []);
   useEffect(() => { if (theme === "auto") { const mq = window.matchMedia("(prefers-color-scheme: dark)"); const h = () => setTheme("auto"); mq.addEventListener("change", h); return () => mq.removeEventListener("change", h); } }, [theme]);
 
@@ -403,7 +417,7 @@ function AppInner() {
   // Reset card number filter when owner changes
   useEffect(() => { setFilterCardNumber("all"); }, [filterOwner]);
   // Reset to page 1 when filters/search change
-  useEffect(() => { setCurrentPage(1); setSelectedTxIds(new Set()); }, [filterCardType, filterOwner, filterCardNumber, searchQuery]);
+  useEffect(() => { setCurrentPage(1); setSelectedTxIds(new Set()); }, [filterCardType, filterOwner, filterCardNumber, filterStatus, filterDateFrom, filterDateTo, searchQuery]);
 
   // Available card numbers based on selected owner
   const availableCardNumbers = useMemo(() =>
@@ -422,13 +436,16 @@ function AppInner() {
       if (filterCardType !== "all" && cd?.type !== filterCardType) return false;
       if (filterOwner !== "all" && t.ownerId !== parseInt(filterOwner)) return false;
       if (filterCardNumber !== "all" && cd?.number !== filterCardNumber) return false;
+      if (filterStatus !== "all" && (t.status || "settled") !== filterStatus) return false;
+      if (filterDateFrom && t.date && t.date < filterDateFrom) return false;
+      if (filterDateTo && t.date && t.date > filterDateTo) return false;
       if (q) {
         const haystack = [cd?.type, cd?.number, ow?.name, t.date].filter(Boolean).join(" ").toLowerCase();
         if (!haystack.includes(q)) return false;
       }
       return true;
     });
-  }, [transactions, filterCardType, filterOwner, filterCardNumber, searchQuery, cards, owners, pendingDelete]);
+  }, [transactions, filterCardType, filterOwner, filterCardNumber, filterStatus, filterDateFrom, filterDateTo, searchQuery, cards, owners, pendingDelete]);
 
   // Sort
   const sortedTransactions = useMemo(() => [...filteredTransactions].sort((a, b) => {
@@ -450,10 +467,10 @@ function AppInner() {
     sortedTransactions.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
   [sortedTransactions, currentPage]);
 
-  const handleSort = (col) => {
+  const handleSort = useCallback((col) => {
     if (sortCol === col) setSortDir(sortDir === "asc" ? "desc" : "asc");
     else { setSortCol(col); setSortDir("asc"); }
-  };
+  }, [sortCol, sortDir]);
   const cardTypes = CARD_TYPES;
 
   // -- Shared styles --
