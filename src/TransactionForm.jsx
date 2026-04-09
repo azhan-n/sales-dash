@@ -16,6 +16,7 @@ export function TransactionForm({
   cardTypes,
   ownerInfoMap, // { "AZHAN": [{type, cardNumber}, ...], ... }
   onSubmit,  // async (formData) => void — called with validated form
+  recentRates, // array of last 10 sell rates for deviation check
 }) {
   const { c, isBrut, isCirc, isGlass, isLG, isTerm, isMobile, isCompact, headingFont, bwh, bwm, bws, bwx, r, rSm } = th;
   const [errors, setErrors] = useState({});
@@ -73,8 +74,15 @@ export function TransactionForm({
     setErrors({});
     setShowTxForm(false);
     setEditingTxId(null);
-    setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "15.42", buyAmount: "", sellRate: "", sellAmount: "", date: fromInputDate(new Date().toISOString().split("T")[0]) });
+    setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "15.42", buyAmount: "", sellRate: "", sellAmount: "", date: fromInputDate(new Date().toISOString().split("T")[0]), status: "settled" });
   };
+
+  const ratesArr = Array.isArray(recentRates) ? recentRates.filter((x) => x > 0) : [];
+  const rateAvg = ratesArr.length > 0 ? ratesArr.reduce((s, v) => s + v, 0) / ratesArr.length : 0;
+  const currentSellRate = parseFloat(txForm.sellRate) || 0;
+  const rateDevPct = rateAvg > 0 && currentSellRate > 0 ? Math.abs((currentSellRate - rateAvg) / rateAvg) * 100 : 0;
+  const rateDevDir = currentSellRate > rateAvg ? "above" : "below";
+  const showRateWarning = rateDevPct > 5 && ratesArr.length > 0 && currentSellRate > 0;
 
   const validate = () => {
     const e = {};
@@ -153,11 +161,11 @@ export function TransactionForm({
       role="dialog"
       aria-modal="true"
       aria-labelledby="tx-form-title"
-      style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: isLG ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", zIndex: 200, animation: "fadeIn 0.2s cubic-bezier(.16,1,.3,1) both" }}
+      style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: isLG ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.5)", display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? "0" : "1rem", zIndex: 200, animation: "fadeIn 0.2s cubic-bezier(.16,1,.3,1) both" }}
       onClick={resetForm}
     >
       <div
-        style={{ backgroundColor: isGlass ? "rgba(20,14,48,0.95)" : (isLG ? "rgba(255,255,255,0.65)" : c.surface), borderRadius: isBrut ? "0" : (isCirc ? "2.5rem" : (isMobile ? "0.75rem" : "1rem")), padding: isMobile ? "1.25rem" : "2rem", maxWidth: isMobile ? "100%" : "520px", width: "100%", maxHeight: "90vh", overflowY: "auto", boxShadow: c.modalShadow, animation: "slideUp 0.3s cubic-bezier(.16,1,.3,1) both", border: isBrut ? `3px solid ${c.border}` : `1px solid ${c.border}`, margin: isMobile ? "0.5rem" : "0" }}
+        style={{ backgroundColor: isGlass ? "rgba(20,14,48,0.95)" : (isLG ? "rgba(255,255,255,0.65)" : c.surface), borderRadius: isBrut ? "0" : (isCirc ? "2.5rem" : (isMobile ? "1.25rem 1.25rem 0 0" : "1rem")), padding: isMobile ? "1.25rem" : "2rem", maxWidth: isMobile ? "100%" : "520px", width: isMobile ? "100%" : "100%", maxHeight: isMobile ? "92vh" : "90vh", overflowY: "auto", boxShadow: c.modalShadow, animation: "slideUp 0.3s cubic-bezier(.16,1,.3,1) both", border: isBrut ? `3px solid ${c.border}` : `1px solid ${c.border}`, margin: isMobile ? "0" : "0" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -245,12 +253,27 @@ export function TransactionForm({
             <label style={fLabel}>Sell Rate *</label>
             <input type="number" step="0.01" min="0" value={txForm.sellRate} onChange={(e) => { setTxForm({ ...txForm, sellRate: e.target.value }); if (errors.sellRate) setErrors((p) => ({ ...p, sellRate: null })); }} style={fInput("sellRate")} />
             {errMsg("sellRate")}
+            {showRateWarning && (
+              <div style={{ marginTop: "0.375rem", padding: "0.375rem 0.625rem", backgroundColor: "#fef9c3", border: "1px solid #fde047", borderRadius: isBrut ? "0" : "0.375rem", fontSize: "0.6875rem", color: "#854d0e", fontWeight: "500" }}>
+                Rate {currentSellRate.toFixed(2)} is {rateDevPct.toFixed(1)}% {rateDevDir} the recent average ({rateAvg.toFixed(2)})
+              </div>
+            )}
           </div>
           <div>
             <label style={fLabel}>Sell Amount ($) *</label>
             <input type="number" step="0.01" min="0" value={txForm.sellAmount} onChange={(e) => { setTxForm({ ...txForm, sellAmount: e.target.value }); if (errors.sellAmount) setErrors((p) => ({ ...p, sellAmount: null })); }} style={fInput("sellAmount")} />
             {errMsg("sellAmount")}
           </div>
+        </div>
+
+        {/* Status */}
+        <div style={{ marginTop: "0.75rem" }}>
+          <label style={fLabel}>Status</label>
+          <select value={txForm.status || "settled"} onChange={(e) => setTxForm({ ...txForm, status: e.target.value })} style={fInput("status")}>
+            <option value="settled">Settled</option>
+            <option value="pending">Pending</option>
+            <option value="failed">Failed</option>
+          </select>
         </div>
 
         {/* Auto-computed */}

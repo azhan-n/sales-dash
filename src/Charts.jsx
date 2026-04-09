@@ -1,10 +1,10 @@
 // =============================================
 // Charts.jsx — Reusable chart & UI components
 // =============================================
-import React from "react";
+import React, { memo } from "react";
 
 // --- Simple Pie Chart (pure SVG) ---
-export const SimplePieChart = ({ data, colors, size = 200, c }) => {
+export const SimplePieChart = memo(({ data, colors, size = 200, c }) => {
   const total = data.reduce((s, d) => s + d.value, 0);
   if (total === 0) return null;
   let cumAngle = 0;
@@ -39,10 +39,10 @@ export const SimplePieChart = ({ data, colors, size = 200, c }) => {
       </div>
     </div>
   );
-};
+});
 
 // --- Chart Toggle Button Pair ---
-export const ChartToggle = ({ mode, setMode, opt1, opt2, c, isBrut, isCompact, bws }) => (
+export const ChartToggle = memo(({ mode, setMode, opt1, opt2, c, isBrut, isCompact, bws }) => (
   <div style={{ display: "flex", gap: "0.375rem" }}>
     {[opt1, opt2].map(({ key, label }) => (
       <button
@@ -63,10 +63,10 @@ export const ChartToggle = ({ mode, setMode, opt1, opt2, c, isBrut, isCompact, b
       </button>
     ))}
   </div>
-);
+));
 
 // --- Stat Card Icon Wrapper ---
-export const StatIcon = ({ Icon, size, layout, c, variant }) => {
+export const StatIcon = memo(({ Icon, size, layout, c, variant }) => {
   if (layout.statIconBg && layout.statIconBgStyle) {
     const bgStyle = layout.statIconBgStyle(variant || c.isDark);
     return (
@@ -76,4 +76,4 @@ export const StatIcon = ({ Icon, size, layout, c, variant }) => {
     );
   }
   return <Icon size={size} style={{ opacity: 0.7 }} />;
-};
+});
