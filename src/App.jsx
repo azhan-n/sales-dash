@@ -1087,8 +1087,8 @@ function AppInner() {
                       <th style={{ ...thStyle, cursor: "pointer", userSelect: "none" }} onClick={() => handleSort("status")}>
                         <div style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>Status {sortCol === "status" && <span style={{ fontSize: "0.625rem" }}>{sortDir === "asc" ? "▲" : "▼"}</span>}</div>
                       </th>
-                      {[{ label: "Buy Rate", col: "buyRate", hideMobile: true }, { label: "Buy Amount", col: "buyAmount" }, { label: "Sell Rate", col: "sellRate", hideMobile: true }, { label: "Sell Amount", col: "sellAmount" }, { label: "Cost", col: "cost" }, { label: "Gross Profit", col: "grossProfit", hideMobile: true }, { label: "Net Profit", col: "netProfit" }, { label: "Margin", col: "profitMargin" }].map(({ label, col, hideMobile }) => (
-                        <th key={col} style={{ ...thStyle, textAlign: "right", cursor: "pointer", userSelect: "none", display: (isMobile && hideMobile) ? "none" : undefined }} onClick={() => handleSort(col)}>
+                      {[{ label: "Buy Rate", col: "buyRate" }, { label: "Buy Amount", col: "buyAmount" }, { label: "Sell Rate", col: "sellRate" }, { label: "Sell Amount", col: "sellAmount" }, { label: "Cost", col: "cost" }, { label: "Gross Profit", col: "grossProfit" }, { label: "Net Profit", col: "netProfit" }, { label: "Margin", col: "profitMargin" }].map(({ label, col }) => (
+                        <th key={col} style={{ ...thStyle, textAlign: "right", cursor: "pointer", userSelect: "none" }} onClick={() => handleSort(col)}>
                           <div style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", justifyContent: "flex-end" }}>{label} {sortCol === col && <span style={{ fontSize: "0.625rem" }}>{sortDir === "asc" ? "▲" : "▼"}</span>}</div>
                         </th>
                       ))}
@@ -1122,12 +1122,12 @@ function AppInner() {
                             <td style={tdStyle}>{pill(t.cardNumber || "-")}</td>
                             <td style={tdStyle}><span style={ownerBadgeStyle(ownerColorId)}>{t.owner}</span></td>
                             <td style={tdStyle}><span style={statusBadgeStyle(t.status || "settled")}>{(t.status || "settled").charAt(0).toUpperCase() + (t.status || "settled").slice(1)}</span></td>
-                            <td style={{ ...tdStyle, textAlign: "right", display: isMobile ? "none" : undefined }}>{pill(parseFloat(t.buyRate).toFixed(2))}</td>
+                            <td style={{ ...tdStyle, textAlign: "right" }}>{pill(parseFloat(t.buyRate).toFixed(2))}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>{pill(`$${parseFloat(t.buyAmount).toFixed(2)}`)}</td>
-                            <td style={{ ...tdStyle, textAlign: "right", display: isMobile ? "none" : undefined }}>{pill(parseFloat(t.sellRate).toFixed(2))}</td>
+                            <td style={{ ...tdStyle, textAlign: "right" }}>{pill(parseFloat(t.sellRate).toFixed(2))}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>{pill(`₮ ${parseFloat(t.sellAmount).toFixed(2)}`)}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>{pill(`ރ.${t.cost.toFixed(2)}`, isTerm ? undefined : "#3b82f6")}</td>
-                            <td style={{ ...tdStyle, textAlign: "right", fontWeight: bws, display: isMobile ? "none" : undefined }}>{pill(`ރ.${t.grossProfit.toFixed(2)}`, isTerm ? undefined : "#f97316")}</td>
+                            <td style={{ ...tdStyle, textAlign: "right", fontWeight: bws }}>{pill(`ރ.${t.grossProfit.toFixed(2)}`, isTerm ? undefined : "#f97316")}</td>
                             <td style={{ ...tdStyle, textAlign: "right", fontWeight: bws }} className={isTerm ? "terminal-glow" : ""}>{pill(`ރ.${t.netProfit.toFixed(2)}`, isTerm ? undefined : "#16a34a")}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}><span style={mb.style}>{(t.profitMargin || 0).toFixed(1)}%</span></td>
                             {editMode && !isHistory && <td style={{ ...tdStyle, textAlign: "center" }}><button onClick={() => editTransaction(t)} aria-label="Edit transaction" style={{ background: "none", border: "none", cursor: "pointer", color: c.accent, padding: "0.25rem", display: "flex", alignItems: "center", opacity: 0.6, transition: "opacity 0.15s" }} onMouseEnter={(e) => e.currentTarget.style.opacity = 1} onMouseLeave={(e) => e.currentTarget.style.opacity = 0.6}><Pencil size={14} /></button></td>}
