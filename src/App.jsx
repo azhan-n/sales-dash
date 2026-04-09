@@ -227,7 +227,7 @@ function AppInner() {
     toast.info(
       `Deleted ${count} transaction${count > 1 ? "s" : ""}`,
       5000,
-      { label: `Undo`, onClick: () => { clearTimeout(timer); clearInterval(countInterval); setPendingDelete(null); setDeleteCountdown(0); } }
+      { label: "Undo", countdown: 5, onClick: () => { clearTimeout(timer); clearInterval(countInterval); setPendingDelete(null); setDeleteCountdown(0); } }
     );
   }, [selectedTxIds]);
 
@@ -471,6 +471,10 @@ function AppInner() {
   const pagedTransactions = useMemo(() =>
     sortedTransactions.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
   [sortedTransactions, currentPage]);
+
+  const recentRates = useMemo(() =>
+    transactions.slice(0, 10).map((t) => parseFloat(t.sellRate) || 0).filter((v) => v > 0),
+  [transactions]);
 
   const handleSort = useCallback((col) => {
     if (sortCol === col) setSortDir(sortDir === "asc" ? "desc" : "asc");
@@ -793,12 +797,26 @@ function AppInner() {
                   <div style={{ display: (L.ownerLayout === "horizontal" && !isMobile) ? "flex" : "grid", flexDirection: L.ownerLayout === "horizontal" ? "column" : undefined, gap: isCompact ? "1rem" : "1.5rem" }}>
                     {[...owners].sort((a, b) => (stats.ownerStats?.[b.id]?.totalNetProfit || 0) - (stats.ownerStats?.[a.id]?.totalNetProfit || 0)).map((o) => {
                       const os = stats.ownerStats?.[o.id] || { count: 0, totalCost: 0, totalGrossProfit: 0, totalNetProfit: 0 };
+                      const now2 = new Date();
+                      const thisYm = `${now2.getFullYear()}-${String(now2.getMonth() + 1).padStart(2, "0")}`;
+                      const prevDate = new Date(now2.getFullYear(), now2.getMonth() - 1, 1);
+                      const prevYm = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, "0")}`;
+                      const ownerTxAll = transactions.filter((t) => t.ownerId === o.id);
+                      const thisMonthNet = ownerTxAll.filter((t) => t.date && t.date.startsWith(thisYm)).reduce((s, t) => s + t.netProfit, 0);
+                      const prevMonthNet = ownerTxAll.filter((t) => t.date && t.date.startsWith(prevYm)).reduce((s, t) => s + t.netProfit, 0);
+                      const hasTrend = ownerTxAll.some((t) => t.date && t.date.startsWith(prevYm));
+                      const trendPct = hasTrend && prevMonthNet !== 0 ? ((thisMonthNet - prevMonthNet) / Math.abs(prevMonthNet)) * 100 : null;
                       return (
                         <div key={o.id} style={{ cursor: "pointer" }} onClick={() => setExpandedOwner(expandedOwner === o.id ? null : o.id)}>
                         <div style={{ padding: isCompact ? "1rem" : "1.5rem", backgroundColor: c.surfaceAlt, borderRadius: isBrut ? "0" : (isCirc ? "1.5rem" : rSm), border: isBrut ? `2px solid ${c.border}` : `1px solid ${expandedOwner === o.id ? c.accent : c.border}`, ...(isBrut ? { boxShadow: "3px 3px 0 #000" } : {}), ...((isGlass || isLG) ? { backdropFilter: "blur(16px) saturate(150%)", WebkitBackdropFilter: "blur(16px) saturate(150%)" } : {}), transition: "border-color 0.15s ease" }}>
                           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", marginBottom: isCompact ? "0.625rem" : "1rem", gap: "0.5rem" }}>
                             <span style={{ fontFamily: headingFont, fontWeight: bwh, fontSize: isMobile ? "0.9375rem" : (isCompact ? "1rem" : "1.25rem"), color: c.textStrong, textTransform: isBrut ? "uppercase" : "none", display: "flex", alignItems: "center", gap: "0.5rem" }} className={isTerm ? "terminal-glow" : ""}>
                               <span style={ownerBadgeStyle(o.id)}>{isTerm ? `> ${o.name}` : o.name}</span>
+                              {trendPct !== null ? (
+                                <span style={{ fontSize: isCompact ? "0.6875rem" : "0.75rem", fontWeight: bwm, color: trendPct >= 0 ? "#16a34a" : "#dc2626" }}>
+                                  {trendPct >= 0 ? "↑" : "↓"} {trendPct >= 0 ? "+" : ""}{trendPct.toFixed(1)}%
+                                </span>
+                              ) : null}
                               <span style={{ fontSize: "0.625rem", color: expandedOwner === o.id ? c.accent : c.textSec, transition: "transform 0.2s ease, color 0.15s ease", display: "inline-block", transform: expandedOwner === o.id ? "rotate(180deg)" : "rotate(0)" }}>▼</span>
                             </span>
                             <span style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", color: c.textSec, backgroundColor: c.surface, padding: "0.25rem 0.75rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), fontWeight: bws, border: isBrut ? "1px solid #000" : "none" }}>{os.count} transactions</span>
@@ -1216,13 +1234,18 @@ function AppInner() {
                     <thead><tr>
                       <th style={thStyle}>Month</th>
                       <th style={{ ...thStyle, textAlign: "right" }}>Profit</th>
+                      <th style={{ ...thStyle, textAlign: "right" }}>Growth</th>
                       {editModeMonthly && <th style={{ ...thStyle, width: "72px" }}></th>}
                     </tr></thead>
                     <tbody>
-                      {monthly.map((m, idx) => (
+                      {monthly.map((m, idx) => {
+                        const prev = monthly[idx - 1];
+                        const growthPct = prev && prev.profit !== 0 ? ((m.profit - prev.profit) / Math.abs(prev.profit)) * 100 : null;
+                        return (
                         <tr key={m.id} style={{ backgroundColor: idx % 2 === 0 ? c.surface : c.surfaceAlt }}>
                           <td style={{ ...tdStyle, fontWeight: bws, fontSize: isCompact ? "0.8125rem" : "1rem" }} className={isTerm ? "terminal-glow" : ""}>{isTerm ? `> ${m.month}` : m.month}</td>
                           <td style={{ ...tdStyle, textAlign: "right", color: isTerm ? c.text : "#16a34a", fontWeight: bwx, fontSize: isCompact ? "0.875rem" : "1.125rem" }} className={isTerm ? "terminal-glow" : ""}>ރ.{m.profit.toFixed(2)}</td>
+                          <td style={{ ...tdStyle, textAlign: "right" }}>{growthPct !== null ? <span style={{ display: "inline-flex", alignItems: "center", padding: "0.15rem 0.5rem", borderRadius: isBrut ? "0" : "9999px", fontSize: "0.75rem", fontWeight: bws, backgroundColor: growthPct >= 0 ? "#dcfce7" : "#fee2e2", color: growthPct >= 0 ? "#15803d" : "#b91c1c" }}>{growthPct >= 0 ? "+" : ""}{growthPct.toFixed(1)}%</span> : <span style={{ color: c.textSec, fontSize: "0.75rem" }}>—</span>}</td>
                           {editModeMonthly && (
                             <td style={{ ...tdStyle, textAlign: "right" }}>
                               <div style={{ display: "flex", gap: "0.375rem", justifyContent: "flex-end" }}>
@@ -1232,11 +1255,13 @@ function AppInner() {
                             </td>
                           )}
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                     <tfoot><tr style={{ backgroundColor: c.surfaceAlt, fontWeight: bwx, borderTop: `2px solid ${c.borderStrong}` }}>
                       <td style={{ ...tdStyle, fontWeight: bwx, fontSize: isCompact ? "0.8125rem" : "1rem", color: c.textStrong }}>TOTAL</td>
                       <td style={{ ...tdStyle, textAlign: "right", fontWeight: bwx, color: isTerm ? c.text : "#16a34a", fontSize: isCompact ? "1rem" : "1.25rem" }} className={isTerm ? "terminal-glow" : ""}>ރ.{monthly.reduce((s, m) => s + m.profit, 0).toFixed(2)}</td>
+                      <td style={tdStyle}></td>
                       {editModeMonthly && <td style={tdStyle}></td>}
                     </tr></tfoot>
                   </table>
@@ -1261,6 +1286,7 @@ function AppInner() {
         cardTypes={cardTypes}
         ownerInfoMap={ownerInfoMap}
         onSubmit={submitTransaction}
+        recentRates={recentRates}
       />
 
       {/* ===== ADD MONTHLY FORM ===== */}
@@ -1400,6 +1426,13 @@ function AppInner() {
                 ))}
               </div>
               {autoRefresh > 0 && <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", marginTop: "0.5rem", fontSize: "0.75rem", color: c.accent }}><Timer size={12} /> Refreshing every {autoRefresh}s</div>}
+            </div>
+
+            {/* Monthly Target */}
+            <div style={{ marginBottom: "2rem" }}>
+              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: bws, marginBottom: "0.75rem", color: c.text }}>Net Profit Target (ރ.)</label>
+              <input type="number" min="0" step="100" value={monthlyTarget || ""} onChange={(e) => setMonthlyTarget(parseFloat(e.target.value) || 0)} placeholder="e.g. 50000" style={{ padding: "0.75rem", border: `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), fontSize: "0.9375rem", width: "100%", backgroundColor: c.inputBg, color: c.text, outline: "none" }} />
+              <div style={{ marginTop: "0.375rem", fontSize: "0.75rem", color: c.textSec }}>Show monthly progress bar on Dashboard when set</div>
             </div>
 
           </div>

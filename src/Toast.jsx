@@ -44,10 +44,23 @@ export function useToast() {
 
 function ToastItem({ toast, onRemove }) {
   const [visible, setVisible] = useState(false);
+  const [countdown, setCountdown] = useState(toast.action?.countdown || 0);
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true));
   }, []);
+
+  useEffect(() => {
+    if (!toast.action?.countdown) return;
+    setCountdown(toast.action.countdown);
+    const iv = setInterval(() => {
+      setCountdown((p) => {
+        if (p <= 1) { clearInterval(iv); return 0; }
+        return p - 1;
+      });
+    }, 1000);
+    return () => clearInterval(iv);
+  }, [toast.action?.countdown]);
 
   const configs = {
     success: { icon: CheckCircle, bg: "#16a34a", border: "#15803d", text: "#fff" },
@@ -85,7 +98,7 @@ function ToastItem({ toast, onRemove }) {
           onClick={() => { toast.action.onClick(); onRemove(toast.id); }}
           style={{ background: "rgba(255,255,255,0.25)", border: "1px solid rgba(255,255,255,0.4)", cursor: "pointer", color: text, padding: "0.2rem 0.6rem", borderRadius: "0.25rem", fontSize: "0.8125rem", fontWeight: "700", flexShrink: 0, whiteSpace: "nowrap" }}
         >
-          {toast.action.label}
+          {toast.action.countdown ? `${toast.action.label.replace(/ \(\d+s\)$/, "")} (${countdown}s)` : toast.action.label}
         </button>
       )}
       <button
