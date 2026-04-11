@@ -18,6 +18,8 @@ import { MonthlyForm } from "./MonthlyForm";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { ConfirmDialog } from "./ConfirmDialog";
 
+const APP_VERSION = "1.3.0";
+
 if (typeof document !== 'undefined') {
   const link = document.createElement('link');
   link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&family=League+Spartan:wght@300;400;500;600;700;800;900&family=Open+Sans:wght@300;400;500;600;700;800&family=Lexend:wght@300;400;500;600;700;800;900&family=Public+Sans:wght@300;400;500;600;700;800;900&family=Rethink+Sans:wght@400;500;600;700;800&family=Noto+Sans:wght@300;400;500;600;700;800;900&family=Noto+Serif:wght@300;400;500;600;700;800;900&family=Quicksand:wght@300;400;500;600;700&family=Winky+Sans:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap';
@@ -72,6 +74,7 @@ function AppInner() {
   const [editingMonthlyId, setEditingMonthlyId] = useState(null);
   const [editModeMonthly, setEditModeMonthly] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [showSortMenu, setShowSortMenu] = useState(false);
   const [filterDateFrom, setFilterDateFrom] = useState(() => lsGet("filterDateFrom") || "");
   const [filterDateTo, setFilterDateTo] = useState(() => lsGet("filterDateTo") || "");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -533,7 +536,7 @@ function AppInner() {
           <div>
             <h1 key={theme} style={{ fontSize: isBrut ? "3rem" : `${titleFontSize}px`, fontFamily: titleFontFamily, fontWeight: isBrut ? "900" : bwh, background: isSky ? "none" : c.titleGrad, WebkitBackgroundClip: isSky ? "unset" : "text", WebkitTextFillColor: isSky ? "#ffffff" : "transparent", backgroundClip: isSky ? "unset" : "text", color: isSky ? "#ffffff" : "transparent", display: "inline-block", width: "fit-content", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>Sales Dashboard</h1>
             <p style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", color: isSky ? "rgba(255,255,255,0.85)" : c.textSec, marginTop: "0.25rem", display: "flex", alignItems: "center", gap: "0.75rem" }} className={isTerm ? "terminal-glow" : ""}>
-              {isTerm ? "> " : ""}{lastSync ? `Last updated: ${lastSync.toLocaleTimeString()}` : "Loading data..."}
+              {isTerm ? "> " : ""}{lastSync ? `Last updated: ${lastSync.toLocaleTimeString()}` : "Loading data..."} <span style={{ opacity: 0.5, fontSize: "0.75em" }}>v{APP_VERSION}</span>
               {autoRefresh > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "0.6875rem", color: isSky ? "#ffffff" : c.accent, backgroundColor: isSky ? "rgba(255,255,255,0.2)" : c.accentBg, padding: "0.125rem 0.5rem", borderRadius: "999px" }}><Timer size={10} />{autoRefresh}s</span>}
               <button onClick={fetchData} disabled={loading} style={{ padding: "0.5rem", borderRadius: isBrut ? "0" : (isCirc || isLG ? "50%" : "0.5rem"), border: isSky ? "1px solid rgba(255,255,255,0.3)" : (isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`), backgroundColor: isSky ? "rgba(255,255,255,0.15)" : c.inputBg, color: isSky ? "#ffffff" : c.text, cursor: loading ? "not-allowed" : "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", opacity: loading ? 0.6 : 1 }} title="Refresh"><RefreshCw size={16} style={loading ? { animation: "spin 1s linear infinite" } : {}} /></button>
               <button onClick={() => setShowSettings(true)} style={{ padding: "0.5rem", borderRadius: isBrut ? "0" : (isCirc || isLG ? "50%" : "0.5rem"), border: isSky ? "1px solid rgba(255,255,255,0.3)" : (isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`), backgroundColor: isSky ? "rgba(255,255,255,0.15)" : c.inputBg, color: isSky ? "#ffffff" : c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }} title="Settings"><Settings size={16} /></button>
@@ -1041,6 +1044,35 @@ function AppInner() {
                       </div>
                     )}
                   </div>
+                  {/* Sort dropdown */}
+                  {!isHistory && (() => {
+                    const SORT_OPTS = [
+                      { key: null,         dir: "asc",  label: "Default" },
+                      { key: "owner",      dir: "asc",  label: "Name" },
+                      { key: "date",       dir: "desc", label: "Date" },
+                      { key: "netProfit",  dir: "desc", label: "Net Profit" },
+                    ];
+                    const active = SORT_OPTS.find((o) => o.key === sortCol) || SORT_OPTS[0];
+                    return (
+                      <div style={{ position: "relative" }}>
+                        <button onClick={() => setShowSortMenu((v) => !v)} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 0.875rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: isBrut ? `2px solid ${c.border}` : `1px solid ${showSortMenu || sortCol ? c.accent : c.border}`, backgroundColor: showSortMenu || sortCol ? c.accentBg : c.inputBg, color: showSortMenu || sortCol ? c.accent : c.text, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.375rem", fontSize: isCompact ? "0.75rem" : "0.875rem", fontWeight: bwm, transition: "border-color 0.15s, background-color 0.15s, color 0.15s" }}>
+                          <ChevronDown size={isCompact ? 12 : 14} />
+                          {isTerm ? `> Sort: ${active.label}` : `Sort: ${active.label}`}
+                          <ChevronDown size={isCompact ? 12 : 14} style={{ transition: "transform 0.15s", transform: showSortMenu ? "rotate(180deg)" : "rotate(0deg)" }} />
+                        </button>
+                        {showSortMenu && (
+                          <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 200, backgroundColor: isGlass ? "rgba(20,14,48,0.95)" : (isLG ? "rgba(255,255,255,0.85)" : c.surface), border: isBrut ? `2px solid ${c.border}` : `1px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "1.5rem" : "0.75rem"), padding: "0.375rem", boxShadow: c.shadow, minWidth: "9rem", display: "flex", flexDirection: "column", gap: "0.125rem", animation: "slideUp 0.15s cubic-bezier(.16,1,.3,1) both", ...((isGlass || isLG) ? { backdropFilter: "blur(20px) saturate(150%)", WebkitBackdropFilter: "blur(20px) saturate(150%)" } : {}) }}>
+                            {SORT_OPTS.map((o) => (
+                              <button key={String(o.key)} onClick={() => { setSortCol(o.key); setSortDir(o.dir); setShowSortMenu(false); }} style={{ padding: isCompact ? "0.375rem 0.625rem" : "0.5rem 0.75rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "none", backgroundColor: sortCol === o.key ? c.accentBg : "transparent", color: sortCol === o.key ? c.accent : c.text, cursor: "pointer", textAlign: "left", fontSize: isCompact ? "0.75rem" : "0.8125rem", fontWeight: sortCol === o.key ? bwx : bwm, display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                {sortCol === o.key && <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: c.accent, flexShrink: 0 }} />}
+                                {o.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                   {/* Persistent search bar */}
                   <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
                     <Search size={isCompact ? 12 : 13} style={{ position: "absolute", left: "0.5rem", color: c.textSec, pointerEvents: "none" }} />
@@ -1258,12 +1290,7 @@ function AppInner() {
                   <button onClick={() => { setEditingMonthlyId(null); setMonthlyForm({ month: "", profit: "" }); setShowMonthlyForm(true); }} style={{ padding: isCompact ? "0.25rem 0.5rem" : "0.375rem 0.75rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "none", background: c.btnGrad, color: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.3rem", fontSize: isCompact ? "0.6875rem" : "0.8125rem", fontWeight: bwm, boxShadow: `0 2px 8px ${c.btnGlow}` }}><Plus size={isCompact ? 12 : 14} /> Add Month</button>
                   <h2 style={{ ...sectionTitleStyle, marginBottom: 0 }}><Calendar size={isCompact ? 20 : 24} /> Monthly Records</h2>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
-                  {[{ v: "name", l: "Name" }, { v: "date", l: "Date" }, { v: "profit", l: "Profit" }].map((o) => (
-                    <button key={o.v} onClick={() => setMonthlySort(o.v)} style={{ padding: isCompact ? "0.2rem 0.5rem" : "0.3rem 0.625rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), border: `1px solid ${monthlySort === o.v ? c.accent : c.border}`, backgroundColor: monthlySort === o.v ? c.accentBg : c.inputBg, color: monthlySort === o.v ? c.accent : c.textSec, cursor: "pointer", fontSize: isCompact ? "0.625rem" : "0.75rem", fontWeight: bwm, transition: "border-color 0.15s, background-color 0.15s, color 0.15s" }}>{o.l}</button>
-                  ))}
-                  <button onClick={() => { setEditModeMonthly((m) => !m); }} aria-pressed={editModeMonthly} style={{ padding: isCompact ? "0.25rem 0.5rem" : "0.375rem 0.75rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${editModeMonthly ? c.accent : c.border}`, backgroundColor: editModeMonthly ? c.accentBg : c.inputBg, color: editModeMonthly ? c.accent : c.text, cursor: "pointer", fontSize: isCompact ? "0.6875rem" : "0.8125rem", fontWeight: bwm, display: "inline-flex", alignItems: "center", gap: "0.3rem", transition: "border-color 0.15s, background-color 0.15s, color 0.15s" }}><Pencil size={isCompact ? 11 : 13} /> {editModeMonthly ? "Done" : "Edit"}</button>
-                </div>
+                <button onClick={() => { setEditModeMonthly((m) => !m); }} aria-pressed={editModeMonthly} style={{ padding: isCompact ? "0.25rem 0.5rem" : "0.375rem 0.75rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${editModeMonthly ? c.accent : c.border}`, backgroundColor: editModeMonthly ? c.accentBg : c.inputBg, color: editModeMonthly ? c.accent : c.text, cursor: "pointer", fontSize: isCompact ? "0.6875rem" : "0.8125rem", fontWeight: bwm, display: "inline-flex", alignItems: "center", gap: "0.3rem", transition: "border-color 0.15s, background-color 0.15s, color 0.15s" }}><Pencil size={isCompact ? 11 : 13} /> {editModeMonthly ? "Done" : "Edit"}</button>
               </div>
               {monthly.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "3rem", color: c.textSec }}><p style={{ fontSize: "1.125rem", fontWeight: bws }}>No monthly data available</p></div>
@@ -1277,12 +1304,8 @@ function AppInner() {
                       {editModeMonthly && <th style={{ ...thStyle, width: "72px" }}></th>}
                     </tr></thead>
                     <tbody>
-                      {[...monthly].sort((a, b) => {
-                        if (monthlySort === "profit") return b.profit - a.profit;
-                        if (monthlySort === "name") return a.month.localeCompare(b.month);
-                        return a.id - b.id; // "date" = entry order
-                      }).map((m, idx, arr) => {
-                        const prev = arr[idx - 1];
+                      {monthly.map((m, idx) => {
+                        const prev = monthly[idx - 1];
                         const growthPct = prev && prev.profit !== 0 ? ((m.profit - prev.profit) / Math.abs(prev.profit)) * 100 : null;
                         return (
                         <tr key={m.id} style={{ backgroundColor: idx % 2 === 0 ? c.surface : c.surfaceAlt }}>
