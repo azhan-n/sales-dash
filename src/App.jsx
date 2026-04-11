@@ -406,7 +406,19 @@ function AppInner() {
   };
   const getCardById = (id) => cards.find((x) => x.id === id);
   const getOwnerById = (id) => owners.find((o) => o.id === id);
-  const OWNER_BADGES = [
+  const OWNER_BADGES = isTerm ? Array.from({ length: 8 }, (_, i) => i % 2 === 0
+    ? { bg: "rgba(0,255,65,0.12)", text: "#00ff41" }
+    : { bg: "rgba(0,204,51,0.12)", text: "#00cc33" }
+  ) : c.isDark ? [
+    { bg: "rgba(96,165,250,0.15)",  text: "#93c5fd" },
+    { bg: "rgba(251,146,60,0.15)",  text: "#fdba74" },
+    { bg: "rgba(52,211,153,0.15)",  text: "#6ee7b7" },
+    { bg: "rgba(196,181,253,0.15)", text: "#c4b5fd" },
+    { bg: "rgba(249,168,212,0.15)", text: "#f9a8d4" },
+    { bg: "rgba(103,232,249,0.15)", text: "#67e8f9" },
+    { bg: "rgba(253,224,71,0.15)",  text: "#fde047" },
+    { bg: "rgba(252,165,165,0.15)", text: "#fca5a5" },
+  ] : [
     { bg: "#dbeafe", text: "#1d4ed8" }, { bg: "#ffedd5", text: "#c2410c" },
     { bg: "#dcfce7", text: "#15803d" }, { bg: "#ede9fe", text: "#6d28d9" },
     { bg: "#fce7f3", text: "#be185d" }, { bg: "#cffafe", text: "#0e7490" },
@@ -414,9 +426,11 @@ function AppInner() {
   ];
   const getOwnerBadge = (ownerId) => OWNER_BADGES[((ownerId || 1) - 1) % OWNER_BADGES.length];
   const ownerBadgeStyle = (ownerId) => { const { bg, text } = getOwnerBadge(ownerId); return { display: "inline-flex", alignItems: "center", padding: isBrut ? "0.25rem 0.5rem" : "0.2rem 0.6rem", borderRadius: isBrut ? "0" : "9999px", fontSize: "0.75rem", fontWeight: bws, backgroundColor: bg, color: text, border: isBrut ? "2px solid #000" : "none", whiteSpace: "nowrap" }; };
-  const cardBadgeStyle = (type) => { const { bg, text } = getCardTypeBadge(type); return { display: "inline-flex", alignItems: "center", padding: isBrut ? "0.25rem 0.5rem" : "0.2rem 0.6rem", borderRadius: isBrut ? "0" : "9999px", fontSize: "0.75rem", fontWeight: bws, backgroundColor: bg, color: text, border: isBrut ? "2px solid #000" : "none", whiteSpace: "nowrap" }; };
+  const _cardBadgesDark = { "VISA DEBIT": { bg: "rgba(96,165,250,0.15)", text: "#93c5fd" }, "VISA CREDIT": { bg: "rgba(52,211,153,0.15)", text: "#6ee7b7" }, AMEX: { bg: "rgba(196,181,253,0.15)", text: "#c4b5fd" }, SELLER: { bg: "rgba(148,163,184,0.15)", text: "#94a3b8" }, MASTERCARD: { bg: "rgba(253,224,71,0.15)", text: "#fde047" }, UNKNOWN: { bg: "rgba(148,163,184,0.15)", text: "#94a3b8" } };
+  const _cardBadgesTerm = { "VISA DEBIT": { bg: "rgba(0,255,65,0.12)", text: "#00ff41" }, "VISA CREDIT": { bg: "rgba(0,204,51,0.12)", text: "#00cc33" }, AMEX: { bg: "rgba(0,255,65,0.08)", text: "#00ff41" }, SELLER: { bg: "rgba(0,204,51,0.08)", text: "#00cc33" }, MASTERCARD: { bg: "rgba(0,255,65,0.15)", text: "#00ff41" }, UNKNOWN: { bg: "rgba(0,204,51,0.06)", text: "#00cc33" } };
+  const cardBadgeStyle = (type) => { const norm = normalizeCardType(type); const { bg, text } = isTerm ? (_cardBadgesTerm[norm] || _cardBadgesTerm.UNKNOWN) : (c.isDark ? (_cardBadgesDark[norm] || _cardBadgesDark.UNKNOWN) : (getCardTypeBadge(type))); return { display: "inline-flex", alignItems: "center", padding: isBrut ? "0.25rem 0.5rem" : "0.2rem 0.6rem", borderRadius: isBrut ? "0" : "9999px", fontSize: "0.75rem", fontWeight: bws, backgroundColor: bg, color: text, border: isBrut ? "2px solid #000" : "none", whiteSpace: "nowrap" }; };
   const statusBadgeStyle = (status) => {
-    const map = { settled: { bg: "#dcfce7", text: "#15803d" }, pending: { bg: "#fef9c3", text: "#a16207" }, failed: { bg: "#fee2e2", text: "#b91c1c" } };
+    const map = { settled: c.badgeGreen, pending: c.badgeYellow, failed: c.badgeRed };
     const { bg, text } = map[status] || map.settled;
     return { display: "inline-flex", alignItems: "center", padding: isBrut ? "0.25rem 0.5rem" : "0.2rem 0.5rem", borderRadius: isBrut ? "0" : "9999px", fontSize: "0.6875rem", fontWeight: bws, backgroundColor: bg, color: text, border: isBrut ? "2px solid #000" : "none", whiteSpace: "nowrap" };
   };
