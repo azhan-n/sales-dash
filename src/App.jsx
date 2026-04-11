@@ -420,11 +420,15 @@ function AppInner() {
     const { bg, text } = map[status] || map.settled;
     return { display: "inline-flex", alignItems: "center", padding: isBrut ? "0.25rem 0.5rem" : "0.2rem 0.5rem", borderRadius: isBrut ? "0" : "9999px", fontSize: "0.6875rem", fontWeight: bws, backgroundColor: bg, color: text, border: isBrut ? "2px solid #000" : "none", whiteSpace: "nowrap" };
   };
-  const pill = (content, color) => pillTags ? <span style={{ display: "inline-flex", alignItems: "center", padding: isBrut ? "0.15rem 0.4rem" : "0.15rem 0.55rem", borderRadius: isBrut ? "0" : "9999px", fontSize: "inherit", fontWeight: "inherit", backgroundColor: c.surfaceAlt, color: color || c.text, border: `1px solid ${color || c.border}`, whiteSpace: "nowrap" }}>{content}</span> : <span style={{ color: color || "inherit" }}>{content}</span>;
-  // Theme-aware profit colors (respects dark/terminal/brutalist themes)
-  const clCost  = isBrut ? undefined : (isTerm ? c.accent : (c.isDark ? "#93c5fd" : "#3b82f6"));
-  const clGross = isBrut ? undefined : (isTerm ? c.accent : (c.isDark ? "#fdba74" : "#f97316"));
-  const clNet   = isBrut ? undefined : (isTerm ? c.accent : c.badgeGreen.text);
+  // pill(content, color, bg) — bg is used when pill tags are enabled
+  const pill = (content, color, bg) => pillTags ? <span style={{ display: "inline-flex", alignItems: "center", padding: isBrut ? "0.15rem 0.4rem" : "0.15rem 0.55rem", borderRadius: isBrut ? "0" : "9999px", fontSize: "inherit", fontWeight: "inherit", backgroundColor: bg || c.surfaceAlt, color: color || c.text, border: isBrut ? "2px solid #000" : `1px solid ${color || c.border}`, whiteSpace: "nowrap" }}>{content}</span> : <span style={{ color: color || "inherit" }}>{content}</span>;
+  // Theme-aware profit colors — text and background, styled like the Margin badge
+  const clCost  = isBrut ? c.text   : (isTerm ? c.accent : (c.isDark ? "#93c5fd" : "#3b82f6"));
+  const clGross = isBrut ? c.text   : (isTerm ? c.accent : (c.isDark ? "#fdba74" : "#f97316"));
+  const clNet   = isBrut ? c.text   : (isTerm ? c.accent : c.badgeGreen.text);
+  const bgCost  = isBrut ? c.surfaceAlt : (isTerm ? c.badgeGreen.bg  : (c.isDark ? "rgba(147,197,253,0.15)" : "#eff6ff"));
+  const bgGross = isBrut ? c.surfaceAlt : (isTerm ? c.badgeYellow.bg : (c.isDark ? "rgba(253,186,116,0.15)" : "#fff7ed"));
+  const bgNet   = isBrut ? c.surfaceAlt : c.badgeGreen.bg;
   const selectBg = isGlass ? "rgba(20,14,48,0.85)" : (isLG ? "rgba(255,255,255,0.92)" : c.inputBg);
 
   // Reset card number filter when owner changes
@@ -1163,9 +1167,9 @@ function AppInner() {
                             <td style={{ ...tdStyle, textAlign: "right" }}>{pill(`$${parseFloat(t.buyAmount).toFixed(2)}`)}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>{pill(parseFloat(t.sellRate).toFixed(2))}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>{pill(`₮ ${parseFloat(t.sellAmount).toFixed(2)}`)}</td>
-                            <td style={{ ...tdStyle, textAlign: "right", fontWeight: bws }}>{pill(`ރ.${t.cost.toFixed(2)}`, clCost)}</td>
-                            <td style={{ ...tdStyle, textAlign: "right", fontWeight: bws }}>{pill(`ރ.${t.grossProfit.toFixed(2)}`, clGross)}</td>
-                            <td style={{ ...tdStyle, textAlign: "right", fontWeight: bws }} className={isTerm ? "terminal-glow" : ""}>{pill(`ރ.${t.netProfit.toFixed(2)}`, clNet)}</td>
+                            <td style={{ ...tdStyle, textAlign: "right", fontWeight: bws }}>{pill(`ރ.${t.cost.toFixed(2)}`, clCost, bgCost)}</td>
+                            <td style={{ ...tdStyle, textAlign: "right", fontWeight: bws }}>{pill(`ރ.${t.grossProfit.toFixed(2)}`, clGross, bgGross)}</td>
+                            <td style={{ ...tdStyle, textAlign: "right", fontWeight: bws }} className={isTerm ? "terminal-glow" : ""}>{pill(`ރ.${t.netProfit.toFixed(2)}`, clNet, bgNet)}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}><span style={mb.style}>{(t.profitMargin || 0).toFixed(1)}%</span></td>
                             {editMode && !isHistory && <td style={{ ...tdStyle, textAlign: "center" }}><button onClick={() => editTransaction(t)} aria-label="Edit transaction" style={{ background: "none", border: "none", cursor: "pointer", color: c.accent, padding: "0.25rem", display: "flex", alignItems: "center", opacity: 0.6, transition: "opacity 0.15s" }} onMouseEnter={(e) => e.currentTarget.style.opacity = 1} onMouseLeave={(e) => e.currentTarget.style.opacity = 0.6}><Pencil size={14} /></button></td>}
                           </tr>
@@ -1212,8 +1216,8 @@ function AppInner() {
                         <div><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>Avg Sell Rate</div><div style={{ fontWeight: bws, fontSize: isCompact ? "0.75rem" : "inherit", color: c.text }}>{avgSell.toFixed(2)}</div></div>
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: isCompact ? "0.5rem" : "1rem", paddingTop: isCompact ? "0.5rem" : "0.75rem", borderTop: `1px solid ${c.border}` }}>
-                        {[{ l: "Cost", v: totCost, cl: clCost }, { l: "Gross", v: totGross, cl: clGross }, { l: "Net", v: totNet, cl: clNet }].map((x) => (
-                          <div key={x.l}><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>{x.l}</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.875rem" : "inherit" }}>{pill(`ރ.${x.v.toFixed(0)}`, isTerm ? undefined : x.cl)}</div></div>
+                        {[{ l: "Cost", v: totCost, cl: clCost, bg: bgCost }, { l: "Gross", v: totGross, cl: clGross, bg: bgGross }, { l: "Net", v: totNet, cl: clNet, bg: bgNet }].map((x) => (
+                          <div key={x.l}><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>{x.l}</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.875rem" : "inherit" }}>{pill(`ރ.${x.v.toFixed(0)}`, x.cl, x.bg)}</div></div>
                         ))}
                       </div>
                     </div>
@@ -1243,8 +1247,8 @@ function AppInner() {
                         <div><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>Sell</div><div style={{ fontWeight: bws, fontSize: isCompact ? "0.75rem" : "inherit", color: c.text }}>{pill(`${parseFloat(t.sellRate).toFixed(2)} × ₮ ${parseFloat(t.sellAmount).toFixed(0)}`)}</div></div>
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: isCompact ? "0.5rem" : "1rem", paddingTop: isCompact ? "0.5rem" : "1rem", borderTop: `1px solid ${c.border}` }}>
-                        {[{ l: "Cost", v: t.cost, cl: clCost }, { l: "Gross", v: t.grossProfit, cl: clGross }, { l: "Net", v: t.netProfit, cl: clNet }].map((x) => (
-                          <div key={x.l}><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>{x.l}</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.875rem" : "inherit" }}>{pill(`ރ.${x.v.toFixed(0)}`, isTerm ? undefined : x.cl)}</div></div>
+                        {[{ l: "Cost", v: t.cost, cl: clCost, bg: bgCost }, { l: "Gross", v: t.grossProfit, cl: clGross, bg: bgGross }, { l: "Net", v: t.netProfit, cl: clNet, bg: bgNet }].map((x) => (
+                          <div key={x.l}><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>{x.l}</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.875rem" : "inherit" }}>{pill(`ރ.${x.v.toFixed(0)}`, x.cl, x.bg)}</div></div>
                         ))}
                       </div>
                       {editMode && !isHistory && <button onClick={(e) => { e.stopPropagation(); editTransaction(t); }} style={{ marginTop: isCompact ? "0.5rem" : "0.75rem", width: "100%", padding: "0.375rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), border: `1px solid ${c.border}`, backgroundColor: "transparent", color: c.textSec, cursor: "pointer", fontSize: "0.75rem", fontWeight: bwm, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", transition: "color 0.15s, border-color 0.15s" }} onMouseEnter={(e) => { e.currentTarget.style.color = c.accent; e.currentTarget.style.borderColor = c.accent; }} onMouseLeave={(e) => { e.currentTarget.style.color = c.textSec; e.currentTarget.style.borderColor = c.border; }}><Pencil size={12} /> Edit</button>}
