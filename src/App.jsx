@@ -55,6 +55,7 @@ function AppInner() {
   // Sort
   const [sortCol, setSortCol] = useState(null);
   const [sortDir, setSortDir] = useState("asc");
+  const [monthlySort, setMonthlySort] = useState("name");
   // Auto-refresh
   const [autoRefresh, setAutoRefresh] = useState(() => parseInt(lsGet("autoRefresh")) || 0);
   const [hoveredBar, setHoveredBar] = useState(null);
@@ -417,6 +418,10 @@ function AppInner() {
     return { display: "inline-flex", alignItems: "center", padding: isBrut ? "0.25rem 0.5rem" : "0.2rem 0.5rem", borderRadius: isBrut ? "0" : "9999px", fontSize: "0.6875rem", fontWeight: bws, backgroundColor: bg, color: text, border: isBrut ? "2px solid #000" : "none", whiteSpace: "nowrap" };
   };
   const pill = (content, color) => pillTags ? <span style={{ display: "inline-flex", alignItems: "center", padding: isBrut ? "0.15rem 0.4rem" : "0.15rem 0.55rem", borderRadius: isBrut ? "0" : "9999px", fontSize: "inherit", fontWeight: "inherit", backgroundColor: c.surfaceAlt, color: color || c.text, border: `1px solid ${color || c.border}`, whiteSpace: "nowrap" }}>{content}</span> : <span style={{ color: color || "inherit" }}>{content}</span>;
+  // Theme-aware profit colors (respects dark/terminal/brutalist themes)
+  const clCost  = isBrut ? undefined : (isTerm ? c.accent : (c.isDark ? "#93c5fd" : "#3b82f6"));
+  const clGross = isBrut ? undefined : (isTerm ? c.accent : (c.isDark ? "#fdba74" : "#f97316"));
+  const clNet   = isBrut ? undefined : (isTerm ? c.accent : c.badgeGreen.text);
   const selectBg = isGlass ? "rgba(20,14,48,0.85)" : (isLG ? "rgba(255,255,255,0.92)" : c.inputBg);
 
   // Reset card number filter when owner changes
@@ -822,7 +827,7 @@ function AppInner() {
                             <span style={{ fontSize: isCompact ? "0.75rem" : "0.875rem", color: c.textSec, backgroundColor: c.surface, padding: "0.25rem 0.75rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), fontWeight: bws, border: isBrut ? "1px solid #000" : "none" }}>{os.count} transactions</span>
                           </div>
                           <div style={{ display: (L.ownerLayout === "horizontal" && !isMobile) ? "flex" : "grid", flexDirection: L.ownerLayout === "horizontal" ? "column" : undefined, gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: isCompact ? "0.625rem" : "1rem" }}>
-                            {[{ label: "COST", value: os.totalCost, color: "#3b82f6" }, { label: "GROSS", value: os.totalGrossProfit, color: "#f97316" }, { label: "NET PROFIT", value: os.totalNetProfit, color: "#16a34a" }].map((s) => (
+                            {[{ label: "COST", value: os.totalCost, color: clCost }, { label: "GROSS", value: os.totalGrossProfit, color: clGross }, { label: "NET PROFIT", value: os.totalNetProfit, color: clNet }].map((s) => (
                               <div key={s.label} style={{ textAlign: "center", padding: isCompact ? "0.625rem" : "1rem", backgroundColor: c.surface, borderRadius: isBrut ? "0" : (isCirc ? "1.5rem" : rSm), flex: L.ownerLayout === "horizontal" ? 1 : undefined, border: isBrut ? "1px solid #000" : "none" }}>
                                 <div style={{ fontSize: isCompact ? "0.6875rem" : "0.75rem", color: c.textSec, marginBottom: "0.25rem", fontWeight: bws, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>{s.label}</div>
                                 <div style={{ fontSize: isCompact ? "1.125rem" : "1.5rem", fontWeight: bwx, color: isTerm ? c.text : s.color }} className={isTerm ? "terminal-glow" : ""}>ރ.{s.value.toFixed(2)}</div>
@@ -834,7 +839,7 @@ function AppInner() {
                           const ownerTx = transactions.filter((t) => t.ownerId === o.id);
                           if (ownerTx.length === 0) return <div style={{ padding: "1rem", color: c.textSec, fontSize: "0.8125rem" }}>No transactions</div>;
                           return (
-                            <div style={{ marginTop: isCompact ? "0.5rem" : "0.75rem", borderRadius: isBrut ? "0" : (isCirc ? "1rem" : rSm), overflowX: "auto", WebkitOverflowScrolling: "touch", border: `1px solid ${c.border}`, animation: "slideUp 0.25s cubic-bezier(.16,1,.3,1) both" }}>
+                            <div style={{ marginTop: isCompact ? "0.5rem" : "0.75rem", borderRadius: isBrut ? "0" : (isCirc ? "1rem" : rSm), overflow: "auto", WebkitOverflowScrolling: "touch", maxHeight: "60vh", border: `1px solid ${c.border}`, animation: "slideUp 0.25s cubic-bezier(.16,1,.3,1) both" }}>
                               <div>
                                 <table style={{ width: "max-content", minWidth: "100%", borderCollapse: "collapse", fontSize: isCompact ? "0.6875rem" : "0.8125rem" }}>
                                   <thead><tr>
@@ -853,9 +858,9 @@ function AppInner() {
                                           <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>${parseFloat(t.buyAmount).toFixed(2)}</td>
                                           <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>{parseFloat(t.sellRate).toFixed(2)}</td>
                                           <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>₮ {parseFloat(t.sellAmount).toFixed(2)}</td>
-                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>ރ.{t.cost.toFixed(2)}</td>
-                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", color: isTerm ? c.text : "#f97316", fontWeight: bws }}>ރ.{t.grossProfit.toFixed(2)}</td>
-                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", color: isTerm ? c.text : (t.netProfit >= 0 ? "#16a34a" : "#ef4444"), fontWeight: bwx }}>ރ.{t.netProfit.toFixed(2)}</td>
+                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", color: clCost || c.text, fontWeight: bws }}>ރ.{t.cost.toFixed(2)}</td>
+                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", color: clGross || c.text, fontWeight: bws }}>ރ.{t.grossProfit.toFixed(2)}</td>
+                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", color: t.netProfit >= 0 ? (clNet || c.text) : (isTerm ? c.text : (c.isDark ? "#fca5a5" : "#ef4444")), fontWeight: bwx }}>ރ.{t.netProfit.toFixed(2)}</td>
                                         </tr>
                                       );
                                     })}
@@ -867,8 +872,8 @@ function AppInner() {
                                     <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}></td>
                                     <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>₮ {ownerTx.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0).toFixed(2)}</td>
                                     <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>ރ.{ownerTx.reduce((s, t) => s + t.cost, 0).toFixed(2)}</td>
-                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx, color: isTerm ? c.text : "#f97316" }}>ރ.{ownerTx.reduce((s, t) => s + t.grossProfit, 0).toFixed(2)}</td>
-                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx, color: isTerm ? c.text : "#16a34a" }}>ރ.{ownerTx.reduce((s, t) => s + t.netProfit, 0).toFixed(2)}</td>
+                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx, color: clGross || c.text }}>ރ.{ownerTx.reduce((s, t) => s + t.grossProfit, 0).toFixed(2)}</td>
+                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx, color: clNet || c.text }}>ރ.{ownerTx.reduce((s, t) => s + t.netProfit, 0).toFixed(2)}</td>
                                   </tr></tfoot>
                                 </table>
                               </div>
@@ -1126,9 +1131,9 @@ function AppInner() {
                             <td style={{ ...tdStyle, textAlign: "right" }}>{pill(`$${parseFloat(t.buyAmount).toFixed(2)}`)}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>{pill(parseFloat(t.sellRate).toFixed(2))}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>{pill(`₮ ${parseFloat(t.sellAmount).toFixed(2)}`)}</td>
-                            <td style={{ ...tdStyle, textAlign: "right" }}>{pill(`ރ.${t.cost.toFixed(2)}`, isTerm ? undefined : "#3b82f6")}</td>
-                            <td style={{ ...tdStyle, textAlign: "right", fontWeight: bws }}>{pill(`ރ.${t.grossProfit.toFixed(2)}`, isTerm ? undefined : "#f97316")}</td>
-                            <td style={{ ...tdStyle, textAlign: "right", fontWeight: bws }} className={isTerm ? "terminal-glow" : ""}>{pill(`ރ.${t.netProfit.toFixed(2)}`, isTerm ? undefined : "#16a34a")}</td>
+                            <td style={{ ...tdStyle, textAlign: "right", fontWeight: bws }}>{pill(`ރ.${t.cost.toFixed(2)}`, clCost)}</td>
+                            <td style={{ ...tdStyle, textAlign: "right", fontWeight: bws }}>{pill(`ރ.${t.grossProfit.toFixed(2)}`, clGross)}</td>
+                            <td style={{ ...tdStyle, textAlign: "right", fontWeight: bws }} className={isTerm ? "terminal-glow" : ""}>{pill(`ރ.${t.netProfit.toFixed(2)}`, clNet)}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}><span style={mb.style}>{(t.profitMargin || 0).toFixed(1)}%</span></td>
                             {editMode && !isHistory && <td style={{ ...tdStyle, textAlign: "center" }}><button onClick={() => editTransaction(t)} aria-label="Edit transaction" style={{ background: "none", border: "none", cursor: "pointer", color: c.accent, padding: "0.25rem", display: "flex", alignItems: "center", opacity: 0.6, transition: "opacity 0.15s" }} onMouseEnter={(e) => e.currentTarget.style.opacity = 1} onMouseLeave={(e) => e.currentTarget.style.opacity = 0.6}><Pencil size={14} /></button></td>}
                           </tr>
@@ -1142,9 +1147,9 @@ function AppInner() {
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Avg Sell:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>{displayFiltered.length > 0 ? (displayFiltered.reduce((s, t) => s + (parseFloat(t.sellRate) || 0), 0) / displayFiltered.length).toFixed(2) : "0.00"}</div></td>
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Avg Buy:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>{(() => { const tc2 = displayFiltered.reduce((s, t) => s + (parseFloat(t.cost) || 0), 0); const ts2 = displayFiltered.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0); return (ts2 > 0 ? tc2 / ts2 : 0).toFixed(2); })()}</div></td>
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Buy Amt:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>${displayFiltered.reduce((s, t) => s + (parseFloat(t.buyAmount) || 0), 0).toFixed(2)}</div></td>
-                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Cost:</div><div style={{ color: isTerm ? c.text : "#3b82f6", fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem" }}>ރ.{displayFiltered.reduce((s, t) => s + t.cost, 0).toFixed(2)}</div></td>
-                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Gross:</div><div style={{ color: isTerm ? c.text : "#f97316", fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem" }}>ރ.{displayFiltered.reduce((s, t) => s + t.grossProfit, 0).toFixed(2)}</div></td>
-                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Net:</div><div style={{ color: isTerm ? c.text : "#16a34a", fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem" }} className={isTerm ? "terminal-glow" : ""}>ރ.{displayFiltered.reduce((s, t) => s + t.netProfit, 0).toFixed(2)}</div></td>
+                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Cost:</div><div style={{ color: clCost || c.text, fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem" }}>ރ.{displayFiltered.reduce((s, t) => s + t.cost, 0).toFixed(2)}</div></td>
+                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Gross:</div><div style={{ color: clGross || c.text, fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem" }}>ރ.{displayFiltered.reduce((s, t) => s + t.grossProfit, 0).toFixed(2)}</div></td>
+                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Net:</div><div style={{ color: clNet || c.text, fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem" }} className={isTerm ? "terminal-glow" : ""}>ރ.{displayFiltered.reduce((s, t) => s + t.netProfit, 0).toFixed(2)}</div></td>
                         {(() => { const totCost = displayFiltered.reduce((s, t) => s + t.cost, 0); const totNet = displayFiltered.reduce((s, t) => s + t.netProfit, 0); const avgMargin = totCost > 0 ? (totNet / totCost) * 100 : 0; const mb = getProfitMarginBadge(avgMargin); return <td style={{ ...tdStyle, textAlign: "center" }}><div style={{ fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid, marginBottom: "0.2rem" }}>Avg:</div><span style={mb.style}>{avgMargin.toFixed(1)}%</span></td>; })()}
                       </tr>
                     </tfoot>
@@ -1175,7 +1180,7 @@ function AppInner() {
                         <div><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>Avg Sell Rate</div><div style={{ fontWeight: bws, fontSize: isCompact ? "0.75rem" : "inherit", color: c.text }}>{avgSell.toFixed(2)}</div></div>
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: isCompact ? "0.5rem" : "1rem", paddingTop: isCompact ? "0.5rem" : "0.75rem", borderTop: `1px solid ${c.border}` }}>
-                        {[{ l: "Cost", v: totCost, cl: "#3b82f6" }, { l: "Gross", v: totGross, cl: "#f97316" }, { l: "Net", v: totNet, cl: "#16a34a" }].map((x) => (
+                        {[{ l: "Cost", v: totCost, cl: clCost }, { l: "Gross", v: totGross, cl: clGross }, { l: "Net", v: totNet, cl: clNet }].map((x) => (
                           <div key={x.l}><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>{x.l}</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.875rem" : "inherit" }}>{pill(`ރ.${x.v.toFixed(0)}`, isTerm ? undefined : x.cl)}</div></div>
                         ))}
                       </div>
@@ -1206,7 +1211,7 @@ function AppInner() {
                         <div><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>Sell</div><div style={{ fontWeight: bws, fontSize: isCompact ? "0.75rem" : "inherit", color: c.text }}>{pill(`${parseFloat(t.sellRate).toFixed(2)} × ₮ ${parseFloat(t.sellAmount).toFixed(0)}`)}</div></div>
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: isCompact ? "0.5rem" : "1rem", paddingTop: isCompact ? "0.5rem" : "1rem", borderTop: `1px solid ${c.border}` }}>
-                        {[{ l: "Cost", v: t.cost, cl: "#3b82f6" }, { l: "Gross", v: t.grossProfit, cl: "#f97316" }, { l: "Net", v: t.netProfit, cl: "#16a34a" }].map((x) => (
+                        {[{ l: "Cost", v: t.cost, cl: clCost }, { l: "Gross", v: t.grossProfit, cl: clGross }, { l: "Net", v: t.netProfit, cl: clNet }].map((x) => (
                           <div key={x.l}><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>{x.l}</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.875rem" : "inherit" }}>{pill(`ރ.${x.v.toFixed(0)}`, isTerm ? undefined : x.cl)}</div></div>
                         ))}
                       </div>
@@ -1253,7 +1258,12 @@ function AppInner() {
                   <button onClick={() => { setEditingMonthlyId(null); setMonthlyForm({ month: "", profit: "" }); setShowMonthlyForm(true); }} style={{ padding: isCompact ? "0.25rem 0.5rem" : "0.375rem 0.75rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: "none", background: c.btnGrad, color: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.3rem", fontSize: isCompact ? "0.6875rem" : "0.8125rem", fontWeight: bwm, boxShadow: `0 2px 8px ${c.btnGlow}` }}><Plus size={isCompact ? 12 : 14} /> Add Month</button>
                   <h2 style={{ ...sectionTitleStyle, marginBottom: 0 }}><Calendar size={isCompact ? 20 : 24} /> Monthly Records</h2>
                 </div>
-                <button onClick={() => { setEditModeMonthly((m) => !m); }} aria-pressed={editModeMonthly} style={{ padding: isCompact ? "0.25rem 0.5rem" : "0.375rem 0.75rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${editModeMonthly ? c.accent : c.border}`, backgroundColor: editModeMonthly ? c.accentBg : c.inputBg, color: editModeMonthly ? c.accent : c.text, cursor: "pointer", fontSize: isCompact ? "0.6875rem" : "0.8125rem", fontWeight: bwm, display: "inline-flex", alignItems: "center", gap: "0.3rem", transition: "border-color 0.15s, background-color 0.15s, color 0.15s" }}><Pencil size={isCompact ? 11 : 13} /> {editModeMonthly ? "Done" : "Edit"}</button>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
+                  {[{ v: "name", l: "Name" }, { v: "date", l: "Date" }, { v: "profit", l: "Profit" }].map((o) => (
+                    <button key={o.v} onClick={() => setMonthlySort(o.v)} style={{ padding: isCompact ? "0.2rem 0.5rem" : "0.3rem 0.625rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), border: `1px solid ${monthlySort === o.v ? c.accent : c.border}`, backgroundColor: monthlySort === o.v ? c.accentBg : c.inputBg, color: monthlySort === o.v ? c.accent : c.textSec, cursor: "pointer", fontSize: isCompact ? "0.625rem" : "0.75rem", fontWeight: bwm, transition: "border-color 0.15s, background-color 0.15s, color 0.15s" }}>{o.l}</button>
+                  ))}
+                  <button onClick={() => { setEditModeMonthly((m) => !m); }} aria-pressed={editModeMonthly} style={{ padding: isCompact ? "0.25rem 0.5rem" : "0.375rem 0.75rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), border: `1px solid ${editModeMonthly ? c.accent : c.border}`, backgroundColor: editModeMonthly ? c.accentBg : c.inputBg, color: editModeMonthly ? c.accent : c.text, cursor: "pointer", fontSize: isCompact ? "0.6875rem" : "0.8125rem", fontWeight: bwm, display: "inline-flex", alignItems: "center", gap: "0.3rem", transition: "border-color 0.15s, background-color 0.15s, color 0.15s" }}><Pencil size={isCompact ? 11 : 13} /> {editModeMonthly ? "Done" : "Edit"}</button>
+                </div>
               </div>
               {monthly.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "3rem", color: c.textSec }}><p style={{ fontSize: "1.125rem", fontWeight: bws }}>No monthly data available</p></div>
@@ -1267,8 +1277,12 @@ function AppInner() {
                       {editModeMonthly && <th style={{ ...thStyle, width: "72px" }}></th>}
                     </tr></thead>
                     <tbody>
-                      {monthly.map((m, idx) => {
-                        const prev = monthly[idx - 1];
+                      {[...monthly].sort((a, b) => {
+                        if (monthlySort === "profit") return b.profit - a.profit;
+                        if (monthlySort === "name") return a.month.localeCompare(b.month);
+                        return a.id - b.id; // "date" = entry order
+                      }).map((m, idx, arr) => {
+                        const prev = arr[idx - 1];
                         const growthPct = prev && prev.profit !== 0 ? ((m.profit - prev.profit) / Math.abs(prev.profit)) * 100 : null;
                         return (
                         <tr key={m.id} style={{ backgroundColor: idx % 2 === 0 ? c.surface : c.surfaceAlt }}>
