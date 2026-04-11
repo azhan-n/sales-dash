@@ -8,6 +8,7 @@ import {
   Settings, X, Calendar, Timer, Plus, Pencil, Download, Search, Trash2, ChevronLeft, ChevronRight, ChevronDown,
 } from "lucide-react";
 import { supabase } from "./supabaseClient";
+import { ICON_PACKS, ICON_PACK_KEYS } from "./iconPacks";
 import { FONTS, THEME_OPTIONS, getThemeLayout, getThemeColors } from "./themes";
 import { normalizeCardType, CARD_TYPES, getCardTypeColor, getCardTypeBadge, getTodayDate, exportToCSV, exportMonthlyToCSV, exportTransactionsPDF, exportMonthlyPDF } from "./utils";
 import { SimplePieChart, ChartToggle, StatIcon } from "./Charts";
@@ -53,6 +54,7 @@ function AppInner() {
   const [boldText, setBoldText] = useState(() => lsGet("boldText") === "true");
   const [pillTags, setPillTags] = useState(() => lsGet("pillTags") === "true");
   const [statCardCols, setStatCardCols] = useState(() => parseInt(lsGet("statCardCols")) || 4);
+  const [iconPack, setIconPack] = useState(() => lsGet("iconPack") || "lucide");
 
   // Sort
   const [sortCol, setSortCol] = useState(null);
@@ -261,6 +263,13 @@ function AppInner() {
   const isCirc = theme === "circular";
   const isSky = theme === "sky";
 
+  // Icon pack — shadow lucide module-level imports with the selected pack's components
+  const {
+    TrendingUp, DollarSign, Filter, User, RefreshCw, LayoutGrid, List,
+    Settings, X, Calendar, Timer, Plus, Pencil, Download, Search, Trash2,
+    ChevronLeft, ChevronRight, ChevronDown,
+  } = ICON_PACKS[iconPack] || ICON_PACKS.lucide;
+
   // Responsive breakpoints
   const [winW, setWinW] = useState(() => typeof window !== 'undefined' ? window.innerWidth : 1200);
   useEffect(() => {
@@ -328,6 +337,7 @@ function AppInner() {
   useEffect(() => { lsSet("pillTags", pillTags.toString()); }, [pillTags]);
   useEffect(() => { lsSet("autoRefresh", autoRefresh.toString()); }, [autoRefresh]);
   useEffect(() => { lsSet("statCardCols", statCardCols.toString()); }, [statCardCols]);
+  useEffect(() => { lsSet("iconPack", iconPack); }, [iconPack]);
   useEffect(() => { lsSet("filterDateFrom", filterDateFrom); }, [filterDateFrom]);
   useEffect(() => { lsSet("filterDateTo", filterDateTo); }, [filterDateTo]);
 
@@ -1486,6 +1496,47 @@ function AppInner() {
                 </>
               );
             })()}
+
+            {/* Icon Pack */}
+            <div style={{ marginBottom: "0.5rem" }}>
+              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: bws, marginBottom: "0.75rem", color: c.text }}>Icon Pack</label>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: "0.5rem" }}>
+                {ICON_PACK_KEYS.map((key) => {
+                  const pack = ICON_PACKS[key];
+                  const PreviewSettings = pack.Settings;
+                  const PreviewDownload = pack.Download;
+                  const PreviewUser = pack.User;
+                  const isSelected = iconPack === key;
+                  return (
+                    <div
+                      key={key}
+                      onClick={() => setIconPack(key)}
+                      style={{
+                        padding: "0.75rem 0.5rem",
+                        border: isSelected ? `2px solid ${c.accent}` : `2px solid ${c.border}`,
+                        borderRadius: isBrut ? "0" : (isCirc ? "1.5rem" : "0.625rem"),
+                        backgroundColor: isSelected ? c.accentBg : c.surfaceAlt,
+                        cursor: "pointer",
+                        textAlign: "center",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: "0.5rem",
+                        transition: "border-color 0.15s, background-color 0.15s",
+                        color: isSelected ? c.accent : c.textSec,
+                      }}
+                    >
+                      <div style={{ display: "flex", gap: "0.375rem", alignItems: "center", justifyContent: "center" }}>
+                        <PreviewSettings size={16} />
+                        <PreviewDownload size={16} />
+                        <PreviewUser size={16} />
+                      </div>
+                      <div style={{ fontSize: "0.6875rem", fontWeight: bws, color: isSelected ? c.accent : c.text }}>{pack.label}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
 
           </div>
         </div>
