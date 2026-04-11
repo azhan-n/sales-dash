@@ -834,9 +834,9 @@ function AppInner() {
                           const ownerTx = transactions.filter((t) => t.ownerId === o.id);
                           if (ownerTx.length === 0) return <div style={{ padding: "1rem", color: c.textSec, fontSize: "0.8125rem" }}>No transactions</div>;
                           return (
-                            <div style={{ marginTop: isCompact ? "0.5rem" : "0.75rem", borderRadius: isBrut ? "0" : (isCirc ? "1rem" : rSm), overflow: "hidden", border: `1px solid ${c.border}`, animation: "slideUp 0.25s cubic-bezier(.16,1,.3,1) both" }}>
-                              <div style={{ overflowX: "auto" }}>
-                                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: isCompact ? "0.6875rem" : "0.8125rem" }}>
+                            <div style={{ marginTop: isCompact ? "0.5rem" : "0.75rem", borderRadius: isBrut ? "0" : (isCirc ? "1rem" : rSm), overflowX: "auto", WebkitOverflowScrolling: "touch", border: `1px solid ${c.border}`, animation: "slideUp 0.25s cubic-bezier(.16,1,.3,1) both" }}>
+                              <div>
+                                <table style={{ width: "max-content", minWidth: "100%", borderCollapse: "collapse", fontSize: isCompact ? "0.6875rem" : "0.8125rem" }}>
                                   <thead><tr>
                                     {["Date", "Card", "Buy Rate", "Buy Amt", "Sell Rate", "Sell Amt", "Cost", "Gross", "Net"].map((h) => (
                                       <th key={h} style={{ padding: isCompact ? "0.375rem 0.5rem" : "0.5rem 0.625rem", textAlign: h === "Date" || h === "Card" ? "left" : "right", backgroundColor: c.surfaceDeep, color: c.textSec, fontWeight: bws, fontSize: isCompact ? "0.5625rem" : "0.6875rem", borderBottom: `1px solid ${c.border}`, textTransform: "uppercase", letterSpacing: "0.05em", whiteSpace: "nowrap" }}>{h}</th>
@@ -1142,7 +1142,7 @@ function AppInner() {
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Avg Sell:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>{displayFiltered.length > 0 ? (displayFiltered.reduce((s, t) => s + (parseFloat(t.sellRate) || 0), 0) / displayFiltered.length).toFixed(2) : "0.00"}</div></td>
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Avg Buy:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>{(() => { const tc2 = displayFiltered.reduce((s, t) => s + (parseFloat(t.cost) || 0), 0); const ts2 = displayFiltered.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0); return (ts2 > 0 ? tc2 / ts2 : 0).toFixed(2); })()}</div></td>
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Buy Amt:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>${displayFiltered.reduce((s, t) => s + (parseFloat(t.buyAmount) || 0), 0).toFixed(2)}</div></td>
-                        <td style={tdStyle}></td>
+                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Cost:</div><div style={{ color: isTerm ? c.text : "#3b82f6", fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem" }}>ރ.{displayFiltered.reduce((s, t) => s + t.cost, 0).toFixed(2)}</div></td>
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Gross:</div><div style={{ color: isTerm ? c.text : "#f97316", fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem" }}>ރ.{displayFiltered.reduce((s, t) => s + t.grossProfit, 0).toFixed(2)}</div></td>
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Net:</div><div style={{ color: isTerm ? c.text : "#16a34a", fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem" }} className={isTerm ? "terminal-glow" : ""}>ރ.{displayFiltered.reduce((s, t) => s + t.netProfit, 0).toFixed(2)}</div></td>
                         {(() => { const totCost = displayFiltered.reduce((s, t) => s + t.cost, 0); const totNet = displayFiltered.reduce((s, t) => s + t.netProfit, 0); const avgMargin = totCost > 0 ? (totNet / totCost) * 100 : 0; const mb = getProfitMarginBadge(avgMargin); return <td style={{ ...tdStyle, textAlign: "center" }}><div style={{ fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid, marginBottom: "0.2rem" }}>Avg:</div><span style={mb.style}>{avgMargin.toFixed(1)}%</span></td>; })()}
@@ -1153,6 +1153,35 @@ function AppInner() {
               </div>
             ) : (
               <div style={{ display: "grid", gridTemplateColumns: (isBrut || isMobile) ? "1fr" : "repeat(2, 1fr)", gap: isCompact ? "0.625rem" : "1rem" }}>
+                {(() => {
+                  const cardRows = isHistory ? displayFiltered : pagedTransactions;
+                  const totCost = cardRows.reduce((s, t) => s + t.cost, 0);
+                  const totGross = cardRows.reduce((s, t) => s + t.grossProfit, 0);
+                  const totNet = cardRows.reduce((s, t) => s + t.netProfit, 0);
+                  const totBuyAmt = cardRows.reduce((s, t) => s + (parseFloat(t.buyAmount) || 0), 0);
+                  const totSellAmt = cardRows.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0);
+                  const avgSell = cardRows.length > 0 ? cardRows.reduce((s, t) => s + (parseFloat(t.sellRate) || 0), 0) / cardRows.length : 0;
+                  const avgMargin = totCost > 0 ? (totNet / totCost) * 100 : 0;
+                  const mb = getProfitMarginBadge(avgMargin);
+                  return (
+                    <div style={{ backgroundColor: c.surfaceAlt, borderRadius: isLG ? r : (isCirc ? "2rem" : rSm), padding: isCompact ? "0.875rem" : "1.5rem", border: isBrut ? `3px solid ${c.border}` : `2px solid ${c.borderStrong || c.border}`, ...(isBrut ? { boxShadow: "4px 4px 0 #000" } : {}), animation: "slideUp 0.2s cubic-bezier(.16,1,.3,1) both" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isCompact ? "0.75rem" : "1rem" }}>
+                        <div style={{ fontSize: isCompact ? "0.6875rem" : "0.8125rem", fontWeight: bwx, color: c.textStrong, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>Totals · {cardRows.length} transaction{cardRows.length !== 1 ? "s" : ""}</div>
+                        <span style={mb.style}>{avgMargin.toFixed(1)}% avg</span>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: isCompact ? "0.5rem" : "0.75rem", marginBottom: isCompact ? "0.5rem" : "0.75rem" }}>
+                        <div><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>Buy Amt</div><div style={{ fontWeight: bws, fontSize: isCompact ? "0.75rem" : "inherit", color: c.text }}>${totBuyAmt.toFixed(2)}</div></div>
+                        <div><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>Sell Amt</div><div style={{ fontWeight: bws, fontSize: isCompact ? "0.75rem" : "inherit", color: c.text }}>₮ {totSellAmt.toFixed(2)}</div></div>
+                        <div><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>Avg Sell Rate</div><div style={{ fontWeight: bws, fontSize: isCompact ? "0.75rem" : "inherit", color: c.text }}>{avgSell.toFixed(2)}</div></div>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: isCompact ? "0.5rem" : "1rem", paddingTop: isCompact ? "0.5rem" : "0.75rem", borderTop: `1px solid ${c.border}` }}>
+                        {[{ l: "Cost", v: totCost, cl: "#3b82f6" }, { l: "Gross", v: totGross, cl: "#f97316" }, { l: "Net", v: totNet, cl: "#16a34a" }].map((x) => (
+                          <div key={x.l}><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>{x.l}</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.875rem" : "inherit" }}>{pill(`ރ.${x.v.toFixed(0)}`, isTerm ? undefined : x.cl)}</div></div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
                 {(isHistory ? displayFiltered : pagedTransactions).map((t, idx) => {
                   const cc = getCardTypeColor(t.cardType); const mb = getProfitMarginBadge(t.profitMargin || 0);
                   const ownerColorId = t.ownerId || (owners.findIndex((o) => o.name === t.owner) + 1) || 1;
