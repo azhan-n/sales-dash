@@ -436,7 +436,7 @@ function AppInner() {
   // pill(content, color, bg) — bg is used when pill tags are enabled
   const pill = (content, color, bg) => pillTags ? <span style={{ display: "inline-flex", alignItems: "center", padding: isBrut ? "0.15rem 0.4rem" : "0.15rem 0.55rem", borderRadius: isBrut ? "0" : "9999px", fontSize: "inherit", fontWeight: "inherit", backgroundColor: bg || c.surfaceAlt, color: color || c.text, border: isBrut ? "2px solid #000" : `1px solid ${color || c.border}`, whiteSpace: "nowrap" }}>{content}</span> : <span style={{ color: color || "inherit" }}>{content}</span>;
   // badge(content, color, bg) — always rendered as a pill, used for cost/gross/net profit
-  const badge = (content, color, bg) => <span style={{ display: "inline-flex", alignItems: "center", padding: isBrut ? "0.15rem 0.4rem" : "0.2rem 0.6rem", borderRadius: isBrut ? "0" : "9999px", fontSize: "inherit", fontWeight: "inherit", backgroundColor: bg || c.surfaceAlt, color: color || c.text, border: isBrut ? "2px solid #000" : `1px solid ${color || c.border}`, whiteSpace: "nowrap" }}>{content}</span>;
+  const badge = (content, color, bg) => <span style={{ display: "inline-flex", alignItems: "center", padding: isBrut ? "0.15rem 0.4rem" : "0.2rem 0.6rem", borderRadius: isBrut ? "0" : "9999px", fontSize: "inherit", fontWeight: "inherit", backgroundColor: bg || c.surfaceAlt, color: color || c.text, border: isBrut ? "2px solid #000" : "none", whiteSpace: "nowrap" }}>{content}</span>;
   // Theme-aware profit colors — text and background, styled like the Margin badge
   const clCost  = isBrut ? c.text   : (isTerm ? c.accent : (c.isDark ? "#93c5fd" : "#3b82f6"));
   const clGross = isBrut ? c.text   : (isTerm ? c.accent : (c.isDark ? "#fdba74" : "#f97316"));
