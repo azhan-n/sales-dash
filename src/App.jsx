@@ -435,6 +435,8 @@ function AppInner() {
   const cardBadgeStyle = (type) => { const norm = normalizeCardType(type); const { bg, text } = isTerm ? (_cardBadgesTerm[norm] || _cardBadgesTerm.UNKNOWN) : (c.isDark ? (_cardBadgesDark[norm] || _cardBadgesDark.UNKNOWN) : (getCardTypeBadge(type))); return { display: "inline-flex", alignItems: "center", padding: isBrut ? "0.25rem 0.5rem" : "0.2rem 0.6rem", borderRadius: isBrut ? "0" : "9999px", fontSize: "0.75rem", fontWeight: bws, backgroundColor: bg, color: text, border: isBrut ? "2px solid #000" : "none", whiteSpace: "nowrap" }; };
   // pill(content, color, bg) — bg is used when pill tags are enabled
   const pill = (content, color, bg) => pillTags ? <span style={{ display: "inline-flex", alignItems: "center", padding: isBrut ? "0.15rem 0.4rem" : "0.15rem 0.55rem", borderRadius: isBrut ? "0" : "9999px", fontSize: "inherit", fontWeight: "inherit", backgroundColor: bg || c.surfaceAlt, color: color || c.text, border: isBrut ? "2px solid #000" : `1px solid ${color || c.border}`, whiteSpace: "nowrap" }}>{content}</span> : <span style={{ color: color || "inherit" }}>{content}</span>;
+  // badge(content, color, bg) — always rendered as a pill, used for cost/gross/net profit
+  const badge = (content, color, bg) => <span style={{ display: "inline-flex", alignItems: "center", padding: isBrut ? "0.15rem 0.4rem" : "0.2rem 0.6rem", borderRadius: isBrut ? "0" : "9999px", fontSize: "inherit", fontWeight: "inherit", backgroundColor: bg || c.surfaceAlt, color: color || c.text, border: isBrut ? "2px solid #000" : `1px solid ${color || c.border}`, whiteSpace: "nowrap" }}>{content}</span>;
   // Theme-aware profit colors — text and background, styled like the Margin badge
   const clCost  = isBrut ? c.text   : (isTerm ? c.accent : (c.isDark ? "#93c5fd" : "#3b82f6"));
   const clGross = isBrut ? c.text   : (isTerm ? c.accent : (c.isDark ? "#fdba74" : "#f97316"));
@@ -830,7 +832,7 @@ function AppInner() {
                             {[{ label: "COST", value: os.totalCost, color: clCost, bg: bgCost }, { label: "GROSS", value: os.totalGrossProfit, color: clGross, bg: bgGross }, { label: "NET PROFIT", value: os.totalNetProfit, color: clNet, bg: bgNet }].map((s) => (
                               <div key={s.label} style={{ textAlign: "center", padding: isCompact ? "0.625rem" : "1rem", backgroundColor: c.surface, borderRadius: isBrut ? "0" : (isCirc ? "1.5rem" : rSm), flex: L.ownerLayout === "horizontal" ? 1 : undefined, border: isBrut ? "1px solid #000" : "none" }}>
                                 <div style={{ fontSize: isCompact ? "0.6875rem" : "0.75rem", color: c.textSec, marginBottom: "0.25rem", fontWeight: bws, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>{s.label}</div>
-                                <div style={{ fontWeight: bwx, marginTop: "0.25rem" }} className={isTerm ? "terminal-glow" : ""}>{pill(`ރ.${s.value.toFixed(2)}`, s.color, s.bg)}</div>
+                                <div style={{ fontSize: isCompact ? "1rem" : "1.375rem", fontWeight: bwx, marginTop: "0.25rem" }} className={isTerm ? "terminal-glow" : ""}>{badge(`ރ.${s.value.toFixed(2)}`, s.color, s.bg)}</div>
                               </div>
                             ))}
                           </div>
@@ -858,9 +860,9 @@ function AppInner() {
                                           <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>${parseFloat(t.buyAmount).toFixed(2)}</td>
                                           <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>{parseFloat(t.sellRate).toFixed(2)}</td>
                                           <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>₮ {parseFloat(t.sellAmount).toFixed(2)}</td>
-                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bws }}>{pill(`ރ.${t.cost.toFixed(2)}`, clCost, bgCost)}</td>
-                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bws }}>{pill(`ރ.${t.grossProfit.toFixed(2)}`, clGross, bgGross)}</td>
-                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>{pill(`ރ.${t.netProfit.toFixed(2)}`, t.netProfit >= 0 ? clNet : (isTerm ? c.text : (c.isDark ? "#fca5a5" : "#ef4444")), t.netProfit >= 0 ? bgNet : (c.isDark ? "rgba(252,165,165,0.15)" : "#fee2e2"))}</td>
+                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bws }}>{badge(`ރ.${t.cost.toFixed(2)}`, clCost, bgCost)}</td>
+                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bws }}>{badge(`ރ.${t.grossProfit.toFixed(2)}`, clGross, bgGross)}</td>
+                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>{badge(`ރ.${t.netProfit.toFixed(2)}`, t.netProfit >= 0 ? clNet : (isTerm ? c.text : (c.isDark ? "#fca5a5" : "#ef4444")), t.netProfit >= 0 ? bgNet : (c.isDark ? "rgba(252,165,165,0.15)" : "#fee2e2"))}</td>
                                         </tr>
                                       );
                                     })}
@@ -871,9 +873,9 @@ function AppInner() {
                                     <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>${ownerTx.reduce((s, t) => s + (parseFloat(t.buyAmount) || 0), 0).toFixed(2)}</td>
                                     <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}></td>
                                     <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>₮ {ownerTx.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0).toFixed(2)}</td>
-                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>{pill(`ރ.${ownerTx.reduce((s, t) => s + t.cost, 0).toFixed(2)}`, clCost, bgCost)}</td>
-                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>{pill(`ރ.${ownerTx.reduce((s, t) => s + t.grossProfit, 0).toFixed(2)}`, clGross, bgGross)}</td>
-                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>{pill(`ރ.${ownerTx.reduce((s, t) => s + t.netProfit, 0).toFixed(2)}`, clNet, bgNet)}</td>
+                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>{badge(`ރ.${ownerTx.reduce((s, t) => s + t.cost, 0).toFixed(2)}`, clCost, bgCost)}</td>
+                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>{badge(`ރ.${ownerTx.reduce((s, t) => s + t.grossProfit, 0).toFixed(2)}`, clGross, bgGross)}</td>
+                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>{badge(`ރ.${ownerTx.reduce((s, t) => s + t.netProfit, 0).toFixed(2)}`, clNet, bgNet)}</td>
                                   </tr></tfoot>
                                 </table>
                               </div>
@@ -1156,9 +1158,9 @@ function AppInner() {
                             <td style={{ ...tdStyle, textAlign: "right" }}>{pill(`$${parseFloat(t.buyAmount).toFixed(2)}`)}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>{pill(parseFloat(t.sellRate).toFixed(2))}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>{pill(`₮ ${parseFloat(t.sellAmount).toFixed(2)}`)}</td>
-                            <td style={{ ...tdStyle, textAlign: "right", fontWeight: bws }}>{pill(`ރ.${t.cost.toFixed(2)}`, clCost, bgCost)}</td>
-                            <td style={{ ...tdStyle, textAlign: "right", fontWeight: bws }}>{pill(`ރ.${t.grossProfit.toFixed(2)}`, clGross, bgGross)}</td>
-                            <td style={{ ...tdStyle, textAlign: "right", fontWeight: bws }} className={isTerm ? "terminal-glow" : ""}>{pill(`ރ.${t.netProfit.toFixed(2)}`, clNet, bgNet)}</td>
+                            <td style={{ ...tdStyle, textAlign: "right", fontWeight: bws }}>{badge(`ރ.${t.cost.toFixed(2)}`, clCost, bgCost)}</td>
+                            <td style={{ ...tdStyle, textAlign: "right", fontWeight: bws }}>{badge(`ރ.${t.grossProfit.toFixed(2)}`, clGross, bgGross)}</td>
+                            <td style={{ ...tdStyle, textAlign: "right", fontWeight: bws }} className={isTerm ? "terminal-glow" : ""}>{badge(`ރ.${t.netProfit.toFixed(2)}`, clNet, bgNet)}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}><span style={mb.style}>{(t.profitMargin || 0).toFixed(1)}%</span></td>
                             {editMode && !isHistory && <td style={{ ...tdStyle, textAlign: "center" }}><button onClick={() => editTransaction(t)} aria-label="Edit transaction" style={{ background: "none", border: "none", cursor: "pointer", color: c.accent, padding: "0.25rem", display: "flex", alignItems: "center", opacity: 0.6, transition: "opacity 0.15s" }} onMouseEnter={(e) => e.currentTarget.style.opacity = 1} onMouseLeave={(e) => e.currentTarget.style.opacity = 0.6}><Pencil size={14} /></button></td>}
                           </tr>
@@ -1172,9 +1174,9 @@ function AppInner() {
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Avg Sell:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>{displayFiltered.length > 0 ? (displayFiltered.reduce((s, t) => s + (parseFloat(t.sellRate) || 0), 0) / displayFiltered.length).toFixed(2) : "0.00"}</div></td>
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Avg Buy:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>{(() => { const tc2 = displayFiltered.reduce((s, t) => s + (parseFloat(t.cost) || 0), 0); const ts2 = displayFiltered.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0); return (ts2 > 0 ? tc2 / ts2 : 0).toFixed(2); })()}</div></td>
                         <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid }}><div>Buy Amt:</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.9375rem", color: c.textStrong }}>${displayFiltered.reduce((s, t) => s + (parseFloat(t.buyAmount) || 0), 0).toFixed(2)}</div></td>
-                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Cost:</div><div style={{ fontWeight: bwx, marginTop: "0.2rem" }}>{pill(`ރ.${displayFiltered.reduce((s, t) => s + t.cost, 0).toFixed(2)}`, clCost, bgCost)}</div></td>
-                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Gross:</div><div style={{ fontWeight: bwx, marginTop: "0.2rem" }}>{pill(`ރ.${displayFiltered.reduce((s, t) => s + t.grossProfit, 0).toFixed(2)}`, clGross, bgGross)}</div></td>
-                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Net:</div><div style={{ fontWeight: bwx, marginTop: "0.2rem" }} className={isTerm ? "terminal-glow" : ""}>{pill(`ރ.${displayFiltered.reduce((s, t) => s + t.netProfit, 0).toFixed(2)}`, clNet, bgNet)}</div></td>
+                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Cost:</div><div style={{ fontWeight: bwx, marginTop: "0.2rem" }}>{badge(`ރ.${displayFiltered.reduce((s, t) => s + t.cost, 0).toFixed(2)}`, clCost, bgCost)}</div></td>
+                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Gross:</div><div style={{ fontWeight: bwx, marginTop: "0.2rem" }}>{badge(`ރ.${displayFiltered.reduce((s, t) => s + t.grossProfit, 0).toFixed(2)}`, clGross, bgGross)}</div></td>
+                        <td style={{ ...tdStyle, textAlign: "center", fontSize: isCompact ? "0.625rem" : "0.8125rem" }}><div>Net:</div><div style={{ fontWeight: bwx, marginTop: "0.2rem" }} className={isTerm ? "terminal-glow" : ""}>{badge(`ރ.${displayFiltered.reduce((s, t) => s + t.netProfit, 0).toFixed(2)}`, clNet, bgNet)}</div></td>
                         {(() => { const totCost = displayFiltered.reduce((s, t) => s + t.cost, 0); const totNet = displayFiltered.reduce((s, t) => s + t.netProfit, 0); const avgMargin = totCost > 0 ? (totNet / totCost) * 100 : 0; const mb = getProfitMarginBadge(avgMargin); return <td style={{ ...tdStyle, textAlign: "center" }}><div style={{ fontSize: isCompact ? "0.625rem" : "0.8125rem", color: c.textMid, marginBottom: "0.2rem" }}>Avg:</div><span style={mb.style}>{avgMargin.toFixed(1)}%</span></td>; })()}
                       </tr>
                     </tfoot>
@@ -1206,7 +1208,7 @@ function AppInner() {
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: isCompact ? "0.5rem" : "1rem", paddingTop: isCompact ? "0.5rem" : "0.75rem", borderTop: `1px solid ${c.border}` }}>
                         {[{ l: "Cost", v: totCost, cl: clCost, bg: bgCost }, { l: "Gross", v: totGross, cl: clGross, bg: bgGross }, { l: "Net", v: totNet, cl: clNet, bg: bgNet }].map((x) => (
-                          <div key={x.l}><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>{x.l}</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.875rem" : "inherit" }}>{pill(`ރ.${x.v.toFixed(0)}`, x.cl, x.bg)}</div></div>
+                          <div key={x.l}><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>{x.l}</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.875rem" : "inherit" }}>{badge(`ރ.${x.v.toFixed(0)}`, x.cl, x.bg)}</div></div>
                         ))}
                       </div>
                     </div>
@@ -1234,7 +1236,7 @@ function AppInner() {
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: isCompact ? "0.5rem" : "1rem", paddingTop: isCompact ? "0.5rem" : "1rem", borderTop: `1px solid ${c.border}` }}>
                         {[{ l: "Cost", v: t.cost, cl: clCost, bg: bgCost }, { l: "Gross", v: t.grossProfit, cl: clGross, bg: bgGross }, { l: "Net", v: t.netProfit, cl: clNet, bg: bgNet }].map((x) => (
-                          <div key={x.l}><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>{x.l}</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.875rem" : "inherit" }}>{pill(`ރ.${x.v.toFixed(0)}`, x.cl, x.bg)}</div></div>
+                          <div key={x.l}><div style={{ fontSize: isCompact ? "0.625rem" : "0.75rem", color: c.textSec }}>{x.l}</div><div style={{ fontWeight: bwx, fontSize: isCompact ? "0.875rem" : "inherit" }}>{badge(`ރ.${x.v.toFixed(0)}`, x.cl, x.bg)}</div></div>
                         ))}
                       </div>
                       {editMode && !isHistory && <button onClick={(e) => { e.stopPropagation(); editTransaction(t); }} style={{ marginTop: isCompact ? "0.5rem" : "0.75rem", width: "100%", padding: "0.375rem", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.375rem"), border: `1px solid ${c.border}`, backgroundColor: "transparent", color: c.textSec, cursor: "pointer", fontSize: "0.75rem", fontWeight: bwm, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.375rem", transition: "color 0.15s, border-color 0.15s" }} onMouseEnter={(e) => { e.currentTarget.style.color = c.accent; e.currentTarget.style.borderColor = c.accent; }} onMouseLeave={(e) => { e.currentTarget.style.color = c.textSec; e.currentTarget.style.borderColor = c.border; }}><Pencil size={12} /> Edit</button>}
