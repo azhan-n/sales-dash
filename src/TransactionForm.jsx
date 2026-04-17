@@ -74,7 +74,7 @@ export function TransactionForm({
     setErrors({});
     setShowTxForm(false);
     setEditingTxId(null);
-    setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "15.42", buyAmount: "", sellRate: "", sellAmount: "", date: fromInputDate(new Date().toISOString().split("T")[0]), status: "settled" });
+    setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "15.42", buyAmount: "", sellRate: "", sellAmount: "", date: fromInputDate(new Date().toISOString().split("T")[0]) });
   };
 
   const ratesArr = Array.isArray(recentRates) ? recentRates.filter((x) => x > 0) : [];
@@ -264,16 +264,6 @@ export function TransactionForm({
             <input type="number" step="0.01" min="0" value={txForm.sellAmount} onChange={(e) => { setTxForm({ ...txForm, sellAmount: e.target.value }); if (errors.sellAmount) setErrors((p) => ({ ...p, sellAmount: null })); }} style={fInput("sellAmount")} />
             {errMsg("sellAmount")}
           </div>
-        </div>
-
-        {/* Status */}
-        <div style={{ marginTop: "0.75rem" }}>
-          <label style={fLabel}>Status</label>
-          <select value={txForm.status || "settled"} onChange={(e) => setTxForm({ ...txForm, status: e.target.value })} style={fInput("status")}>
-            <option value="settled">Settled</option>
-            <option value="pending">Pending</option>
-            <option value="failed">Failed</option>
-          </select>
         </div>
 
         {/* Auto-computed */}
