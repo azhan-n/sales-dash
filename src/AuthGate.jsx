@@ -110,13 +110,13 @@ function LoginScreen() {
               inputMode="numeric"
               autoComplete="one-time-code"
               pattern="[0-9]*"
-              maxLength={8}
+              maxLength={6}
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
               style={{ ...inputStyle, letterSpacing: "0.3em", fontSize: 18, textAlign: "center" }}
-              placeholder="00000000"
+              placeholder="000000"
             />
-            <button type="submit" disabled={busy || code.length < 8} style={buttonStyle}>
+            <button type="submit" disabled={busy || code.length < 6} style={buttonStyle}>
               {busy ? "Verifying…" : "Verify"}
             </button>
             <button
