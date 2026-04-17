@@ -1,6 +1,8 @@
 // =============================================
 // utils.js — Helpers, card types, and export functions
 // =============================================
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 // --- Card type normalization ---
 export const normalizeCardType = (type) => {
@@ -110,132 +112,158 @@ export const exportTransactionsPDF = (transactions, getCardById, getOwnerById, t
     sellAmt: transactions.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0),
   };
 
-  const rows = transactions.map((t) => {
+  const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 40;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.setTextColor("#1a1a2e");
+  doc.text("Sales Dashboard", margin, 50);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.setTextColor("#888");
+  doc.text(title, margin, 66);
+  doc.text(`Generated: ${today}`, pageWidth - margin, 50, { align: "right" });
+  doc.text(`${transactions.length} transactions`, pageWidth - margin, 66, { align: "right" });
+  doc.setDrawColor("#1a1a2e");
+  doc.setLineWidth(1.5);
+  doc.line(margin, 78, pageWidth - margin, 78);
+
+  const summaryY = 96;
+  const cardWidth = (pageWidth - margin * 2 - 24) / 3;
+  const cards = [
+    { label: "TOTAL COST", value: `$${totals.cost.toFixed(2)}`, color: "#2980b9" },
+    { label: "GROSS PROFIT", value: `$${totals.gross.toFixed(2)}`, color: "#e67e22" },
+    { label: "NET PROFIT", value: `$${totals.net.toFixed(2)}`, color: "#27ae60" },
+  ];
+  cards.forEach((card, i) => {
+    const x = margin + i * (cardWidth + 12);
+    doc.setDrawColor("#e0e0e0");
+    doc.setLineWidth(0.5);
+    doc.roundedRect(x, summaryY, cardWidth, 44, 4, 4);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor("#888");
+    doc.text(card.label, x + 10, summaryY + 14);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.setTextColor(card.color);
+    doc.text(card.value, x + 10, summaryY + 34);
+  });
+
+  const body = transactions.map((t) => {
     const cd = getCardById(t.cardId);
     const ow = getOwnerById(t.ownerId);
-    return `<tr>
-      <td>${t.date || "-"}</td>
-      <td>${cd?.type || ""}</td>
-      <td>${cd?.number || ""}</td>
-      <td>${ow?.name || ""}</td>
-      <td class="r">${parseFloat(t.buyRate).toFixed(2)}</td>
-      <td class="r">$${parseFloat(t.buyAmount).toFixed(2)}</td>
-      <td class="r">${parseFloat(t.sellRate).toFixed(2)}</td>
-      <td class="r">$${parseFloat(t.sellAmount).toFixed(2)}</td>
-      <td class="r">$${t.cost.toFixed(2)}</td>
-      <td class="r" style="color:#e67e22">$${t.grossProfit.toFixed(2)}</td>
-      <td class="r" style="color:${t.netProfit >= 0 ? '#27ae60' : '#e74c3c'};font-weight:700">$${t.netProfit.toFixed(2)}</td>
-      <td class="r">${t.profitMargin.toFixed(1)}%</td>
-    </tr>`;
-  }).join("");
+    return [
+      t.date || "-",
+      cd?.type || "",
+      cd?.number || "",
+      ow?.name || "",
+      parseFloat(t.buyRate).toFixed(2),
+      `$${parseFloat(t.buyAmount).toFixed(2)}`,
+      parseFloat(t.sellRate).toFixed(2),
+      `$${parseFloat(t.sellAmount).toFixed(2)}`,
+      `$${t.cost.toFixed(2)}`,
+      `$${t.grossProfit.toFixed(2)}`,
+      `$${t.netProfit.toFixed(2)}`,
+      `${t.profitMargin.toFixed(1)}%`,
+    ];
+  });
 
-  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
-    <title>${title}</title>
-    <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; color: #1a1a2e; padding: 40px; font-size: 11px; }
-      .header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 3px solid #1a1a2e; padding-bottom: 16px; margin-bottom: 24px; }
-      .header h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
-      .header .meta { text-align: right; color: #666; font-size: 10px; line-height: 1.6; }
-      .summary { display: flex; gap: 16px; margin-bottom: 24px; }
-      .summary .card { flex: 1; padding: 12px 16px; border: 1px solid #e0e0e0; border-radius: 6px; }
-      .summary .card .label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #888; margin-bottom: 4px; }
-      .summary .card .value { font-size: 18px; font-weight: 800; }
-      .green { color: #27ae60; } .orange { color: #e67e22; } .blue { color: #2980b9; }
-      table { width: 100%; border-collapse: collapse; font-size: 10px; }
-      th { background: #f8f9fa; border: 1px solid #e0e0e0; padding: 8px 6px; text-align: left; font-size: 8px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: #555; }
-      td { border: 1px solid #e8e8e8; padding: 6px; }
-      tr:nth-child(even) { background: #fafbfc; }
-      .r { text-align: right; }
-      .totals td { background: #f0f0f0; font-weight: 700; border-top: 2px solid #1a1a2e; }
-      .footer { margin-top: 20px; padding-top: 12px; border-top: 1px solid #e0e0e0; font-size: 9px; color: #999; display: flex; justify-content: space-between; }
-      @media print { body { padding: 20px; } @page { margin: 15mm; size: landscape; } }
-    </style>
-  </head><body>
-    <div class="header">
-      <div><h1>Sales Dashboard</h1><div style="color:#888;font-size:11px;margin-top:4px">${title}</div></div>
-      <div class="meta">Generated: ${today}<br>${transactions.length} transactions</div>
-    </div>
-    <div class="summary">
-      <div class="card"><div class="label">Total Cost</div><div class="value blue">$${totals.cost.toFixed(2)}</div></div>
-      <div class="card"><div class="label">Gross Profit</div><div class="value orange">$${totals.gross.toFixed(2)}</div></div>
-      <div class="card"><div class="label">Net Profit</div><div class="value green">$${totals.net.toFixed(2)}</div></div>
-    </div>
-    <table>
-      <thead><tr><th>Date</th><th>Card Type</th><th>Card #</th><th>Owner</th><th class="r">Buy Rate</th><th class="r">Buy Amt</th><th class="r">Sell Rate</th><th class="r">Sell Amt</th><th class="r">Cost</th><th class="r">Gross</th><th class="r">Net</th><th class="r">Margin</th></tr></thead>
-      <tbody>${rows}
-        <tr class="totals">
-          <td colspan="5">TOTALS</td>
-          <td class="r">$${totals.buyAmt.toFixed(2)}</td>
-          <td></td>
-          <td class="r">$${totals.sellAmt.toFixed(2)}</td>
-          <td class="r">$${totals.cost.toFixed(2)}</td>
-          <td class="r" style="color:#e67e22">$${totals.gross.toFixed(2)}</td>
-          <td class="r" style="color:#27ae60">$${totals.net.toFixed(2)}</td>
-          <td></td>
-        </tr>
-      </tbody>
-    </table>
-    <div class="footer"><span>Sales Dashboard Report</span><span>${today}</span></div>
-    <script>window.onload=()=>{window.print();window.onafterprint=()=>window.close();}</script>
-  </body></html>`;
+  body.push([
+    { content: "TOTALS", colSpan: 5, styles: { fontStyle: "bold", fillColor: [240, 240, 240] } },
+    { content: `$${totals.buyAmt.toFixed(2)}`, styles: { fontStyle: "bold", halign: "right", fillColor: [240, 240, 240] } },
+    { content: "", styles: { fillColor: [240, 240, 240] } },
+    { content: `$${totals.sellAmt.toFixed(2)}`, styles: { fontStyle: "bold", halign: "right", fillColor: [240, 240, 240] } },
+    { content: `$${totals.cost.toFixed(2)}`, styles: { fontStyle: "bold", halign: "right", fillColor: [240, 240, 240] } },
+    { content: `$${totals.gross.toFixed(2)}`, styles: { fontStyle: "bold", halign: "right", fillColor: [240, 240, 240], textColor: [230, 126, 34] } },
+    { content: `$${totals.net.toFixed(2)}`, styles: { fontStyle: "bold", halign: "right", fillColor: [240, 240, 240], textColor: [39, 174, 96] } },
+    { content: "", styles: { fillColor: [240, 240, 240] } },
+  ]);
 
-  const win = window.open("", "_blank");
-  if (!win) { alert("Please allow pop-ups to export PDF."); return; }
-  win.document.write(html);
-  win.document.close();
+  autoTable(doc, {
+    startY: summaryY + 60,
+    head: [["Date", "Card Type", "Card #", "Owner", "Buy Rate", "Buy Amt", "Sell Rate", "Sell Amt", "Cost", "Gross", "Net", "Margin"]],
+    body,
+    styles: { fontSize: 8, cellPadding: 4 },
+    headStyles: { fillColor: [248, 249, 250], textColor: [85, 85, 85], fontStyle: "bold", fontSize: 7 },
+    alternateRowStyles: { fillColor: [250, 251, 252] },
+    columnStyles: {
+      4: { halign: "right" }, 5: { halign: "right" }, 6: { halign: "right" },
+      7: { halign: "right" }, 8: { halign: "right" }, 9: { halign: "right", textColor: [230, 126, 34] },
+      10: { halign: "right", fontStyle: "bold" }, 11: { halign: "right" },
+    },
+    didParseCell: (data) => {
+      if (data.section === "body" && data.column.index === 10 && data.row.index < transactions.length) {
+        const t = transactions[data.row.index];
+        data.cell.styles.textColor = t.netProfit >= 0 ? [39, 174, 96] : [231, 76, 60];
+      }
+    },
+    margin: { left: margin, right: margin },
+  });
+
+  doc.save(`transactions_${today.replace(/\//g, "-")}.pdf`);
 };
+
 export const exportMonthlyPDF = (monthly) => {
   const today = getTodayDate();
   const total = monthly.reduce((s, m) => s + m.profit, 0);
 
-  const rows = monthly.map((m, i) => `<tr${i % 2 === 0 ? '' : ' style="background:#fafbfc"'}>
-    <td style="font-weight:600">${m.month}</td>
-    <td class="r" style="color:#27ae60;font-weight:700">$${m.profit.toFixed(2)}</td>
-  </tr>`).join("");
+  const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 40;
 
-  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
-    <title>Monthly Profit Report</title>
-    <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; color: #1a1a2e; padding: 40px; font-size: 12px; }
-      .header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 3px solid #1a1a2e; padding-bottom: 16px; margin-bottom: 32px; }
-      .header h1 { font-size: 22px; font-weight: 800; }
-      .header .meta { text-align: right; color: #666; font-size: 10px; line-height: 1.6; }
-      .hero { text-align: center; padding: 32px; border: 2px solid #27ae60; border-radius: 12px; margin-bottom: 32px; }
-      .hero .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: #888; margin-bottom: 8px; }
-      .hero .value { font-size: 36px; font-weight: 800; color: #27ae60; }
-      .hero .sub { font-size: 11px; color: #999; margin-top: 8px; }
-      table { width: 100%; max-width: 500px; margin: 0 auto; border-collapse: collapse; }
-      th { background: #f8f9fa; border: 1px solid #e0e0e0; padding: 10px 16px; text-align: left; font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: #555; }
-      td { border: 1px solid #e8e8e8; padding: 10px 16px; }
-      .r { text-align: right; }
-      .totals td { background: #f0f0f0; font-weight: 700; border-top: 2px solid #1a1a2e; font-size: 13px; }
-      .footer { margin-top: 24px; padding-top: 12px; border-top: 1px solid #e0e0e0; font-size: 9px; color: #999; display: flex; justify-content: space-between; }
-      @media print { body { padding: 20px; } @page { margin: 20mm; } }
-    </style>
-  </head><body>
-    <div class="header">
-      <div><h1>Sales Dashboard</h1><div style="color:#888;font-size:11px;margin-top:4px">Monthly Profit Report</div></div>
-      <div class="meta">Generated: ${today}<br>${monthly.length} months</div>
-    </div>
-    <div class="hero">
-      <div class="label">All Time Net Profit</div>
-      <div class="value">$${total.toFixed(2)}</div>
-      <div class="sub">Total from ${monthly.length} months</div>
-    </div>
-    <table>
-      <thead><tr><th>Month</th><th class="r">Profit</th></tr></thead>
-      <tbody>${rows}
-        <tr class="totals"><td>TOTAL</td><td class="r" style="color:#27ae60">$${total.toFixed(2)}</td></tr>
-      </tbody>
-    </table>
-    <div class="footer"><span>Sales Dashboard Report</span><span>${today}</span></div>
-    <script>window.onload=()=>{window.print();window.onafterprint=()=>window.close();}</script>
-  </body></html>`;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.setTextColor("#1a1a2e");
+  doc.text("Sales Dashboard", margin, 50);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.setTextColor("#888");
+  doc.text("Monthly Profit Report", margin, 66);
+  doc.text(`Generated: ${today}`, pageWidth - margin, 50, { align: "right" });
+  doc.text(`${monthly.length} months`, pageWidth - margin, 66, { align: "right" });
+  doc.setDrawColor("#1a1a2e");
+  doc.setLineWidth(1.5);
+  doc.line(margin, 78, pageWidth - margin, 78);
 
-  const win = window.open("", "_blank");
-  if (!win) { alert("Please allow pop-ups to export PDF."); return; }
-  win.document.write(html);
-  win.document.close();
+  const heroY = 100;
+  const heroHeight = 80;
+  doc.setDrawColor("#27ae60");
+  doc.setLineWidth(1.5);
+  doc.roundedRect(margin, heroY, pageWidth - margin * 2, heroHeight, 8, 8);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor("#888");
+  doc.text("ALL TIME NET PROFIT", pageWidth / 2, heroY + 22, { align: "center" });
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(28);
+  doc.setTextColor("#27ae60");
+  doc.text(`$${total.toFixed(2)}`, pageWidth / 2, heroY + 54, { align: "center" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor("#999");
+  doc.text(`Total from ${monthly.length} months`, pageWidth / 2, heroY + 70, { align: "center" });
+
+  const body = monthly.map((m) => [m.month, `$${m.profit.toFixed(2)}`]);
+  body.push([
+    { content: "TOTAL", styles: { fontStyle: "bold", fillColor: [240, 240, 240] } },
+    { content: `$${total.toFixed(2)}`, styles: { fontStyle: "bold", halign: "right", fillColor: [240, 240, 240], textColor: [39, 174, 96] } },
+  ]);
+
+  autoTable(doc, {
+    startY: heroY + heroHeight + 24,
+    head: [["Month", "Profit"]],
+    body,
+    styles: { fontSize: 10, cellPadding: 8 },
+    headStyles: { fillColor: [248, 249, 250], textColor: [85, 85, 85], fontStyle: "bold", fontSize: 9 },
+    columnStyles: {
+      0: { fontStyle: "bold" },
+      1: { halign: "right", textColor: [39, 174, 96], fontStyle: "bold" },
+    },
+    margin: { left: margin + 40, right: margin + 40 },
+  });
+
+  doc.save(`monthly_${today.replace(/\//g, "-")}.pdf`);
 };
