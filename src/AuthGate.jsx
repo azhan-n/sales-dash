@@ -35,42 +35,53 @@ export function AuthGate({ children }) {
 }
 
 function LoginScreen() {
+  const [step, setStep] = useState("email");
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState("idle");
+  const [code, setCode] = useState("");
+  const [busy, setBusy] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const onSubmit = async (e) => {
+  const sendCode = async (e) => {
     e.preventDefault();
     if (!email) return;
-    setStatus("sending");
+    setBusy(true);
     setErrorMsg("");
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: window.location.origin },
+      options: { shouldCreateUser: false },
     });
-    if (error) {
-      setStatus("error");
-      setErrorMsg(error.message);
-    } else {
-      setStatus("sent");
-    }
+    setBusy(false);
+    if (error) setErrorMsg(error.message);
+    else setStep("code");
+  };
+
+  const verifyCode = async (e) => {
+    e.preventDefault();
+    if (!code) return;
+    setBusy(true);
+    setErrorMsg("");
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: code.trim(),
+      type: "email",
+    });
+    setBusy(false);
+    if (error) setErrorMsg(error.message);
   };
 
   return (
     <div style={wrapperStyle}>
-      <form onSubmit={onSubmit} style={cardStyle}>
+      <form onSubmit={step === "email" ? sendCode : verifyCode} style={cardStyle}>
         <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0, letterSpacing: "-0.5px" }}>
           Sales Dashboard
         </h1>
         <p style={{ color: "#666", fontSize: 13, marginTop: 8, marginBottom: 24 }}>
-          Sign in with a magic link to continue.
+          {step === "email"
+            ? "Enter your email to receive a sign-in code."
+            : `Enter the 6-digit code sent to ${email}.`}
         </p>
 
-        {status === "sent" ? (
-          <div style={{ fontSize: 14, color: "#27ae60", lineHeight: 1.5 }}>
-            Check your inbox for a sign-in link sent to <b>{email}</b>.
-          </div>
-        ) : (
+        {step === "email" ? (
           <>
             <label htmlFor="email" style={labelStyle}>Email</label>
             <input
@@ -78,18 +89,48 @@ function LoginScreen() {
               type="email"
               required
               autoFocus
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               style={inputStyle}
               placeholder="you@example.com"
             />
-            <button type="submit" disabled={status === "sending"} style={buttonStyle}>
-              {status === "sending" ? "Sending…" : "Send magic link"}
+            <button type="submit" disabled={busy} style={buttonStyle}>
+              {busy ? "Sending…" : "Send code"}
             </button>
-            {errorMsg && (
-              <div style={{ marginTop: 12, fontSize: 12, color: "#e74c3c" }}>{errorMsg}</div>
-            )}
           </>
+        ) : (
+          <>
+            <label htmlFor="code" style={labelStyle}>Code</label>
+            <input
+              id="code"
+              type="text"
+              required
+              autoFocus
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              pattern="[0-9]*"
+              maxLength={6}
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              style={{ ...inputStyle, letterSpacing: "0.3em", fontSize: 18, textAlign: "center" }}
+              placeholder="000000"
+            />
+            <button type="submit" disabled={busy || code.length < 6} style={buttonStyle}>
+              {busy ? "Verifying…" : "Verify"}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setStep("email"); setCode(""); setErrorMsg(""); }}
+              style={linkButtonStyle}
+            >
+              Use a different email
+            </button>
+          </>
+        )}
+
+        {errorMsg && (
+          <div style={{ marginTop: 12, fontSize: 12, color: "#e74c3c" }}>{errorMsg}</div>
         )}
       </form>
     </div>
@@ -178,4 +219,16 @@ const buttonStyle = {
   border: "none",
   borderRadius: 6,
   cursor: "pointer",
+};
+
+const linkButtonStyle = {
+  width: "100%",
+  marginTop: 10,
+  padding: "6px 0",
+  fontSize: 12,
+  color: "#666",
+  background: "transparent",
+  border: "none",
+  cursor: "pointer",
+  textDecoration: "underline",
 };
