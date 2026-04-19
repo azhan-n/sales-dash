@@ -262,6 +262,7 @@ function AppInner() {
   const isLG = theme === "liquid_glass";
   const isCirc = theme === "circular";
   const isSky = theme === "sky";
+  const isMint = theme === "mint";
 
   // Icon pack — shadow lucide module-level imports with the selected pack's components
   const {
@@ -661,10 +662,12 @@ function AppInner() {
                 const isGlassy = isGlass || isLG || isSky;
                 return (
                   <div key={idx} className={isLG ? "lg-specular" : ""} style={{
-                    padding: isMobile ? "1rem" : (isCompact ? "0.875rem" : (isBrut ? "1.5rem" : "2rem")),
-                    borderRadius: isBrut ? "0" : r, color: txtColor || (isLG ? c.text : "#ffffff"),
-                    background: sc.bg, border: sc.border || (isBrut ? "3px solid #000" : (isLG ? "1px solid rgba(255,255,255,0.6)" : (isCirc ? `2px solid ${c.border}` : "none"))),
-                    boxShadow: isBrut ? "4px 4px 0 #000" : (isLG ? "0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7)" : (isCompact ? c.shadowLgCompact : c.shadowLg)),
+                    padding: isMobile ? "1rem" : (isCompact ? "0.875rem" : (isBrut ? "1.5rem" : (isMint ? "1.25rem" : "2rem"))),
+                    borderRadius: isBrut ? "0" : r, color: txtColor || (isMint ? c.text : (isLG ? c.text : "#ffffff")),
+                    background: isMint ? c.surface : sc.bg,
+                    border: isMint ? `1px solid ${c.border}` : (sc.border || (isBrut ? "3px solid #000" : (isLG ? "1px solid rgba(255,255,255,0.6)" : (isCirc ? `2px solid ${c.border}` : "none")))),
+                    borderBottom: isMint ? `3px solid ${sc.accentStrip || c.accent}` : undefined,
+                    boxShadow: isBrut ? "4px 4px 0 #000" : (isLG ? "0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.7)" : (isMint ? c.shadow : (isCompact ? c.shadowLgCompact : c.shadowLg))),
                     ...((isGlass || isLG) ? { backdropFilter: "blur(16px) saturate(150%)", WebkitBackdropFilter: "blur(16px) saturate(150%)" } : {}),
                     cursor: "pointer", willChange: "transform, box-shadow, opacity",
                     display: (isRow && !isGlassy) ? "flex" : "block", alignItems: (isRow && !isGlassy) ? "center" : undefined, gap: (isRow && !isGlassy) ? "1.25rem" : undefined,
@@ -700,12 +703,12 @@ function AppInner() {
                     ) : (
                       <>
                         {(isMid || isCirc) && L.statIconBg && <div style={{ display: "flex", justifyContent: "center" }}><StatIcon Icon={stat.icon} size={iconSz} layout={L} c={c} variant={stat.color} /></div>}
-                        <div style={{ display: isCirc ? "block" : "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isCompact ? "0.5rem" : "1rem", textAlign: isCirc ? "center" : undefined }}>
-                          <div style={{ fontSize: isCompact ? "0.75rem" : "1rem", opacity: 0.9, fontWeight: bws, color: txtColor || undefined, textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : "normal" }}>{stat.label}</div>
+                        <div style={{ display: isCirc ? "block" : "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isCompact ? "0.5rem" : (isMint ? "0.75rem" : "1rem"), textAlign: isCirc ? "center" : undefined }}>
+                          <div style={{ fontSize: isMint ? (isCompact ? "0.625rem" : "0.6875rem") : (isCompact ? "0.75rem" : "1rem"), opacity: isMint ? 1 : 0.9, fontWeight: isMint ? 600 : bws, color: isMint ? c.textMuted : (txtColor || undefined), textTransform: (isBrut || isMint) ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : (isMint ? "0.06em" : "normal") }}>{stat.label}</div>
                           {!isMid && !isCirc && <StatIcon Icon={stat.icon} size={iconSz} layout={L} c={c} variant={stat.color} />}
                         </div>
-                        <div style={{ fontSize: "clamp(0.95rem, 13cqi, 2.7rem)", fontWeight: bwx, color: txtColor || undefined, textAlign: (isMid || isCirc) ? "center" : undefined, lineHeight: 1.1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} className={isTerm ? "terminal-glow" : ""}>{stat.noPrefix ? "" : (stat.prefix || "$")}{stat.value?.toFixed(2) || 0}</div>
-                        <div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", opacity: 0.8, marginTop: "0.5rem", color: txtColor || undefined, textAlign: (isMid || isCirc) ? "center" : undefined }}>{stat.count ? `${stat.count} transactions` : stat.sub}</div>
+                        <div style={{ fontSize: "clamp(0.95rem, 13cqi, 2.7rem)", fontWeight: bwx, color: txtColor || undefined, textAlign: (isMid || isCirc) ? "center" : undefined, lineHeight: 1.1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontVariantNumeric: isMint ? "tabular-nums" : undefined, letterSpacing: isMint ? "-0.02em" : undefined }} className={isTerm ? "terminal-glow" : ""}>{stat.noPrefix ? "" : (stat.prefix || "$")}{stat.value?.toFixed(2) || 0}</div>
+                        <div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", opacity: isMint ? 1 : 0.8, marginTop: "0.5rem", color: isMint ? c.textMuted : (txtColor || undefined), textAlign: (isMid || isCirc) ? "center" : undefined }}>{stat.count ? `${stat.count} transactions` : stat.sub}</div>
                       </>
                     )}
                   </div>

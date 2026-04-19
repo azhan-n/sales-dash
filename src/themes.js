@@ -20,6 +20,7 @@ export const THEME_OPTIONS = [
   { key: "auto", label: "Auto", preview: ["#fff7ed", "#f97316", "#0f0720", "#7c3aed"] },
   { key: "sunset", label: "Sunset", preview: ["#fff7ed", "#f97316", "#e11d48", "#fbbf24"] },
   { key: "sky", label: "Sky", preview: ["#e0f5ff", "#0ea5e9", "#00c9a7", "#6366f1"] },
+  { key: "mint", label: "Mint", preview: ["#ffffff", "#10b981", "#8b5cf6", "#f97316"] },
   { key: "glass", label: "Glass", preview: ["#1a1a2e", "#e0e7ff", "#818cf8", "#312e81"] },
   { key: "terminal", label: "Terminal", preview: ["#0a0a0a", "#00ff41", "#003b00", "#1a1a1a"] },
   { key: "brutalist", label: "Brutalist", preview: ["#f5f5f0", "#000000", "#ff3333", "#ffffff"] },
@@ -178,11 +179,30 @@ const themeLayouts = {
     tableStyle: "default",
     extraCss: `.sky-header-bar { background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 60%, #38bdf8 100%); }`,
   },
+  mint: {
+    statCardDir: "column",
+    statIconSize: 20,
+    statIconSizeSm: 16,
+    statIconBg: true,
+    statIconBgStyle: (variant) => {
+      const map = { Green: "#10b981", Teal: "#8b5cf6", Orange: "#f97316", Blue: "#6366f1", Pink: "#ec4899", Purple: "#a855f7" };
+      const color = map[variant] || map.Green;
+      return {
+        width: "36px", height: "36px", borderRadius: "10px",
+        background: `${color}1f`, color,
+        display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+      };
+    },
+    ownerLayout: "grid",
+    cardTypeLayout: "grid",
+    tableStyle: "default",
+    extraCss: "",
+  },
 };
 
 export const getThemeLayout = (name) => {
   const map = { auto: "default", sunset: "default",
-    sky: "sky", glass: "glass", terminal: "terminal", brutalist: "brutalist", midnight: "midnight", liquid_glass: "liquid_glass", circular: "circular" };
+    sky: "sky", glass: "glass", terminal: "terminal", brutalist: "brutalist", midnight: "midnight", liquid_glass: "liquid_glass", circular: "circular", mint: "mint" };
   return themeLayouts[map[name] || "default"];
 };
 
@@ -361,6 +381,38 @@ export const getThemeColors = (themeName) => {
       toggleBg: "#ddd6fe",
       headerBorderBottom: "none",
       bgPattern: "radial-gradient(circle at 15% 15%, rgba(139,92,246,0.08) 0%, transparent 40%), radial-gradient(circle at 85% 85%, rgba(232,121,249,0.06) 0%, transparent 40%), radial-gradient(circle at 50% 50%, rgba(167,139,250,0.04) 0%, transparent 50%)",
+    },
+    mint: {
+      ...base, isDark: false,
+      radius: "1rem", radiusSm: "0.75rem", radiusCompact: "0.625rem", radiusCompactSm: "0.5rem",
+      bg: "#fafbfc",
+      surface: "#ffffff", surfaceAlt: "#f6f8fa", surfaceDeep: "#eef0f3",
+      text: "#0b1220", textSec: "#475569", textMuted: "#94a3b8", textMid: "#334155", textStrong: "#020617",
+      border: "#eef0f3", borderStrong: "#d4d8de",
+      accent: "#10b981", accentBg: "rgba(16,185,129,0.1)",
+      positive: "#10b981", negative: "#f43f5e", chartB: "#34d399",
+      inputBg: "#ffffff", inputBorder: "#e5e7eb",
+      titleGrad: "linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%)",
+      btnGrad: "linear-gradient(135deg, #059669 0%, #10b981 100%)", btnGlow: "rgba(16,185,129,0.3)",
+      statCards: {
+        Green:  { bg: "#ffffff", text: "#0b1220", accentStrip: "#10b981", chipBg: "rgba(16,185,129,0.12)", chipFg: "#059669" },
+        Teal:   { bg: "#ffffff", text: "#0b1220", accentStrip: "#8b5cf6", chipBg: "rgba(139,92,246,0.12)", chipFg: "#7c3aed" },
+        Orange: { bg: "#ffffff", text: "#0b1220", accentStrip: "#f97316", chipBg: "rgba(249,115,22,0.12)", chipFg: "#ea580c" },
+        Blue:   { bg: "#ffffff", text: "#0b1220", accentStrip: "#6366f1", chipBg: "rgba(99,102,241,0.12)", chipFg: "#4f46e5" },
+        Pink:   { bg: "#ffffff", text: "#0b1220", accentStrip: "#ec4899", chipBg: "rgba(236,72,153,0.12)", chipFg: "#db2777" },
+        Purple: { bg: "#ffffff", text: "#0b1220", accentStrip: "#a855f7", chipBg: "rgba(168,85,247,0.12)", chipFg: "#9333ea" },
+      },
+      profitGrad: "linear-gradient(135deg, #10b981 0%, #34d399 100%)",
+      errorBg: "#fef2f2", errorBorder: "#fecaca", errorText: "#b91c1c",
+      badgeGreen: { bg: "rgba(16,185,129,0.12)", text: "#065f46" },
+      badgeYellow: { bg: "rgba(249,115,22,0.12)", text: "#9a3412" },
+      badgeRed: { bg: "rgba(244,63,94,0.12)", text: "#9f1239" },
+      shadow: "0 1px 2px rgba(10,30,51,0.04)",
+      shadowLg: "0 6px 20px rgba(10,30,51,0.06)", shadowLgCompact: "0 2px 8px rgba(10,30,51,0.04)",
+      cardHoverShadow: "0 4px 12px rgba(10,30,51,0.06)", modalShadow: "0 20px 40px rgba(10,30,51,0.12)",
+      toggleBg: "#e5e7eb",
+      headerBorderBottom: "1px solid #eef0f3",
+      bgPattern: null,
     },
   };
 
