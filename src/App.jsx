@@ -682,6 +682,7 @@ function AppInner() {
                     ...(isBrut ? { marginBottom: "0.5rem" } : {}),
                     containerType: "inline-size",
                     minWidth: 0,
+                    minHeight: isMobile ? "140px" : (isCompact ? "150px" : "180px"),
                     overflow: "hidden",
                   }}
                     onMouseEnter={() => setHoveredStat(idx)} onMouseLeave={() => setHoveredStat(null)}>

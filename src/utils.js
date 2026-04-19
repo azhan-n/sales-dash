@@ -1,8 +1,6 @@
 // =============================================
 // utils.js — Helpers, card types, and export functions
 // =============================================
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 
 // --- Card type normalization ---
 export const normalizeCardType = (type) => {
@@ -102,7 +100,9 @@ export const exportMonthlyToCSV = (monthly) => {
 };
 
 // --- Export Transactions to PDF ---
-export const exportTransactionsPDF = (transactions, getCardById, getOwnerById, title = "Transactions Report") => {
+export const exportTransactionsPDF = async (transactions, getCardById, getOwnerById, title = "Transactions Report") => {
+  const { default: jsPDF } = await import("jspdf");
+  const { default: autoTable } = await import("jspdf-autotable");
   const today = getTodayDate();
   const totals = {
     cost: transactions.reduce((s, t) => s + (t.cost || 0), 0),
@@ -206,7 +206,9 @@ export const exportTransactionsPDF = (transactions, getCardById, getOwnerById, t
   doc.save(`transactions_${today.replace(/\//g, "-")}.pdf`);
 };
 
-export const exportMonthlyPDF = (monthly) => {
+export const exportMonthlyPDF = async (monthly) => {
+  const { default: jsPDF } = await import("jspdf");
+  const { default: autoTable } = await import("jspdf-autotable");
   const today = getTodayDate();
   const total = monthly.reduce((s, m) => s + m.profit, 0);
 
