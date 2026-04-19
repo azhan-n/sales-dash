@@ -8,12 +8,10 @@ export const FONTS = [
   { name: "League Spartan", value: "League Spartan" },
   { name: "Open Sans", value: "Open Sans" },
   { name: "Lexend", value: "Lexend" },
-  { name: "Public Sans", value: "Public Sans" },
   { name: "Rethink Sans", value: "Rethink Sans" },
   { name: "Noto Sans", value: "Noto Sans" },
-  { name: "Noto Serif", value: "Noto Serif" },
-  { name: "Quicksand", value: "Quicksand" },
-  { name: "Winky Sans", value: "Winky Sans" },
+  { name: "IBM Plex Sans", value: "IBM Plex Sans" },
+  { name: "JetBrains Mono", value: "JetBrains Mono" },
 ];
 
 export const THEME_OPTIONS = [
