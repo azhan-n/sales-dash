@@ -570,13 +570,15 @@ function AppInner() {
           <nav style={{ display: "flex", gap: isBrut ? "0" : (isMobile ? "1rem" : "2rem"), alignItems: "center" }}>
             {["dashboard", "transactions", "monthly"].map((tab) => (
               <button key={tab} onClick={() => { setActiveTab(tab); setShowExportMenu(false); }} style={{
-                padding: isBrut ? "1rem 1.5rem" : (isCompact ? "0.625rem 0.25rem" : "1rem 0.25rem"), border: "none",
-                borderBottom: activeTab === tab ? (isBrut ? `4px solid ${c.accent}` : `2px solid ${c.accent}`) : (isBrut ? "4px solid transparent" : "2px solid transparent"),
-                backgroundColor: isBrut && activeTab === tab ? c.accentBg : "transparent",
+                padding: isMid ? (isCompact ? "0.5rem 0.875rem" : "0.625rem 1.125rem") : (isBrut ? "1rem 1.5rem" : (isCompact ? "0.625rem 0.25rem" : "1rem 0.25rem")),
+                border: isMid ? `1px solid ${activeTab === tab ? c.borderStrong : "transparent"}` : "none",
+                borderBottom: isMid ? undefined : (activeTab === tab ? (isBrut ? `4px solid ${c.accent}` : `2px solid ${c.accent}`) : (isBrut ? "4px solid transparent" : "2px solid transparent")),
+                borderRadius: isMid ? "999px" : undefined,
+                backgroundColor: isMid ? (activeTab === tab ? c.accentBg : "transparent") : (isBrut && activeTab === tab ? c.accentBg : "transparent"),
                 fontSize: isCompact ? "0.8125rem" : "0.875rem", fontWeight: bwm, cursor: "pointer", color: activeTab === tab ? c.accent : c.textSec,
                 textTransform: isBrut ? "uppercase" : "none", letterSpacing: isBrut ? "0.1em" : "normal",
-                transform: activeTab === tab && !isBrut ? "translateY(-2px)" : "none",
-                transition: "color 0.15s cubic-bezier(.4,0,.2,1), border-color 0.15s cubic-bezier(.4,0,.2,1), transform 0.15s cubic-bezier(.4,0,.2,1)",
+                transform: activeTab === tab && !isBrut && !isMid ? "translateY(-2px)" : "none",
+                transition: "color 0.15s cubic-bezier(.4,0,.2,1), border-color 0.15s cubic-bezier(.4,0,.2,1), background-color 0.15s cubic-bezier(.4,0,.2,1), transform 0.15s cubic-bezier(.4,0,.2,1)",
               }} className={isTerm && activeTab === tab ? "terminal-glow" : ""}>
                 {isTerm ? `[${tab.toUpperCase()}]` : tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
@@ -703,12 +705,36 @@ function AppInner() {
                     ) : (
                       <>
                         {(isMid || isCirc) && L.statIconBg && <div style={{ display: "flex", justifyContent: "center" }}><StatIcon Icon={stat.icon} size={iconSz} layout={L} c={c} variant={stat.color} /></div>}
-                        <div style={{ display: isCirc ? "block" : "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isCompact ? "0.5rem" : (isMint ? "0.75rem" : "1rem"), textAlign: isCirc ? "center" : undefined }}>
-                          <div style={{ fontSize: isMint ? (isCompact ? "0.625rem" : "0.6875rem") : (isCompact ? "0.75rem" : "1rem"), opacity: isMint ? 1 : 0.9, fontWeight: isMint ? 600 : bws, color: isMint ? c.textMuted : (txtColor || undefined), textTransform: (isBrut || isMint) ? "uppercase" : "none", letterSpacing: isBrut ? "0.05em" : (isMint ? "0.06em" : "normal") }}>{stat.label}</div>
+                        <div style={{ display: isCirc ? "block" : "flex", justifyContent: isMid ? "center" : "space-between", alignItems: "center", marginBottom: isCompact ? "0.5rem" : (isMint ? "0.75rem" : "1rem"), textAlign: isCirc ? "center" : undefined }}>
+                          <div style={{
+                            display: isMid ? "inline-flex" : undefined, alignItems: isMid ? "center" : undefined,
+                            padding: isMid ? "0.25rem 0.75rem" : undefined,
+                            backgroundColor: isMid ? c.pillBg : undefined,
+                            border: isMid ? `1px solid ${c.border}` : undefined,
+                            borderRadius: isMid ? "999px" : undefined,
+                            fontSize: isMid ? (isCompact ? "0.625rem" : "0.6875rem") : (isMint ? (isCompact ? "0.625rem" : "0.6875rem") : (isCompact ? "0.75rem" : "1rem")),
+                            opacity: (isMint || isMid) ? 1 : 0.9,
+                            fontWeight: (isMint || isMid) ? 600 : bws,
+                            color: isMid ? c.textSec : (isMint ? c.textMuted : (txtColor || undefined)),
+                            textTransform: (isBrut || isMint || isMid) ? "uppercase" : "none",
+                            letterSpacing: isBrut ? "0.05em" : ((isMint || isMid) ? "0.08em" : "normal"),
+                          }}>{stat.label}</div>
                           {!isMid && !isCirc && <StatIcon Icon={stat.icon} size={iconSz} layout={L} c={c} variant={stat.color} />}
                         </div>
-                        <div style={{ fontSize: "clamp(0.95rem, 13cqi, 2.7rem)", fontWeight: bwx, color: txtColor || undefined, textAlign: (isMid || isCirc) ? "center" : undefined, lineHeight: 1.1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontVariantNumeric: isMint ? "tabular-nums" : undefined, letterSpacing: isMint ? "-0.02em" : undefined }} className={isTerm ? "terminal-glow" : ""}>{stat.noPrefix ? "" : (stat.prefix || "$")}{stat.value?.toFixed(2) || 0}</div>
-                        <div style={{ fontSize: isCompact ? "0.6875rem" : "0.875rem", opacity: isMint ? 1 : 0.8, marginTop: "0.5rem", color: isMint ? c.textMuted : (txtColor || undefined), textAlign: (isMid || isCirc) ? "center" : undefined }}>{stat.count ? `${stat.count} transactions` : stat.sub}</div>
+                        <div style={{ fontSize: "clamp(0.95rem, 13cqi, 2.7rem)", fontWeight: bwx, color: txtColor || undefined, textAlign: (isMid || isCirc) ? "center" : undefined, lineHeight: 1.1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontVariantNumeric: (isMint || isMid) ? "tabular-nums" : undefined, letterSpacing: (isMint || isMid) ? "-0.02em" : undefined }} className={isTerm ? "terminal-glow" : ""}>{stat.noPrefix ? "" : (stat.prefix || "$")}{stat.value?.toFixed(2) || 0}</div>
+                        <div style={{ display: isMid ? "flex" : "block", justifyContent: isMid ? "center" : undefined, marginTop: "0.5rem", textAlign: (isMid || isCirc) ? "center" : undefined }}>
+                          <span style={{
+                            display: isMid ? "inline-flex" : undefined, alignItems: isMid ? "center" : undefined,
+                            padding: isMid ? "0.2rem 0.625rem" : undefined,
+                            backgroundColor: isMid ? c.pillBg : undefined,
+                            border: isMid ? `1px solid ${c.border}` : undefined,
+                            borderRadius: isMid ? "999px" : undefined,
+                            fontSize: isCompact ? "0.6875rem" : (isMid ? "0.6875rem" : "0.875rem"),
+                            opacity: (isMint || isMid) ? 1 : 0.8,
+                            color: isMid ? c.textMuted : (isMint ? c.textMuted : (txtColor || undefined)),
+                            fontWeight: isMid ? 500 : undefined,
+                          }}>{stat.count ? `${stat.count} transactions` : stat.sub}</span>
+                        </div>
                       </>
                     )}
                   </div>
