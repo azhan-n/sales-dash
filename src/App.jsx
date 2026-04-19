@@ -13,6 +13,7 @@ import { FONTS, THEME_OPTIONS, getThemeLayout, getThemeColors } from "./themes";
 import { normalizeCardType, CARD_TYPES, getCardTypeColor, getCardTypeBadge, getTodayDate, exportToCSV, exportMonthlyToCSV, exportTransactionsPDF, exportMonthlyPDF } from "./utils";
 import { SimplePieChart, ChartToggle, StatIcon } from "./Charts";
 import { ToastProvider, useToast } from "./Toast";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { StatCardsSkeleton, ChartSkeleton, TableSkeleton, SKELETON_CSS } from "./Skeleton";
 import { TransactionForm } from "./TransactionForm";
 import { MonthlyForm } from "./MonthlyForm";
@@ -1603,6 +1604,7 @@ function App() {
   return (
     <ToastProvider>
       <AppInner />
+      <SpeedInsights />
     </ToastProvider>
   );
 }
