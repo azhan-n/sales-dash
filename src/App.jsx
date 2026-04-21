@@ -5,7 +5,7 @@ const lsGet = (key) => { try { return localStorage.getItem(key); } catch { retur
 const lsSet = (key, val) => { try { localStorage.setItem(key, val); } catch {} };
 import {
   TrendingUp, DollarSign, Filter, User, RefreshCw, LayoutGrid, List,
-  Settings, X, Calendar, Timer, Plus, Pencil, Download, Search, Trash2, ChevronLeft, ChevronRight, ChevronDown,
+  Settings, X, Calendar, Timer, Plus, Pencil, Download, Search, Trash2, ChevronLeft, ChevronRight, ChevronDown, LogOut,
 } from "lucide-react";
 import { supabase } from "./supabaseClient";
 import { ICON_PACKS, ICON_PACK_KEYS } from "./iconPacks";
@@ -48,6 +48,7 @@ function AppInner() {
   const [hoveredCard, setHoveredCard] = useState(null);
   const [hoveredStat, setHoveredStat] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [settingsSection, setSettingsSection] = useState("appearance");
   const [selectedFont, setSelectedFont] = useState(() => lsGet("font") || "Poppins");
   const [titleFont, setTitleFont] = useState(() => lsGet("titleFont") || "Poppins");
   const [fontSize, setFontSize] = useState(() => parseInt(lsGet("fontSize")) || 20);
@@ -321,6 +322,20 @@ function AppInner() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [showSettings]);
+
+  // Current user email for the Account section in settings
+  const [userEmail, setUserEmail] = useState("");
+  const [signingOut, setSigningOut] = useState(false);
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user?.email) setUserEmail(data.user.email);
+    });
+  }, []);
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    await supabase.auth.signOut();
+    setSigningOut(false);
+  };
 
   // Sync iOS status bar & body background with theme
   useEffect(() => {
@@ -873,10 +888,10 @@ function AppInner() {
                           if (ownerTx.length === 0) return <div style={{ padding: "1rem", color: c.textSec, fontSize: "0.8125rem" }}>No transactions</div>;
                           return (
                             <div style={{ marginTop: isCompact ? "0.5rem" : "0.75rem", borderRadius: isBrut ? "0" : (isCirc ? "1rem" : rSm), overflowX: "auto", overflowY: "auto", WebkitOverflowScrolling: "touch", maxHeight: "60vh", border: `1px solid ${c.border}`, animation: "slideUp 0.25s cubic-bezier(.16,1,.3,1) both" }}>
-                                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: isCompact ? "0.6875rem" : "0.8125rem" }}>
+                                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: isCompact ? "0.625rem" : "0.6875rem" }}>
                                   <thead><tr>
                                     {["Card", "Buy Rate", "Buy Amt", "Sell Rate", "Sell Amt", "Cost", "Gross", "Net"].map((h) => (
-                                      <th key={h} style={{ padding: isCompact ? "0.375rem 0.5rem" : "0.5rem 0.625rem", textAlign: h === "Card" ? "left" : "right", backgroundColor: c.surfaceDeep, color: c.textSec, fontWeight: bws, fontSize: isCompact ? "0.5625rem" : "0.6875rem", borderBottom: `1px solid ${c.border}`, textTransform: "uppercase", letterSpacing: "0.05em", whiteSpace: "nowrap" }}>{h}</th>
+                                      <th key={h} style={{ padding: isCompact ? "0.25rem 0.375rem" : "0.3125rem 0.4375rem", textAlign: h === "Card" ? "left" : "right", backgroundColor: c.surfaceDeep, color: c.textSec, fontWeight: bws, fontSize: isCompact ? "0.5rem" : "0.5625rem", borderBottom: `1px solid ${c.border}`, textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>{h}</th>
                                     ))}
                                   </tr></thead>
                                   <tbody>
@@ -884,27 +899,27 @@ function AppInner() {
                                       const cd = getCardById(t.cardId);
                                       return (
                                         <tr key={t.id} style={{ backgroundColor: ti % 2 === 0 ? "transparent" : c.surfaceAlt }}>
-                                          <td style={{ padding: "0.375rem 0.5rem", whiteSpace: "nowrap" }}><span style={cardBadgeStyle(cd?.type)}>#{cd?.number || "—"}</span></td>
-                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>{parseFloat(t.buyRate).toFixed(2)}</td>
-                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>${parseFloat(t.buyAmount).toFixed(2)}</td>
-                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>{parseFloat(t.sellRate).toFixed(2)}</td>
-                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right" }}>₮ {parseFloat(t.sellAmount).toFixed(2)}</td>
-                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bws }}>{badge(`ރ.${t.cost.toFixed(2)}`, clCost, bgCost)}</td>
-                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bws }}>{badge(`ރ.${t.grossProfit.toFixed(2)}`, clGross, bgGross)}</td>
-                                          <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>{badge(`ރ.${t.netProfit.toFixed(2)}`, t.netProfit >= 0 ? clNet : (isTerm ? c.text : (c.isDark ? "#fca5a5" : "#ef4444")), t.netProfit >= 0 ? bgNet : (c.isDark ? "rgba(252,165,165,0.15)" : "#fee2e2"))}</td>
+                                          <td style={{ padding: "0.25rem 0.375rem", whiteSpace: "nowrap" }}><span style={{ ...cardBadgeStyle(cd?.type), padding: isBrut ? "0.125rem 0.375rem" : "0.1rem 0.45rem", fontSize: "0.625rem" }}>#{cd?.number || "—"}</span></td>
+                                          <td style={{ padding: "0.25rem 0.375rem", textAlign: "right" }}>{parseFloat(t.buyRate).toFixed(2)}</td>
+                                          <td style={{ padding: "0.25rem 0.375rem", textAlign: "right" }}>${parseFloat(t.buyAmount).toFixed(2)}</td>
+                                          <td style={{ padding: "0.25rem 0.375rem", textAlign: "right" }}>{parseFloat(t.sellRate).toFixed(2)}</td>
+                                          <td style={{ padding: "0.25rem 0.375rem", textAlign: "right" }}>₮ {parseFloat(t.sellAmount).toFixed(2)}</td>
+                                          <td style={{ padding: "0.25rem 0.375rem", textAlign: "right", fontWeight: bws }}>{badge(`ރ.${t.cost.toFixed(2)}`, clCost, bgCost)}</td>
+                                          <td style={{ padding: "0.25rem 0.375rem", textAlign: "right", fontWeight: bws }}>{badge(`ރ.${t.grossProfit.toFixed(2)}`, clGross, bgGross)}</td>
+                                          <td style={{ padding: "0.25rem 0.375rem", textAlign: "right", fontWeight: bwx }}>{badge(`ރ.${t.netProfit.toFixed(2)}`, t.netProfit >= 0 ? clNet : (isTerm ? c.text : (c.isDark ? "#fca5a5" : "#ef4444")), t.netProfit >= 0 ? bgNet : (c.isDark ? "rgba(252,165,165,0.15)" : "#fee2e2"))}</td>
                                         </tr>
                                       );
                                     })}
                                   </tbody>
                                   <tfoot><tr style={{ backgroundColor: c.surfaceDeep, borderTop: `2px solid ${c.border}` }}>
-                                    <td style={{ padding: "0.5rem", fontWeight: bwx, fontSize: isCompact ? "0.6875rem" : "0.8125rem", color: c.textStrong }}>TOTALS</td>
-                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>{(() => { const tc2 = ownerTx.reduce((s, t) => s + (parseFloat(t.cost) || 0), 0); const ts2 = ownerTx.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0); return (ts2 > 0 ? tc2 / ts2 : 0).toFixed(2); })()}</td>
-                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>${ownerTx.reduce((s, t) => s + (parseFloat(t.buyAmount) || 0), 0).toFixed(2)}</td>
-                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>{ownerTx.length > 0 ? (ownerTx.reduce((s, t) => s + (parseFloat(t.sellRate) || 0), 0) / ownerTx.length).toFixed(2) : "0.00"}</td>
-                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>₮ {ownerTx.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0).toFixed(2)}</td>
-                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>{badge(`ރ.${ownerTx.reduce((s, t) => s + t.cost, 0).toFixed(2)}`, clCost, bgCost)}</td>
-                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>{badge(`ރ.${ownerTx.reduce((s, t) => s + t.grossProfit, 0).toFixed(2)}`, clGross, bgGross)}</td>
-                                    <td style={{ padding: "0.375rem 0.5rem", textAlign: "right", fontWeight: bwx }}>{badge(`ރ.${ownerTx.reduce((s, t) => s + t.netProfit, 0).toFixed(2)}`, clNet, bgNet)}</td>
+                                    <td style={{ padding: "0.375rem 0.375rem", fontWeight: bwx, fontSize: isCompact ? "0.625rem" : "0.6875rem", color: c.textStrong }}>TOTALS</td>
+                                    <td style={{ padding: "0.25rem 0.375rem", textAlign: "right", fontWeight: bwx }}>{(() => { const tc2 = ownerTx.reduce((s, t) => s + (parseFloat(t.cost) || 0), 0); const ts2 = ownerTx.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0); return (ts2 > 0 ? tc2 / ts2 : 0).toFixed(2); })()}</td>
+                                    <td style={{ padding: "0.25rem 0.375rem", textAlign: "right", fontWeight: bwx }}>${ownerTx.reduce((s, t) => s + (parseFloat(t.buyAmount) || 0), 0).toFixed(2)}</td>
+                                    <td style={{ padding: "0.25rem 0.375rem", textAlign: "right", fontWeight: bwx }}>{ownerTx.length > 0 ? (ownerTx.reduce((s, t) => s + (parseFloat(t.sellRate) || 0), 0) / ownerTx.length).toFixed(2) : "0.00"}</td>
+                                    <td style={{ padding: "0.25rem 0.375rem", textAlign: "right", fontWeight: bwx }}>₮ {ownerTx.reduce((s, t) => s + (parseFloat(t.sellAmount) || 0), 0).toFixed(2)}</td>
+                                    <td style={{ padding: "0.25rem 0.375rem", textAlign: "right", fontWeight: bwx }}>{badge(`ރ.${ownerTx.reduce((s, t) => s + t.cost, 0).toFixed(2)}`, clCost, bgCost)}</td>
+                                    <td style={{ padding: "0.25rem 0.375rem", textAlign: "right", fontWeight: bwx }}>{badge(`ރ.${ownerTx.reduce((s, t) => s + t.grossProfit, 0).toFixed(2)}`, clGross, bgGross)}</td>
+                                    <td style={{ padding: "0.25rem 0.375rem", textAlign: "right", fontWeight: bwx }}>{badge(`ރ.${ownerTx.reduce((s, t) => s + t.netProfit, 0).toFixed(2)}`, clNet, bgNet)}</td>
                                   </tr></tfoot>
                                 </table>
                             </div>
@@ -1410,164 +1425,146 @@ function AppInner() {
             </div>
 
             {(() => {
-              const sectionHeader = (label) => (
-                <div style={{ display: "flex", alignItems: "center", gap: "0.625rem", marginTop: "1.5rem", marginBottom: "0.875rem" }}>
-                  <div style={{ fontSize: "0.6875rem", fontWeight: bwx, color: c.textSec, textTransform: "uppercase", letterSpacing: "0.1em" }}>{label}</div>
-                  <div style={{ flex: 1, height: "1px", background: c.border }} />
-                </div>
-              );
-              const firstSectionHeader = (label) => (
-                <div style={{ display: "flex", alignItems: "center", gap: "0.625rem", marginBottom: "0.875rem" }}>
-                  <div style={{ fontSize: "0.6875rem", fontWeight: bwx, color: c.textSec, textTransform: "uppercase", letterSpacing: "0.1em" }}>{label}</div>
-                  <div style={{ flex: 1, height: "1px", background: c.border }} />
-                </div>
-              );
-              const itemStyle = { marginBottom: "1.25rem" };
               const itemLabel = { display: "block", fontSize: "0.8125rem", fontWeight: bws, marginBottom: "0.5rem", color: c.text };
+              const Section = ({ id, title, children }) => {
+                const open = settingsSection === id;
+                return (
+                  <div style={{ border: `1px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "1.25rem" : "0.625rem"), marginBottom: "0.5rem", overflow: "hidden", backgroundColor: open ? c.surfaceAlt : "transparent" }}>
+                    <button onClick={() => setSettingsSection(open ? null : id)} aria-expanded={open} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", background: "transparent", border: "none", cursor: "pointer", color: c.textStrong, fontSize: "0.875rem", fontWeight: bwm, fontFamily: "inherit" }}>
+                      <span>{title}</span>
+                      <ChevronDown size={16} style={{ transform: open ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.15s", color: c.textSec }} />
+                    </button>
+                    {open && <div style={{ padding: "0.25rem 1rem 1rem", borderTop: `1px solid ${c.border}` }}>{children}</div>}
+                  </div>
+                );
+              };
               return (
                 <>
-                  {/* ---- Appearance ---- */}
-                  {firstSectionHeader("Appearance")}
-                  <div style={itemStyle}>
-                    <label style={itemLabel}>Theme</label>
-                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(3, 1fr)" : "repeat(auto-fill, minmax(90px, 1fr))", gap: "0.5rem" }}>
-                      {THEME_OPTIONS.map((opt) => (
-                        <div key={opt.key} onClick={() => setTheme(opt.key)} style={{ padding: "0.5rem", border: theme === opt.key ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "1.5rem" : "0.625rem"), backgroundColor: theme === opt.key ? c.accentBg : c.surfaceAlt, cursor: "pointer", textAlign: "center", transition: "border-color 0.15s cubic-bezier(.4,0,.2,1), background-color 0.15s cubic-bezier(.4,0,.2,1)" }}>
-                          <div style={{ display: "flex", height: "24px", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "4px"), overflow: "hidden", marginBottom: "0.375rem", border: `1px solid ${c.border}` }}>
-                            {opt.preview.map((color, i) => <div key={i} style={{ flex: 1, background: color }}></div>)}
+                  <Section id="appearance" title="Appearance">
+                    <div style={{ marginBottom: "1rem" }}>
+                      <label style={itemLabel}>Theme</label>
+                      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(3, 1fr)" : "repeat(auto-fill, minmax(90px, 1fr))", gap: "0.5rem" }}>
+                        {THEME_OPTIONS.map((opt) => (
+                          <div key={opt.key} onClick={() => setTheme(opt.key)} style={{ padding: "0.5rem", border: theme === opt.key ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "1.5rem" : "0.625rem"), backgroundColor: theme === opt.key ? c.accentBg : c.surface, cursor: "pointer", textAlign: "center", transition: "border-color 0.15s, background-color 0.15s" }}>
+                            <div style={{ display: "flex", height: "24px", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "4px"), overflow: "hidden", marginBottom: "0.375rem", border: `1px solid ${c.border}` }}>
+                              {opt.preview.map((color, i) => <div key={i} style={{ flex: 1, background: color }}></div>)}
+                            </div>
+                            <div style={{ fontSize: "0.6875rem", fontWeight: bws, color: theme === opt.key ? c.accent : c.text }}>{opt.label}</div>
                           </div>
-                          <div style={{ fontSize: "0.6875rem", fontWeight: bws, color: theme === opt.key ? c.accent : c.text }}>{opt.label}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div style={itemStyle}>
-                    <label style={itemLabel}>View Style</label>
-                    <div style={{ display: "flex", gap: "0.75rem" }}>
-                      {[{ k: "normal", i: LayoutGrid, l: "Normal", d: "Large cards" }, { k: "compact", i: List, l: "Compact", d: "Dense layout" }].map((o) => (
-                        <div key={o.k} onClick={() => setViewStyle(o.k)} style={{ flex: 1, padding: "0.75rem", border: viewStyle === o.k ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "2rem" : "0.75rem"), backgroundColor: viewStyle === o.k ? c.accentBg : c.surfaceAlt, cursor: "pointer", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", color: viewStyle === o.k ? c.accent : c.text }}>
-                          <o.i size={24} /><span>{o.l}</span><div style={{ fontSize: "0.6875rem", opacity: 0.7 }}>{o.d}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* ---- Typography ---- */}
-                  {sectionHeader("Typography")}
-                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "0.75rem", marginBottom: "1.25rem" }}>
-                    <div>
-                      <label style={itemLabel}>Body Font</label>
-                      <select value={selectedFont} onChange={(e) => setSelectedFont(e.target.value)} style={{ padding: "0.625rem 0.75rem", border: `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), fontSize: "0.875rem", width: "100%", backgroundColor: selectBg, color: c.text, cursor: "pointer" }}>
-                        {FONTS.map((f) => <option key={f.value} value={f.value}>{f.name}</option>)}
-                      </select>
+                        ))}
+                      </div>
                     </div>
                     <div>
-                      <label style={itemLabel}>Title Font</label>
-                      <select value={titleFont} onChange={(e) => setTitleFont(e.target.value)} style={{ padding: "0.625rem 0.75rem", border: `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), fontSize: "0.875rem", width: "100%", backgroundColor: selectBg, color: c.text, cursor: "pointer" }}>
-                        {FONTS.map((f) => <option key={f.value} value={f.value}>{f.name}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <div style={{ marginBottom: "1.25rem", padding: "0.625rem 0.75rem", backgroundColor: c.surfaceAlt, borderRadius: isBrut ? "0" : rSm, overflow: "hidden" }}>
-                    <div style={{ fontFamily: titleFontFamily, fontSize: `${Math.min(titleFontSize, 36)}px`, fontWeight: bwh, background: c.titleGrad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Sales Dashboard</div>
-                    <div style={{ fontFamily: `"${selectedFont}", sans-serif`, fontSize: `${fontSize}px`, color: c.textSec, marginTop: "0.25rem" }}>The quick brown fox jumps over.</div>
-                  </div>
-                  <div style={itemStyle}>
-                    <label style={itemLabel}>Body Size <span style={{ fontWeight: bwm, color: c.textSec }}>· {fontSize}px</span></label>
-                    <input type="range" min="12" max="40" value={fontSize} onChange={(e) => setFontSize(parseInt(e.target.value))} style={{ width: "100%", height: "8px", borderRadius: "4px", background: c.toggleBg, outline: "none" }} />
-                  </div>
-                  <div style={itemStyle}>
-                    <label style={itemLabel}>Heading Size <span style={{ fontWeight: bwm, color: c.textSec }}>· {titleFontSize}px</span></label>
-                    <input type="range" min="16" max="72" value={titleFontSize} onChange={(e) => setTitleFontSize(parseInt(e.target.value))} style={{ width: "100%", height: "8px", borderRadius: "4px", background: c.toggleBg, outline: "none" }} />
-                  </div>
-                  <div style={itemStyle}>
-                    <div onClick={() => setBoldText(!boldText)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.875rem 1rem", border: boldText ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "2rem" : "0.75rem"), backgroundColor: boldText ? c.accentBg : c.surfaceAlt, cursor: "pointer" }}>
-                      <div>
-                        <div style={{ fontWeight: boldText ? bwx : bws, fontSize: "0.9375rem", color: c.textStrong }}>Bold Text</div>
-                        <div style={{ fontSize: "0.75rem", opacity: 0.7, marginTop: "0.125rem", color: c.textSec }}>Increase font weight across the UI</div>
-                      </div>
-                      <div style={{ width: "44px", height: "24px", borderRadius: "12px", backgroundColor: boldText ? c.accent : c.toggleBg, position: "relative", flexShrink: 0 }}>
-                        <div style={{ width: "20px", height: "20px", borderRadius: "50%", backgroundColor: "#ffffff", position: "absolute", top: "2px", left: boldText ? "22px" : "2px", transition: "left 0.2s cubic-bezier(.4,0,.2,1)", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }}></div>
+                      <label style={itemLabel}>View Style</label>
+                      <div style={{ display: "flex", gap: "0.75rem" }}>
+                        {[{ k: "normal", i: LayoutGrid, l: "Normal", d: "Large cards" }, { k: "compact", i: List, l: "Compact", d: "Dense layout" }].map((o) => (
+                          <div key={o.k} onClick={() => setViewStyle(o.k)} style={{ flex: 1, padding: "0.625rem", border: viewStyle === o.k ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "2rem" : "0.625rem"), backgroundColor: viewStyle === o.k ? c.accentBg : c.surface, cursor: "pointer", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.375rem", color: viewStyle === o.k ? c.accent : c.text }}>
+                            <o.i size={20} /><span style={{ fontSize: "0.8125rem", fontWeight: bws }}>{o.l}</span><div style={{ fontSize: "0.6875rem", opacity: 0.7 }}>{o.d}</div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  </div>
+                  </Section>
 
-                  {/* ---- Display ---- */}
-                  {sectionHeader("Display")}
-                  <div style={itemStyle}>
-                    <div onClick={() => setPillTags(!pillTags)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.875rem 1rem", border: pillTags ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "2rem" : "0.75rem"), backgroundColor: pillTags ? c.accentBg : c.surfaceAlt, cursor: "pointer" }}>
+                  <Section id="typography" title="Typography">
+                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "0.75rem", marginBottom: "1rem" }}>
                       <div>
-                        <div style={{ fontWeight: bws, fontSize: "0.9375rem", color: c.textStrong }}>Pill Tags</div>
-                        <div style={{ fontSize: "0.75rem", opacity: 0.7, marginTop: "0.125rem", color: c.textSec }}>Wrap all field values in pill-shaped tags</div>
+                        <label style={itemLabel}>Body Font</label>
+                        <select value={selectedFont} onChange={(e) => setSelectedFont(e.target.value)} style={{ padding: "0.5rem 0.75rem", border: `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), fontSize: "0.875rem", width: "100%", backgroundColor: selectBg, color: c.text, cursor: "pointer" }}>
+                          {FONTS.map((f) => <option key={f.value} value={f.value}>{f.name}</option>)}
+                        </select>
                       </div>
-                      <div style={{ width: "44px", height: "24px", borderRadius: "12px", backgroundColor: pillTags ? c.accent : c.toggleBg, position: "relative", flexShrink: 0 }}>
-                        <div style={{ width: "20px", height: "20px", borderRadius: "50%", backgroundColor: "#ffffff", position: "absolute", top: "2px", left: pillTags ? "22px" : "2px", transition: "left 0.2s cubic-bezier(.4,0,.2,1)", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }}></div>
+                      <div>
+                        <label style={itemLabel}>Title Font</label>
+                        <select value={titleFont} onChange={(e) => setTitleFont(e.target.value)} style={{ padding: "0.5rem 0.75rem", border: `1px solid ${c.inputBorder}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), fontSize: "0.875rem", width: "100%", backgroundColor: selectBg, color: c.text, cursor: "pointer" }}>
+                          {FONTS.map((f) => <option key={f.value} value={f.value}>{f.name}</option>)}
+                        </select>
                       </div>
                     </div>
-                  </div>
+                    <div style={{ marginBottom: "1rem", padding: "0.5rem 0.75rem", backgroundColor: c.surface, borderRadius: isBrut ? "0" : rSm, border: `1px solid ${c.border}`, overflow: "hidden" }}>
+                      <div style={{ fontFamily: titleFontFamily, fontSize: `${Math.min(titleFontSize, 32)}px`, fontWeight: bwh, background: c.titleGrad, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Sales Dashboard</div>
+                      <div style={{ fontFamily: `"${selectedFont}", sans-serif`, fontSize: `${fontSize}px`, color: c.textSec, marginTop: "0.25rem" }}>The quick brown fox jumps over.</div>
+                    </div>
+                    <div style={{ marginBottom: "0.75rem" }}>
+                      <label style={itemLabel}>Body Size <span style={{ fontWeight: bwm, color: c.textSec }}>· {fontSize}px</span></label>
+                      <input type="range" min="12" max="40" value={fontSize} onChange={(e) => setFontSize(parseInt(e.target.value))} style={{ width: "100%", height: "6px", borderRadius: "3px", background: c.toggleBg, outline: "none" }} />
+                    </div>
+                    <div style={{ marginBottom: "0.875rem" }}>
+                      <label style={itemLabel}>Heading Size <span style={{ fontWeight: bwm, color: c.textSec }}>· {titleFontSize}px</span></label>
+                      <input type="range" min="16" max="72" value={titleFontSize} onChange={(e) => setTitleFontSize(parseInt(e.target.value))} style={{ width: "100%", height: "6px", borderRadius: "3px", background: c.toggleBg, outline: "none" }} />
+                    </div>
+                    <div onClick={() => setBoldText(!boldText)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.625rem 0.875rem", border: boldText ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "2rem" : "0.625rem"), backgroundColor: boldText ? c.accentBg : c.surface, cursor: "pointer" }}>
+                      <div>
+                        <div style={{ fontWeight: boldText ? bwx : bws, fontSize: "0.875rem", color: c.textStrong }}>Bold Text</div>
+                        <div style={{ fontSize: "0.6875rem", opacity: 0.7, marginTop: "0.125rem", color: c.textSec }}>Increase font weight across the UI</div>
+                      </div>
+                      <div style={{ width: "40px", height: "22px", borderRadius: "11px", backgroundColor: boldText ? c.accent : c.toggleBg, position: "relative", flexShrink: 0 }}>
+                        <div style={{ width: "18px", height: "18px", borderRadius: "50%", backgroundColor: "#ffffff", position: "absolute", top: "2px", left: boldText ? "20px" : "2px", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }}></div>
+                      </div>
+                    </div>
+                  </Section>
 
-                  {/* ---- Data ---- */}
-                  {sectionHeader("Data")}
-                  <div style={itemStyle}>
+                  <Section id="display" title="Display">
+                    <div onClick={() => setPillTags(!pillTags)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.625rem 0.875rem", marginBottom: "0.875rem", border: pillTags ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "2rem" : "0.625rem"), backgroundColor: pillTags ? c.accentBg : c.surface, cursor: "pointer" }}>
+                      <div>
+                        <div style={{ fontWeight: bws, fontSize: "0.875rem", color: c.textStrong }}>Pill Tags</div>
+                        <div style={{ fontSize: "0.6875rem", opacity: 0.7, marginTop: "0.125rem", color: c.textSec }}>Wrap all field values in pill-shaped tags</div>
+                      </div>
+                      <div style={{ width: "40px", height: "22px", borderRadius: "11px", backgroundColor: pillTags ? c.accent : c.toggleBg, position: "relative", flexShrink: 0 }}>
+                        <div style={{ width: "18px", height: "18px", borderRadius: "50%", backgroundColor: "#ffffff", position: "absolute", top: "2px", left: pillTags ? "20px" : "2px", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }}></div>
+                      </div>
+                    </div>
+                    <label style={itemLabel}>Icon Pack</label>
+                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: "0.5rem" }}>
+                      {ICON_PACK_KEYS.map((key) => {
+                        const pack = ICON_PACKS[key];
+                        const PreviewSettings = pack.Settings;
+                        const PreviewDownload = pack.Download;
+                        const PreviewUser = pack.User;
+                        const isSelected = iconPack === key;
+                        return (
+                          <div key={key} onClick={() => setIconPack(key)} style={{ padding: "0.625rem 0.5rem", border: isSelected ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "1.5rem" : "0.5rem"), backgroundColor: isSelected ? c.accentBg : c.surface, cursor: "pointer", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.375rem", transition: "border-color 0.15s, background-color 0.15s", color: isSelected ? c.accent : c.textSec }}>
+                            <div style={{ display: "flex", gap: "0.375rem" }}>
+                              <PreviewSettings size={14} />
+                              <PreviewDownload size={14} />
+                              <PreviewUser size={14} />
+                            </div>
+                            <div style={{ fontSize: "0.6875rem", fontWeight: bws, color: isSelected ? c.accent : c.text }}>{pack.label}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </Section>
+
+                  <Section id="data" title="Data">
                     <label style={itemLabel}>Auto-Refresh {autoRefresh > 0 && <span style={{ fontWeight: bwm, color: c.accent }}>· every {autoRefresh}s</span>}</label>
                     <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: "0.5rem" }}>
                       {[{ v: 0, l: "Off" }, { v: 30, l: "30s" }, { v: 60, l: "1m" }, { v: 300, l: "5m" }].map((opt) => (
-                        <button key={opt.v} onClick={() => setAutoRefresh(opt.v)} style={{ padding: "0.5rem", border: autoRefresh === opt.v ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), backgroundColor: autoRefresh === opt.v ? c.accentBg : c.surfaceAlt, color: autoRefresh === opt.v ? c.accent : c.text, cursor: "pointer", fontSize: "0.8125rem", fontWeight: bws, textAlign: "center" }}>
+                        <button key={opt.v} onClick={() => setAutoRefresh(opt.v)} style={{ padding: "0.5rem", border: autoRefresh === opt.v ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), backgroundColor: autoRefresh === opt.v ? c.accentBg : c.surface, color: autoRefresh === opt.v ? c.accent : c.text, cursor: "pointer", fontSize: "0.8125rem", fontWeight: bws, textAlign: "center" }}>
                           {opt.l}
                         </button>
                       ))}
                     </div>
-                  </div>
+                  </Section>
 
-                  {/* ---- About ---- */}
-                  {sectionHeader("About")}
-                  <div style={{ fontSize: "0.75rem", color: c.textSec, textAlign: "center", padding: "0.5rem 0 0.25rem" }}>
+                  <Section id="account" title="Account">
+                    {userEmail && (
+                      <div style={{ padding: "0.625rem 0.875rem", marginBottom: "0.75rem", border: `1px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "1.25rem" : "0.5rem"), backgroundColor: c.surface, display: "flex", alignItems: "center", gap: "0.625rem" }}>
+                        <User size={16} style={{ color: c.textSec, flexShrink: 0 }} />
+                        <span style={{ fontSize: "0.8125rem", color: c.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userEmail}</span>
+                      </div>
+                    )}
+                    <button onClick={handleSignOut} disabled={signingOut} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "0.625rem 0.875rem", border: "1px solid #ef4444", borderRadius: isBrut ? "0" : (isCirc ? "999px" : "0.5rem"), background: "transparent", color: "#ef4444", cursor: signingOut ? "default" : "pointer", fontSize: "0.875rem", fontWeight: bwm, fontFamily: "inherit", opacity: signingOut ? 0.6 : 1 }}>
+                      <LogOut size={15} /> {signingOut ? "Signing out…" : "Sign Out"}
+                    </button>
+                  </Section>
+
+                  <div style={{ fontSize: "0.6875rem", color: c.textSec, textAlign: "center", padding: "0.875rem 0 0.25rem" }}>
                     Sales Dashboard <span style={{ opacity: 0.7 }}>· v{APP_VERSION}</span>
                   </div>
                 </>
               );
             })()}
-
-            {/* Icon Pack */}
-            <div style={{ marginBottom: "0.5rem" }}>
-              <label style={{ display: "block", fontSize: "0.875rem", fontWeight: bws, marginBottom: "0.75rem", color: c.text }}>Icon Pack</label>
-              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: "0.5rem" }}>
-                {ICON_PACK_KEYS.map((key) => {
-                  const pack = ICON_PACKS[key];
-                  const PreviewSettings = pack.Settings;
-                  const PreviewDownload = pack.Download;
-                  const PreviewUser = pack.User;
-                  const isSelected = iconPack === key;
-                  return (
-                    <div
-                      key={key}
-                      onClick={() => setIconPack(key)}
-                      style={{
-                        padding: "0.75rem 0.5rem",
-                        border: isSelected ? `2px solid ${c.accent}` : `2px solid ${c.border}`,
-                        borderRadius: isBrut ? "0" : (isCirc ? "1.5rem" : "0.625rem"),
-                        backgroundColor: isSelected ? c.accentBg : c.surfaceAlt,
-                        cursor: "pointer",
-                        textAlign: "center",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                        transition: "border-color 0.15s, background-color 0.15s",
-                        color: isSelected ? c.accent : c.textSec,
-                      }}
-                    >
-                      <div style={{ display: "flex", gap: "0.375rem", alignItems: "center", justifyContent: "center" }}>
-                        <PreviewSettings size={16} />
-                        <PreviewDownload size={16} />
-                        <PreviewUser size={16} />
-                      </div>
-                      <div style={{ fontSize: "0.6875rem", fontWeight: bws, color: isSelected ? c.accent : c.text }}>{pack.label}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
 
           </div>
         </div>

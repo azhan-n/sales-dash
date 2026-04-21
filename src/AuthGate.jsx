@@ -26,12 +26,7 @@ export function AuthGate({ children }) {
 
   if (!session) return <LoginScreen />;
 
-  return (
-    <>
-      {children}
-      <SignOutButton />
-    </>
-  );
+  return children;
 }
 
 function LoginScreen() {
@@ -134,38 +129,6 @@ function LoginScreen() {
         )}
       </form>
     </div>
-  );
-}
-
-function SignOutButton() {
-  const [busy, setBusy] = useState(false);
-  const onClick = async () => {
-    setBusy(true);
-    await supabase.auth.signOut();
-    setBusy(false);
-  };
-  return (
-    <button
-      onClick={onClick}
-      disabled={busy}
-      style={{
-        position: "fixed",
-        bottom: 16,
-        right: 16,
-        padding: "6px 12px",
-        fontSize: 11,
-        fontFamily: "Inter, sans-serif",
-        color: "#555",
-        background: "rgba(255,255,255,0.9)",
-        border: "1px solid #ddd",
-        borderRadius: 6,
-        cursor: "pointer",
-        zIndex: 9999,
-        boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-      }}
-    >
-      {busy ? "…" : "Sign out"}
-    </button>
   );
 }
 
