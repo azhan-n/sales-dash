@@ -25,6 +25,7 @@ export const THEME_OPTIONS = [
   { key: "midnight", label: "Midnight", preview: ["#0a0e1a", "#34d399", "#a78bfa", "#1a2332"] },
   { key: "liquid_glass", label: "Liquid Glass", preview: ["#f0f2f5", "#e8ecf4", "#ffffff80", "#d0d5e0"] },
   { key: "circular", label: "Circular", preview: ["#faf5ff", "#8b5cf6", "#c084fc", "#ede9fe"] },
+  { key: "ledgerline", label: "Ledgerline", preview: ["#f4f9fd", "#0284c7", "#0e9f6e", "#e3ebf3"] },
 ];
 
 // --- Layout descriptors per theme ---
@@ -191,11 +192,31 @@ const themeLayouts = {
     tableStyle: "default",
     extraCss: "",
   },
+  ledgerline: {
+    statCardDir: "column",
+    statIconSize: 18,
+    statIconSizeSm: 14,
+    statIconBg: true,
+    statIconBgStyle: (variant) => {
+      const map = { Green: "#0e9f6e", Teal: "#0284c7", Orange: "#d97706", Blue: "#4f46e5", Pink: "#db2777", Purple: "#7c3aed" };
+      const color = map[variant] || map.Teal;
+      return {
+        width: "32px", height: "32px", borderRadius: "8px",
+        background: `${color}14`, color,
+        border: `1px solid ${color}1f`,
+        display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+      };
+    },
+    ownerLayout: "grid",
+    cardTypeLayout: "grid",
+    tableStyle: "default",
+    extraCss: "",
+  },
 };
 
 export const getThemeLayout = (name) => {
   const map = { auto: "default", sunset: "default",
-    sky: "sky", glass: "glass", terminal: "terminal", brutalist: "brutalist", midnight: "midnight", liquid_glass: "liquid_glass", circular: "circular", mint: "mint" };
+    sky: "sky", glass: "glass", terminal: "terminal", brutalist: "brutalist", midnight: "midnight", liquid_glass: "liquid_glass", circular: "circular", mint: "mint", ledgerline: "ledgerline" };
   return themeLayouts[map[name] || "default"];
 };
 
@@ -421,6 +442,38 @@ export const getThemeColors = (themeName) => {
       toggleBg: "#e5e7eb",
       headerBorderBottom: "1px solid #eef0f3",
       bgPattern: null,
+    },
+    ledgerline: {
+      ...base, isDark: false,
+      radius: "10px", radiusSm: "6px", radiusCompact: "6px", radiusCompactSm: "4px",
+      bg: "#f4f9fd",
+      surface: "#ffffff", surfaceAlt: "#f7fafc", surfaceDeep: "#eef4fa",
+      text: "#0a1e33", textSec: "#4a6782", textMuted: "#7c93aa", textMid: "#1a3d60", textStrong: "#061320",
+      border: "#e3ebf3", borderStrong: "#c9d7e5",
+      accent: "#0284c7", accentBg: "rgba(2,132,199,0.08)",
+      positive: "#0e9f6e", negative: "#e11d48", chartB: "#0e9f6e",
+      inputBg: "#ffffff", inputBorder: "#e3ebf3",
+      titleGrad: "linear-gradient(135deg, #0284c7 0%, #0ea5e9 50%, #0e9f6e 100%)",
+      btnGrad: "linear-gradient(135deg, #0284c7 0%, #0e9f6e 100%)", btnGlow: "rgba(2,132,199,0.25)",
+      statCards: {
+        Green:  { bg: "#ffffff", text: "#0a1e33", accentStrip: "#0e9f6e", chipBg: "rgba(14,159,110,0.12)", chipFg: "#047857" },
+        Teal:   { bg: "#ffffff", text: "#0a1e33", accentStrip: "#0284c7", chipBg: "rgba(2,132,199,0.12)", chipFg: "#0369a1" },
+        Orange: { bg: "#ffffff", text: "#0a1e33", accentStrip: "#d97706", chipBg: "rgba(217,119,6,0.12)", chipFg: "#b45309" },
+        Blue:   { bg: "#ffffff", text: "#0a1e33", accentStrip: "#4f46e5", chipBg: "rgba(79,70,229,0.12)", chipFg: "#4338ca" },
+        Pink:   { bg: "#ffffff", text: "#0a1e33", accentStrip: "#ec4899", chipBg: "rgba(236,72,153,0.12)", chipFg: "#db2777" },
+        Purple: { bg: "#ffffff", text: "#0a1e33", accentStrip: "#8b5cf6", chipBg: "rgba(139,92,246,0.12)", chipFg: "#7c3aed" },
+      },
+      profitGrad: "linear-gradient(135deg, #0284c7 0%, #0e9f6e 100%)",
+      errorBg: "rgba(225,29,72,0.06)", errorBorder: "rgba(225,29,72,0.25)", errorText: "#9f1239",
+      badgeGreen: { bg: "rgba(14,159,110,0.12)", text: "#065f46" },
+      badgeYellow: { bg: "rgba(217,119,6,0.12)", text: "#92400e" },
+      badgeRed: { bg: "rgba(225,29,72,0.10)", text: "#9f1239" },
+      shadow: "0 1px 2px rgba(10,30,51,0.04), 0 1px 0 rgba(10,30,51,0.03)",
+      shadowLg: "0 6px 20px rgba(10,30,51,0.06)", shadowLgCompact: "0 2px 8px rgba(10,30,51,0.04)",
+      cardHoverShadow: "0 4px 12px rgba(10,30,51,0.08)", modalShadow: "0 20px 40px rgba(10,30,51,0.12)",
+      toggleBg: "#e3ebf3",
+      headerBorderBottom: "1px solid #e3ebf3",
+      bgPattern: "radial-gradient(1200px 600px at 10% -10%, rgba(56,189,248,0.18) 0%, transparent 60%), radial-gradient(800px 500px at 90% 0%, rgba(0,201,167,0.10) 0%, transparent 60%)",
     },
   };
 
