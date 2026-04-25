@@ -17,6 +17,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import { StatCardsSkeleton, ChartSkeleton, TableSkeleton, SKELETON_CSS } from "./Skeleton";
 import { TransactionForm } from "./TransactionForm";
 import { MonthlyForm } from "./MonthlyForm";
+import { ModernApp } from "./modern/ModernApp";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { ConfirmDialog } from "./ConfirmDialog";
 
@@ -45,6 +46,7 @@ function AppInner() {
   const [theme, setTheme] = useState(() => lsGet("theme") || "sunset");
   const [viewMode, setViewMode] = useState("table");
   const [viewStyle, setViewStyle] = useState(() => lsGet("viewStyle") || "normal");
+  const [modernView, setModernView] = useState(() => lsGet("modernView") === "true");
   const [hoveredCard, setHoveredCard] = useState(null);
   const [hoveredStat, setHoveredStat] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -351,6 +353,7 @@ function AppInner() {
     return () => { document.body.style.backgroundColor = ""; };
   }, [c.bg]);
   useEffect(() => { lsSet("viewStyle", viewStyle); }, [viewStyle]);
+  useEffect(() => { lsSet("modernView", modernView.toString()); }, [modernView]);
   useEffect(() => { lsSet("boldText", boldText.toString()); }, [boldText]);
   useEffect(() => { lsSet("pillTags", pillTags.toString()); }, [pillTags]);
   useEffect(() => { lsSet("autoRefresh", autoRefresh.toString()); }, [autoRefresh]);
@@ -552,6 +555,52 @@ function AppInner() {
           <ChartSkeleton isMobile={isMobile} isCompact={isCompact} c={c} />
         </div>
       </div>
+    );
+  }
+
+  if (modernView) {
+    return (
+      <>
+        <ModernApp
+          themeKey={theme}
+          palette={c}
+          font={font}
+          isMobile={isMobile}
+          transactions={transactions}
+          owners={owners}
+          cards={cards}
+          getCardById={getCardById}
+          getOwnerById={getOwnerById}
+          onAdd={() => { setEditingTxId(null); setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "15.42", buyAmount: "", sellRate: "", sellAmount: "", date: getTodayDate() }); setShowTxForm(true); }}
+          onEdit={(t) => editTransaction(t)}
+          onDelete={async (t) => {
+            if (!window.confirm("Delete this transaction?")) return;
+            try {
+              const { error: err } = await supabase.from("transactions").delete().eq("id", t.id);
+              if (err) throw err;
+              toast.success("Transaction deleted");
+              fetchData(true);
+            } catch (err) { toast.error("Failed to delete: " + err.message); }
+          }}
+          setTheme={setTheme}
+          setFont={setSelectedFont}
+          onExitModern={() => setModernView(false)}
+        />
+        <TransactionForm
+          th={{ c, isBrut, isCirc, isGlass, isLG, isTerm, isMobile, isCompact, headingFont, bwh, bwm, bws, bwx, r, rSm }}
+          txForm={txForm}
+          setTxForm={setTxForm}
+          editingTxId={editingTxId}
+          setEditingTxId={setEditingTxId}
+          showTxForm={showTxForm}
+          setShowTxForm={setShowTxForm}
+          submitting={submitting}
+          cardTypes={cardTypes}
+          ownerInfoMap={ownerInfoMap}
+          onSubmit={submitTransaction}
+          recentRates={recentRates}
+        />
+      </>
     );
   }
 
@@ -1448,6 +1497,17 @@ function AppInner() {
                         {[{ k: "normal", i: LayoutGrid, l: "Normal", d: "Large cards" }, { k: "compact", i: List, l: "Compact", d: "Dense layout" }].map((o) => (
                           <div key={o.k} onClick={() => setViewStyle(o.k)} style={{ flex: 1, padding: "0.625rem", border: viewStyle === o.k ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "2rem" : "0.625rem"), backgroundColor: viewStyle === o.k ? c.accentBg : c.surface, cursor: "pointer", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.375rem", color: viewStyle === o.k ? c.accent : c.text }}>
                             <o.i size={20} /><span style={{ fontSize: "0.8125rem", fontWeight: bws }}>{o.l}</span><div style={{ fontSize: "0.6875rem", opacity: 0.7 }}>{o.d}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div style={{ marginTop: "1rem" }}>
+                      <label style={itemLabel}>Layout</label>
+                      <div style={{ display: "flex", gap: "0.75rem" }}>
+                        {[{ k: false, l: "Classic", d: "Original tab layout" }, { k: true, l: "Modern", d: "Ledgerline sidebar" }].map((o) => (
+                          <div key={String(o.k)} onClick={() => { setModernView(o.k); if (o.k) setShowSettings(false); }} style={{ flex: 1, padding: "0.625rem", border: modernView === o.k ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "2rem" : "0.625rem"), backgroundColor: modernView === o.k ? c.accentBg : c.surface, cursor: "pointer", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.375rem", color: modernView === o.k ? c.accent : c.text }}>
+                            <span style={{ fontSize: "0.8125rem", fontWeight: bws }}>{o.l}</span>
+                            <div style={{ fontSize: "0.6875rem", opacity: 0.7 }}>{o.d}</div>
                           </div>
                         ))}
                       </div>
