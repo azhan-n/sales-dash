@@ -3,6 +3,7 @@ import React from "react";
 import { Card, Btn, CardTypeBadge, I, fmtCompact, fmtUSD, fmtDate, cardColors } from "./ui";
 import { TrendChart, Donut, Scatter, Histogram, Sparkline, StackedBars } from "./charts";
 import { aggregateByMonth, aggregateByCardType, computeStats } from "./aggregations";
+import { OwnerStatsPanel } from "./OwnerStatsPanel";
 
 function HeroStat({ label, value, suffix }) {
   return (
@@ -37,7 +38,7 @@ function LegendDot({ color, label, t }) {
   </span>;
 }
 
-export function ModernDashboard({ theme, transactions, getCard, getOwner, setRoute, chartStyle, isMobile }) {
+export function ModernDashboard({ theme, transactions, owners, ownerStats, getCard, getOwner, setRoute, chartStyle, isMobile }) {
   const t = theme;
   const stats = computeStats(transactions);
   const monthly = aggregateByMonth(transactions);
@@ -203,6 +204,8 @@ export function ModernDashboard({ theme, transactions, getCard, getOwner, setRou
           </div>
         </Card>
       </div>
+
+      <OwnerStatsPanel theme={t} ownerStats={ownerStats} owners={owners} transactions={transactions} getCard={getCard} isMobile={isMobile} />
     </div>
   );
 }

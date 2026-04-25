@@ -560,47 +560,58 @@ function AppInner() {
 
   if (modernView) {
     return (
-      <>
-        <ModernApp
-          themeKey={theme}
-          palette={c}
-          font={font}
-          isMobile={isMobile}
-          transactions={transactions}
-          owners={owners}
-          cards={cards}
-          getCardById={getCardById}
-          getOwnerById={getOwnerById}
-          onAdd={() => { setEditingTxId(null); setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "15.42", buyAmount: "", sellRate: "", sellAmount: "", date: getTodayDate() }); setShowTxForm(true); }}
-          onEdit={(t) => editTransaction(t)}
-          onDelete={async (t) => {
-            if (!window.confirm("Delete this transaction?")) return;
-            try {
-              const { error: err } = await supabase.from("transactions").delete().eq("id", t.id);
-              if (err) throw err;
-              toast.success("Transaction deleted");
-              fetchData(true);
-            } catch (err) { toast.error("Failed to delete: " + err.message); }
-          }}
-          setTheme={setTheme}
-          setFont={setSelectedFont}
-          onExitModern={() => setModernView(false)}
-        />
-        <TransactionForm
-          th={{ c, isBrut, isCirc, isGlass, isLG, isTerm, isMobile, isCompact, headingFont, bwh, bwm, bws, bwx, r, rSm }}
-          txForm={txForm}
-          setTxForm={setTxForm}
-          editingTxId={editingTxId}
-          setEditingTxId={setEditingTxId}
-          showTxForm={showTxForm}
-          setShowTxForm={setShowTxForm}
-          submitting={submitting}
-          cardTypes={cardTypes}
-          ownerInfoMap={ownerInfoMap}
-          onSubmit={submitTransaction}
-          recentRates={recentRates}
-        />
-      </>
+      <ModernApp
+        themeKey={theme}
+        palette={c}
+        font={font}
+        isMobile={isMobile}
+        transactions={transactions}
+        owners={owners}
+        cards={cards}
+        monthly={monthly}
+        ownerStats={stats.ownerStats}
+        getCardById={getCardById}
+        getOwnerById={getOwnerById}
+        setTheme={setTheme}
+        setFont={setSelectedFont}
+        onExitModern={() => setModernView(false)}
+        txForm={txForm}
+        setTxForm={setTxForm}
+        showTxForm={showTxForm}
+        setShowTxForm={setShowTxForm}
+        editingTxId={editingTxId}
+        setEditingTxId={setEditingTxId}
+        submitting={submitting}
+        cardTypes={cardTypes}
+        ownerInfoMap={ownerInfoMap}
+        recentRates={recentRates}
+        submitTransaction={submitTransaction}
+        editTransaction={editTransaction}
+        deleteTransaction={async (tx) => {
+          try {
+            const { error: err } = await supabase.from("transactions").delete().eq("id", tx.id);
+            if (err) throw err;
+            toast.success("Transaction deleted");
+            fetchData(true);
+          } catch (err) { toast.error("Failed to delete: " + err.message); }
+        }}
+        selectedTxIds={selectedTxIds}
+        setSelectedTxIds={setSelectedTxIds}
+        deleteSelectedTransactions={deleteSelectedTransactions}
+        monthlyForm={monthlyForm}
+        setMonthlyForm={setMonthlyForm}
+        showMonthlyForm={showMonthlyForm}
+        setShowMonthlyForm={setShowMonthlyForm}
+        editingMonthlyId={editingMonthlyId}
+        setEditingMonthlyId={setEditingMonthlyId}
+        submitMonthly={submitMonthly}
+        deleteMonthlyRecord={deleteMonthlyRecord}
+        historyPeriods={historyPeriods}
+        selectedPeriod={selectedPeriod}
+        setSelectedPeriod={setSelectedPeriod}
+        historyTransactions={historyTransactions}
+        loadingHistory={loadingHistory}
+      />
     );
   }
 

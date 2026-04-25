@@ -1,5 +1,6 @@
 // ModernApp — top-level Modern (Ledgerline) shell. Reads existing app state via props,
 // derives a design-system theme object from the active palette, and renders the right view.
+// Owns its own modal tree (TransactionForm, MonthlyForm, ConfirmDialog) styled to the Modern theme.
 import React, { useEffect, useMemo, useState } from "react";
 import { getThemeColors } from "../themes";
 import { Sidebar, TopBar, BottomTabs } from "./Nav";
@@ -8,6 +9,9 @@ import { ModernDashboard } from "./Dashboard";
 import { ModernTransactions } from "./Transactions";
 import { ModernMonthly } from "./Monthly";
 import { ModernSettings } from "./Settings";
+import { TransactionForm } from "./TransactionForm";
+import { MonthlyForm } from "./MonthlyForm";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch { return d; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
@@ -22,7 +26,6 @@ function useIsMobile(bp = 760) {
   return m;
 }
 
-// Map an existing palette + theme key to the design system's token shape.
 function buildTheme({ themeKey, palette, font }) {
   const c = palette;
   const isDark = !!c.isDark;
@@ -67,16 +70,43 @@ function buildTheme({ themeKey, palette, font }) {
 
 export function ModernApp({
   themeKey, palette, font, isMobile: parentIsMobile,
-  transactions, owners, cards,
+  // shared data
+  transactions, owners, cards, monthly,
+  ownerStats,
   getCardById, getOwnerById,
-  onAdd, onEdit, onDelete,
+  // settings
   setTheme, setFont, onExitModern,
+  // transaction form (shared with Classic)
+  txForm, setTxForm,
+  showTxForm, setShowTxForm,
+  editingTxId, setEditingTxId,
+  submitting,
+  cardTypes, ownerInfoMap, recentRates,
+  submitTransaction,
+  editTransaction,
+  // delete + bulk
+  deleteTransaction,
+  selectedTxIds, setSelectedTxIds,
+  deleteSelectedTransactions,
+  // monthly form (shared with Classic)
+  monthlyForm, setMonthlyForm,
+  showMonthlyForm, setShowMonthlyForm,
+  editingMonthlyId, setEditingMonthlyId,
+  submitMonthly, deleteMonthlyRecord,
+  // archive history
+  historyPeriods, selectedPeriod, setSelectedPeriod,
+  historyTransactions, loadingHistory,
 }) {
   const localIsMobile = useIsMobile(760);
   const isMobile = parentIsMobile ?? localIsMobile;
   const [route, setRoute] = useState(() => lsGet("modern_route", "dashboard"));
   const [chartStyle, setChartStyle] = useState(() => lsGet("modern_chartStyle", "area"));
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editModeMonthly, setEditModeMonthly] = useState(false);
+
+  // Confirm dialog state for delete actions originating in Modern.
+  const [confirmDelete, setConfirmDelete] = useState(null);    // { kind, payload }
+  // kind: "tx" (single transaction), "bulk" (selected transactions), "monthly" (single monthly record)
 
   useEffect(() => { lsSet("modern_route", route); }, [route]);
   useEffect(() => { lsSet("modern_chartStyle", chartStyle); }, [chartStyle]);
@@ -90,11 +120,36 @@ export function ModernApp({
     { key: "settings", label: "Settings", icon: I.settings },
   ];
 
-  // Normalize transactions so the Modern views always receive Date instances.
-  const txs = useMemo(() => transactions.map((t) => ({
+  const isHistory = selectedPeriod && selectedPeriod !== "current";
+  const sourceTxs = isHistory ? (historyTransactions || []) : transactions;
+
+  const txs = useMemo(() => sourceTxs.map((t) => ({
     ...t,
     date: t.date instanceof Date ? t.date : new Date(t.date),
-  })), [transactions]);
+  })), [sourceTxs]);
+
+  const handleAddTx = () => {
+    setEditingTxId(null);
+    setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "15.42", buyAmount: "", sellRate: "", sellAmount: "", date: defaultDate() });
+    setShowTxForm(true);
+  };
+
+  const handleEditTx = (tx) => editTransaction(tx);
+  const handleDeleteTx = (tx) => setConfirmDelete({ kind: "tx", payload: tx });
+  const handleBulkDelete = () => setConfirmDelete({ kind: "bulk" });
+  const handleDeleteMonthly = (m) => setConfirmDelete({ kind: "monthly", payload: m });
+
+  const onConfirmDelete = () => {
+    if (!confirmDelete) return;
+    if (confirmDelete.kind === "tx") {
+      deleteTransaction(confirmDelete.payload);
+    } else if (confirmDelete.kind === "bulk") {
+      deleteSelectedTransactions();
+    } else if (confirmDelete.kind === "monthly") {
+      deleteMonthlyRecord?.(confirmDelete.payload.id);
+    }
+    setConfirmDelete(null);
+  };
 
   const pageStyle = {
     minHeight: "100vh",
@@ -106,6 +161,8 @@ export function ModernApp({
     WebkitFontSmoothing: "antialiased",
   };
 
+  const bulkCount = confirmDelete?.kind === "bulk" ? (selectedTxIds?.size || 0) : 0;
+
   return (
     <div style={pageStyle}>
       <Sidebar
@@ -113,7 +170,7 @@ export function ModernApp({
         navItems={navItems}
         route={route}
         setRoute={setRoute}
-        onAdd={onAdd}
+        onAdd={handleAddTx}
         isMobile={isMobile}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
@@ -125,7 +182,7 @@ export function ModernApp({
           navItems={navItems}
           isMobile={isMobile}
           onMenuClick={() => setDrawerOpen(true)}
-          onAdd={onAdd}
+          onAdd={handleAddTx}
         />
         <main style={{
           flex: 1,
@@ -133,13 +190,53 @@ export function ModernApp({
           maxWidth: 1440, width: "100%", margin: "0 auto",
         }}>
           {route === "dashboard" && (
-            <ModernDashboard theme={theme} transactions={txs} getCard={getCardById} getOwner={getOwnerById} setRoute={setRoute} chartStyle={chartStyle} isMobile={isMobile} />
+            <ModernDashboard
+              theme={theme}
+              transactions={txs}
+              owners={owners}
+              ownerStats={ownerStats}
+              getCard={getCardById}
+              getOwner={getOwnerById}
+              setRoute={setRoute}
+              chartStyle={chartStyle}
+              isMobile={isMobile}
+            />
           )}
           {route === "transactions" && (
-            <ModernTransactions theme={theme} transactions={txs} getCard={getCardById} getOwner={getOwnerById} owners={owners} cards={cards} onAdd={onAdd} onEdit={onEdit} onDelete={onDelete} isMobile={isMobile} />
+            <ModernTransactions
+              theme={theme}
+              transactions={txs}
+              getCard={getCardById}
+              getOwner={getOwnerById}
+              owners={owners}
+              cards={cards}
+              onAdd={handleAddTx}
+              onEdit={handleEditTx}
+              onDelete={handleDeleteTx}
+              isMobile={isMobile}
+              historyPeriods={historyPeriods}
+              selectedPeriod={selectedPeriod}
+              setSelectedPeriod={setSelectedPeriod}
+              loadingHistory={loadingHistory}
+              selectedTxIds={selectedTxIds}
+              setSelectedTxIds={setSelectedTxIds}
+              onBulkDelete={handleBulkDelete}
+            />
           )}
           {route === "monthly" && (
-            <ModernMonthly theme={theme} transactions={txs} chartStyle={chartStyle} isMobile={isMobile} />
+            <ModernMonthly
+              theme={theme}
+              transactions={txs}
+              monthly={monthly}
+              chartStyle={chartStyle}
+              isMobile={isMobile}
+              editModeMonthly={editModeMonthly}
+              setEditModeMonthly={setEditModeMonthly}
+              setMonthlyForm={setMonthlyForm}
+              setShowMonthlyForm={setShowMonthlyForm}
+              setEditingMonthlyId={setEditingMonthlyId}
+              onDeleteMonthly={handleDeleteMonthly}
+            />
           )}
           {route === "settings" && (
             <ModernSettings
@@ -157,9 +254,73 @@ export function ModernApp({
         </main>
         {isMobile && <BottomTabs theme={theme} navItems={navItems} route={route} setRoute={setRoute} />}
       </div>
+
+      {/* Themed transaction form */}
+      <TransactionForm
+        theme={theme}
+        txForm={txForm}
+        setTxForm={setTxForm}
+        editingTxId={editingTxId}
+        setEditingTxId={setEditingTxId}
+        showTxForm={showTxForm}
+        setShowTxForm={setShowTxForm}
+        submitting={submitting}
+        cardTypes={cardTypes}
+        ownerInfoMap={ownerInfoMap}
+        recentRates={recentRates}
+        onSubmit={submitTransaction}
+      />
+
+      {/* Themed monthly form */}
+      <MonthlyForm
+        theme={theme}
+        monthlyForm={monthlyForm}
+        setMonthlyForm={setMonthlyForm}
+        showMonthlyForm={showMonthlyForm}
+        setShowMonthlyForm={setShowMonthlyForm}
+        editingMonthlyId={editingMonthlyId}
+        setEditingMonthlyId={setEditingMonthlyId}
+        submitting={submitting}
+        onSubmit={submitMonthly}
+      />
+
+      {/* Themed confirm dialog (single tx, bulk, monthly) */}
+      <ConfirmDialog
+        open={!!confirmDelete}
+        theme={theme}
+        danger
+        title={
+          confirmDelete?.kind === "bulk"
+            ? `Delete ${bulkCount} transaction${bulkCount === 1 ? "" : "s"}?`
+            : confirmDelete?.kind === "monthly"
+              ? "Delete monthly record?"
+              : "Delete transaction?"
+        }
+        message={
+          confirmDelete?.kind === "bulk"
+            ? "This action will permanently delete the selected transactions."
+            : confirmDelete?.kind === "monthly"
+              ? `${confirmDelete?.payload?.month} will be permanently removed.`
+              : "This transaction will be permanently deleted and cannot be recovered."
+        }
+        confirmLabel={
+          confirmDelete?.kind === "bulk"
+            ? `Delete ${bulkCount}`
+            : "Delete"
+        }
+        onConfirm={onConfirmDelete}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }
 
-// Re-export so callers can hook into the same palette resolver as the classic app.
+function defaultDate() {
+  const d = new Date();
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yy = String(d.getFullYear()).slice(-2);
+  return `${dd}/${mm}/${yy}`;
+}
+
 export { getThemeColors };
