@@ -209,6 +209,28 @@ function AppInner() {
     finally { setSubmitting(false); }
   }, [submitting]);
 
+  // Archive current transactions to history AND record their net profit total in
+  // the monthly table. Used by Modern view's "Archive period" action.
+  const archiveCurrentPeriodWithMonthly = useCallback(async () => {
+    if (submitting) return;
+    if (!transactions.length) { toast.error("No transactions to archive"); return; }
+    setSubmitting(true);
+    try {
+      const now = new Date();
+      const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const period = prev.toLocaleString("default", { month: "long", year: "numeric" });
+      const netProfitTotal = transactions.reduce((s, t) => s + (parseFloat(t.netProfit) || 0), 0);
+      const { error: monthlyErr } = await supabase.from("monthly").insert({ month: period, profit: netProfitTotal });
+      if (monthlyErr) throw monthlyErr;
+      const { error: archiveErr } = await supabase.rpc("archive_transactions", { p_period: period });
+      if (archiveErr) throw archiveErr;
+      toast.success(`Archived ${transactions.length} transactions to ${period}; saved net profit to monthly`);
+      fetchData(true);
+      fetchHistoryPeriods();
+    } catch (err) { toast.error("Failed to archive: " + err.message); setError("Failed to archive: " + err.message); }
+    finally { setSubmitting(false); }
+  }, [submitting, transactions]);
+
   const deleteSelectedTransactions = useCallback(() => {
     if (selectedTxIds.size === 0) return;
     const ids = [...selectedTxIds];
@@ -611,6 +633,7 @@ function AppInner() {
         setSelectedPeriod={setSelectedPeriod}
         historyTransactions={historyTransactions}
         loadingHistory={loadingHistory}
+        onArchive={archiveCurrentPeriodWithMonthly}
       />
     );
   }

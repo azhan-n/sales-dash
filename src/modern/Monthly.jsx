@@ -1,7 +1,7 @@
 // Modern Monthly view — KPI tiles + trend chart + month-by-month bar list
 // + edit mode (add/edit/delete) + PDF export.
 import React, { useState } from "react";
-import { Card, Btn, I, fmtCompact } from "./ui";
+import { Card, Btn, I, fmtFull } from "./ui";
 import { TrendChart } from "./charts";
 import { aggregateByMonth, computeStats } from "./aggregations";
 import { exportMonthlyPDF } from "../utils";
@@ -19,6 +19,8 @@ export function ModernMonthly({
   setShowMonthlyForm,
   setEditingMonthlyId,
   onDeleteMonthly,
+  onRequestArchive,
+  archiveCount = 0,
 }) {
   const t = theme;
   const stats = computeStats(transactions);
@@ -34,6 +36,11 @@ export function ModernMonthly({
           <div style={{ fontSize: 13, color: t.textSec, marginTop: 4 }}>{txMonthly.length} months from transactions · {monthly.length} saved records</div>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {onRequestArchive && (
+            <Btn theme={t} size="sm" onClick={onRequestArchive} disabled={archiveCount === 0} title={archiveCount === 0 ? "Nothing to archive" : `Archive ${archiveCount} transactions`}>
+              {I.download(13)} Archive period
+            </Btn>
+          )}
           <Btn theme={t} size="sm" onClick={() => exportMonthlyPDF(monthly)} disabled={!monthly.length}>{I.download(13)} Export PDF</Btn>
           {setEditModeMonthly && (
             <Btn theme={t} size="sm" variant={editModeMonthly ? "primary" : "secondary"} onClick={() => setEditModeMonthly(!editModeMonthly)}>
@@ -51,17 +58,17 @@ export function ModernMonthly({
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 12 }}>
         <Card theme={t} pad={16}>
           <div style={{ fontSize: 11, fontWeight: 500, color: t.textMuted }}>Total net</div>
-          <div style={{ fontSize: 22, fontWeight: 600, color: t.text, marginTop: 2, fontVariantNumeric: "tabular-nums" }}>{fmtCompact(stats.totalNet)}</div>
+          <div style={{ fontSize: "clamp(14px, 4cqi, 20px)", fontWeight: 600, color: t.text, marginTop: 2, fontVariantNumeric: "tabular-nums", lineHeight: 1.15, wordBreak: "break-all" }}>{fmtFull(stats.totalNet)}</div>
           <div style={{ fontSize: 10, color: t.textMuted, marginTop: 2 }}>MVR</div>
         </Card>
         <Card theme={t} pad={16}>
           <div style={{ fontSize: 11, fontWeight: 500, color: t.textMuted }}>Avg / month</div>
-          <div style={{ fontSize: 22, fontWeight: 600, color: t.text, marginTop: 2, fontVariantNumeric: "tabular-nums" }}>{fmtCompact(txMonthly.length ? stats.totalNet / txMonthly.length : 0)}</div>
+          <div style={{ fontSize: "clamp(14px, 4cqi, 20px)", fontWeight: 600, color: t.text, marginTop: 2, fontVariantNumeric: "tabular-nums", lineHeight: 1.15, wordBreak: "break-all" }}>{fmtFull(txMonthly.length ? stats.totalNet / txMonthly.length : 0)}</div>
           <div style={{ fontSize: 10, color: t.textMuted, marginTop: 2 }}>MVR</div>
         </Card>
         <Card theme={t} pad={16}>
           <div style={{ fontSize: 11, fontWeight: 500, color: t.textMuted }}>Best month</div>
-          <div style={{ fontSize: 22, fontWeight: 600, color: t.positive, marginTop: 2, fontVariantNumeric: "tabular-nums" }}>{fmtCompact(stats.bestMonth.net)}</div>
+          <div style={{ fontSize: "clamp(14px, 4cqi, 20px)", fontWeight: 600, color: t.positive, marginTop: 2, fontVariantNumeric: "tabular-nums", lineHeight: 1.15, wordBreak: "break-all" }}>{fmtFull(stats.bestMonth.net)}</div>
           <div style={{ fontSize: 10, color: t.textMuted, marginTop: 2 }}>{stats.bestMonth.label}</div>
         </Card>
         <Card theme={t} pad={16}>
@@ -99,7 +106,7 @@ export function ModernMonthly({
                     <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${w}%`, background: pos ? t.positive : t.negative, borderRadius: 4, transition: "width .3s" }} />
                   </div>
                 )}
-                <div style={{ textAlign: "right", color: pos ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums", fontSize: 13 }}>{pos ? "+" : ""}{fmtCompact(m.net)}</div>
+                <div style={{ textAlign: "right", color: pos ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums", fontSize: 13 }}>{pos ? "+" : ""}{fmtFull(m.net)}</div>
                 {isMobile && (
                   <div style={{ gridColumn: "1 / -1", height: 6, background: t.surfaceDeep, borderRadius: 3, overflow: "hidden", position: "relative", marginTop: -4 }}>
                     <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${w}%`, background: pos ? t.positive : t.negative, borderRadius: 3 }} />

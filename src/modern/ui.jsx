@@ -103,6 +103,15 @@ export function fmtCompact(v) {
   if (abs >= 1e3) return (v / 1e3).toFixed(1) + "K";
   return Number(v).toFixed(0);
 }
+export function fmtFull(v, digits = 2) {
+  if (v == null || isNaN(v)) return "—";
+  const sign = v < 0 ? "−" : "";
+  return sign + Math.abs(Number(v)).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
+export function fmtInt(v) {
+  if (v == null || isNaN(v)) return "—";
+  return Number(v).toLocaleString();
+}
 export function fmtDate(d) {
   const dt = d instanceof Date ? d : new Date(d);
   if (isNaN(dt.getTime())) return "—";

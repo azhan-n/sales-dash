@@ -96,6 +96,7 @@ export function ModernApp({
   // archive history
   historyPeriods, selectedPeriod, setSelectedPeriod,
   historyTransactions, loadingHistory,
+  onArchive,
 }) {
   const localIsMobile = useIsMobile(760);
   const isMobile = parentIsMobile ?? localIsMobile;
@@ -107,6 +108,7 @@ export function ModernApp({
   // Confirm dialog state for delete actions originating in Modern.
   const [confirmDelete, setConfirmDelete] = useState(null);    // { kind, payload }
   // kind: "tx" (single transaction), "bulk" (selected transactions), "monthly" (single monthly record)
+  const [confirmArchive, setConfirmArchive] = useState(false);
 
   useEffect(() => { lsSet("modern_route", route); }, [route]);
   useEffect(() => { lsSet("modern_chartStyle", chartStyle); }, [chartStyle]);
@@ -134,7 +136,12 @@ export function ModernApp({
     setShowTxForm(true);
   };
 
-  const handleEditTx = (tx) => editTransaction(tx);
+  const handleEditTx = (tx) => {
+    // The view receives Date-converted transactions; editTransaction expects the
+    // raw shape with a "dd/mm/yy" string date. Look up the original record by id.
+    const original = transactions.find((t) => t.id === tx.id) || tx;
+    editTransaction(original);
+  };
   const handleDeleteTx = (tx) => setConfirmDelete({ kind: "tx", payload: tx });
   const handleBulkDelete = () => setConfirmDelete({ kind: "bulk" });
   const handleDeleteMonthly = (m) => setConfirmDelete({ kind: "monthly", payload: m });
@@ -236,6 +243,8 @@ export function ModernApp({
               setShowMonthlyForm={setShowMonthlyForm}
               setEditingMonthlyId={setEditingMonthlyId}
               onDeleteMonthly={handleDeleteMonthly}
+              onRequestArchive={onArchive ? () => setConfirmArchive(true) : null}
+              archiveCount={transactions.length}
             />
           )}
           {route === "settings" && (
@@ -310,6 +319,23 @@ export function ModernApp({
         }
         onConfirm={onConfirmDelete}
         onCancel={() => setConfirmDelete(null)}
+      />
+
+      {/* Archive confirm dialog */}
+      <ConfirmDialog
+        open={confirmArchive}
+        theme={theme}
+        title="Archive current period?"
+        message={(() => {
+          const now = new Date();
+          const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          const period = prev.toLocaleString("default", { month: "long", year: "numeric" });
+          const net = transactions.reduce((s, t) => s + (parseFloat(t.netProfit) || 0), 0);
+          return `${transactions.length} transactions will move to history under "${period}". A monthly record with net profit ${net.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} will be created. The main table will be cleared.`;
+        })()}
+        confirmLabel="Archive"
+        onConfirm={() => { setConfirmArchive(false); onArchive?.(); }}
+        onCancel={() => setConfirmArchive(false)}
       />
     </div>
   );

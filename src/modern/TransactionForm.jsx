@@ -2,7 +2,7 @@
 // Uses the same txForm state shape so the existing submitTransaction handler works unchanged.
 import React, { useEffect, useRef, useState } from "react";
 import { Modal } from "./Modal";
-import { Btn, fmtCompact } from "./ui";
+import { Btn, fmtFull } from "./ui";
 
 const toInputDate = (ddmmyy) => {
   if (!ddmmyy) return "";
@@ -218,7 +218,7 @@ function Computed({ label, value, t, suffix = "MVR", color }) {
     <div>
       <div style={{ fontSize: 10, fontWeight: 600, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
       <div style={{ fontSize: 16, fontWeight: 600, color: color || t.text, fontVariantNumeric: "tabular-nums", marginTop: 2 }}>
-        {suffix === "%" ? `${value.toFixed(1)}%` : fmtCompact(value)}
+        {suffix === "%" ? `${value.toFixed(1)}%` : fmtFull(value)}
         {suffix !== "%" && <span style={{ fontSize: 10, color: t.textMuted, fontWeight: 500, marginLeft: 4 }}>{suffix}</span>}
       </div>
     </div>

@@ -1,7 +1,7 @@
 // Modern Transactions — filterable table with totals footer, mobile cards,
 // archive history selector, bulk select + delete, working PDF export.
 import React, { useState, useMemo } from "react";
-import { Card, Btn, CardTypeBadge, SelectChip, I, fmtCompact, fmtUSD, fmtDate } from "./ui";
+import { Card, Btn, CardTypeBadge, SelectChip, I, fmtFull, fmtUSD, fmtDate } from "./ui";
 import { exportTransactionsPDF } from "../utils";
 
 function Checkbox({ checked, indeterminate, onChange, theme, ariaLabel }) {
@@ -39,6 +39,11 @@ export function ModernTransactions({
 }) {
   const t = theme;
   const isHistory = selectedPeriod !== "current";
+  const [viewMode, setViewMode] = useState(() => {
+    try { return localStorage.getItem("modern_txViewMode") || (isMobile ? "cards" : "table"); } catch { return isMobile ? "cards" : "table"; }
+  });
+  React.useEffect(() => { try { localStorage.setItem("modern_txViewMode", viewMode); } catch {} }, [viewMode]);
+  const useCards = isMobile && viewMode === "cards";
   const [q, setQ] = useState("");
   const [cardFilter, setCardFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("all");
@@ -132,7 +137,7 @@ export function ModernTransactions({
           <div style={{ fontSize: 11, fontWeight: 600, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Ledger</div>
           <h1 style={{ margin: 0, fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", color: t.text }}>Transactions</h1>
           <div style={{ fontSize: 13, color: t.textSec, marginTop: 4 }}>
-            {filtered.length} of {transactions.length} shown · net {fmtCompact(totals.net)} MVR
+            {filtered.length} of {transactions.length} shown · net {fmtFull(totals.net)} MVR
             {isHistory && <span style={{ marginLeft: 8, color: t.textMuted }}>· read-only ({selectedPeriod})</span>}
           </div>
         </div>
@@ -159,6 +164,18 @@ export function ModernTransactions({
         </div>
         <SelectChip theme={t} value={cardFilter} options={cardTypeOptions.map((c) => ({ key: c, label: c === "all" ? "All card types" : c }))} onChange={setCardFilter} />
         <SelectChip theme={t} value={ownerFilter} options={[{ key: "all", label: "All owners" }, ...owners.map((o) => ({ key: o.id, label: o.name }))]} onChange={setOwnerFilter} />
+        {isMobile && (
+          <div style={{ display: "inline-flex", borderRadius: 6, border: `1px solid ${t.border}`, overflow: "hidden", background: t.surfaceAlt }}>
+            {["table", "cards"].map((m) => (
+              <button key={m} onClick={() => setViewMode(m)} style={{
+                padding: "6px 10px", fontSize: 12, fontWeight: 500,
+                background: viewMode === m ? t.accentSoft : "transparent",
+                color: viewMode === m ? t.accent : t.textSec,
+                border: "none", cursor: "pointer", fontFamily: "inherit", textTransform: "capitalize",
+              }}>{m}</button>
+            ))}
+          </div>
+        )}
         {(q || cardFilter !== "all" || ownerFilter !== "all") && (
           <Btn theme={t} size="sm" variant="ghost" onClick={() => { setQ(""); setCardFilter("all"); setOwnerFilter("all"); }}>{I.x(12)} Clear</Btn>
         )}
@@ -187,7 +204,7 @@ export function ModernTransactions({
         </div>
       )}
 
-      {isMobile ? (
+      {useCards ? (
         <Card theme={t} pad={0} style={{ overflow: "hidden" }}>
           <div style={{ padding: "10px 14px", borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: t.surfaceAlt }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>Sort</div>
@@ -222,14 +239,14 @@ export function ModernTransactions({
                       </div>
                     </div>
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <div style={{ color: pos ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums", fontSize: 15, whiteSpace: "nowrap" }}>{pos ? "+" : ""}{fmtCompact(tx.netProfit)}</div>
+                      <div style={{ color: pos ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums", fontSize: 15, whiteSpace: "nowrap" }}>{pos ? "+" : ""}{fmtFull(tx.netProfit)}</div>
                       <div style={{ color: pos ? t.positive : t.negative, fontSize: 11, fontVariantNumeric: "tabular-nums", opacity: 0.8 }}>{(Number(tx.profitMargin) || 0).toFixed(1)}%</div>
                     </div>
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 11, color: t.textMuted, paddingTop: 8, borderTop: `1px dashed ${t.border}` }}>
                     <div><span style={{ opacity: 0.7 }}>Buy</span> <span style={{ color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{fmtUSD(tx.buyAmount)} @ {(Number(tx.buyRate) || 0).toFixed(2)}</span></div>
                     <div><span style={{ opacity: 0.7 }}>Sell</span> <span style={{ color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{fmtUSD(tx.sellAmount)} @ {(Number(tx.sellRate) || 0).toFixed(2)}</span></div>
-                    <div><span style={{ opacity: 0.7 }}>Cost</span> <span style={{ color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{fmtCompact(tx.cost)} MVR</span></div>
+                    <div><span style={{ opacity: 0.7 }}>Cost</span> <span style={{ color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{fmtFull(tx.cost)} MVR</span></div>
                     {showActions && (
                       <div style={{ textAlign: "right", display: "flex", gap: 4, justifyContent: "flex-end" }}>
                         <button onClick={() => onEdit(tx)} style={{ padding: 6, background: "transparent", border: `1px solid ${t.border}`, color: t.textSec, cursor: "pointer", borderRadius: 6, display: "inline-flex", alignItems: "center" }}>{I.edit(13)}</button>
@@ -248,7 +265,7 @@ export function ModernTransactions({
             <div style={{ background: t.surfaceAlt, padding: "12px 16px", borderTop: `1px solid ${t.border}`, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, fontSize: 11 }}>
               <div>
                 <div style={{ color: t.textMuted, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Net · {filtered.length} rows</div>
-                <div style={{ color: totals.net >= 0 ? t.positive : t.negative, fontWeight: 600, fontSize: 15, fontVariantNumeric: "tabular-nums" }}>{totals.net >= 0 ? "+" : ""}{fmtCompact(totals.net)}</div>
+                <div style={{ color: totals.net >= 0 ? t.positive : t.negative, fontWeight: 600, fontSize: 15, fontVariantNumeric: "tabular-nums" }}>{totals.net >= 0 ? "+" : ""}{fmtFull(totals.net)}</div>
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ color: t.textMuted, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Avg margin</div>
@@ -259,8 +276,8 @@ export function ModernTransactions({
         </Card>
       ) : (
         <Card theme={t} pad={0} style={{ overflow: "hidden" }}>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, color: t.text }}>
+          <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: isMobile ? 12 : 13, color: t.text, minWidth: isMobile ? 900 : undefined }}>
               <thead>
                 <tr>
                   {showActions && (
@@ -308,8 +325,8 @@ export function ModernTransactions({
                       <td style={{ padding: "10px 12px", textAlign: "right", color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{fmtUSD(tx.buyAmount)}</td>
                       <td style={{ padding: "10px 12px", textAlign: "right", color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{(Number(tx.sellRate) || 0).toFixed(2)}</td>
                       <td style={{ padding: "10px 12px", textAlign: "right", color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{fmtUSD(tx.sellAmount)}</td>
-                      <td style={{ padding: "10px 12px", textAlign: "right", color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{fmtCompact(tx.cost)}</td>
-                      <td style={{ padding: "10px 12px", textAlign: "right", color: pos ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{pos ? "+" : ""}{fmtCompact(tx.netProfit)}</td>
+                      <td style={{ padding: "10px 12px", textAlign: "right", color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{fmtFull(tx.cost)}</td>
+                      <td style={{ padding: "10px 12px", textAlign: "right", color: pos ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{pos ? "+" : ""}{fmtFull(tx.netProfit)}</td>
                       <td style={{ padding: "10px 12px", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
                         <span style={{ color: pos ? t.positive : t.negative }}>{(Number(tx.profitMargin) || 0).toFixed(1)}%</span>
                       </td>
@@ -338,8 +355,8 @@ export function ModernTransactions({
                     <td style={{ padding: "10px 12px", textAlign: "right", color: t.text, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{fmtUSD(totals.buyAmt)}</td>
                     <td style={{ padding: "10px 12px", textAlign: "right", color: t.text, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{totals.avgSellRate.toFixed(2)}</td>
                     <td style={{ padding: "10px 12px", textAlign: "right", color: t.text, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{fmtUSD(totals.sellAmt)}</td>
-                    <td style={{ padding: "10px 12px", textAlign: "right", color: t.text, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{fmtCompact(totals.cost)}</td>
-                    <td style={{ padding: "10px 12px", textAlign: "right", color: totals.net >= 0 ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{totals.net >= 0 ? "+" : ""}{fmtCompact(totals.net)}</td>
+                    <td style={{ padding: "10px 12px", textAlign: "right", color: t.text, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{fmtFull(totals.cost)}</td>
+                    <td style={{ padding: "10px 12px", textAlign: "right", color: totals.net >= 0 ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{totals.net >= 0 ? "+" : ""}{fmtFull(totals.net)}</td>
                     <td style={{ padding: "10px 12px", textAlign: "right", color: totals.avgMargin >= 0 ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{totals.avgMargin.toFixed(1)}%</td>
                     {showActions && <td></td>}
                   </tr>

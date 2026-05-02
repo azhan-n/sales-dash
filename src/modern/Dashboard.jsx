@@ -1,6 +1,6 @@
 // Modern Overview — hero KPI + sparkline tiles + charts + recent activity
 import React from "react";
-import { Card, Btn, CardTypeBadge, I, fmtCompact, fmtUSD, fmtDate, cardColors } from "./ui";
+import { Card, Btn, CardTypeBadge, I, fmtFull, fmtUSD, fmtDate, cardColors } from "./ui";
 import { TrendChart, Donut, Scatter, Histogram, Sparkline, StackedBars } from "./charts";
 import { aggregateByMonth, aggregateByCardType, computeStats } from "./aggregations";
 import { OwnerStatsPanel } from "./OwnerStatsPanel";
@@ -23,7 +23,7 @@ function StatTile({ theme: t, label, value, sub, spark, positive }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 11, fontWeight: 500, color: t.textMuted }}>{label}</div>
-          <div style={{ fontSize: 22, fontWeight: 600, color: t.text, letterSpacing: "-0.02em", marginTop: 2, fontVariantNumeric: "tabular-nums" }}>{value}</div>
+          <div style={{ fontSize: "clamp(14px, 4cqi, 20px)", fontWeight: 600, color: t.text, letterSpacing: "-0.02em", marginTop: 2, fontVariantNumeric: "tabular-nums", lineHeight: 1.15, wordBreak: "break-all" }}>{value}</div>
           <div style={{ fontSize: 10, color: t.textMuted, marginTop: 2 }}>{sub}</div>
         </div>
         {spark && <Sparkline values={spark} theme={t} positive={positive} w={70} h={30} />}
@@ -78,8 +78,8 @@ export function ModernDashboard({ theme, transactions, owners, ownerStats, getCa
           <div style={{ position: "relative" }}>
             <div style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", opacity: 0.85 }}>All-time net profit</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 6 }}>
-              <div style={{ fontSize: isMobile ? 34 : 44, fontWeight: 600, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums" }}>
-                {fmtCompact(stats.totalNet)}
+              <div style={{ fontSize: isMobile ? "clamp(22px, 8vw, 30px)" : "clamp(28px, 3.5vw, 40px)", fontWeight: 600, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums", lineHeight: 1.1, wordBreak: "break-all" }}>
+                {fmtFull(stats.totalNet)}
               </div>
               <div style={{ fontSize: 14, opacity: 0.85 }}>MVR</div>
             </div>
@@ -87,11 +87,11 @@ export function ModernDashboard({ theme, transactions, owners, ownerStats, getCa
               <span style={{ display: "inline-flex", alignItems: "center", gap: 3, padding: "2px 6px", background: "rgba(255,255,255,0.2)", borderRadius: 999 }}>
                 {stats.momPct >= 0 ? I.arrowUp(11) : I.arrowDown(11)} {Math.abs(stats.momPct).toFixed(1)}%
               </span>
-              <span>vs previous month ({fmtCompact(stats.prevMonthNet)} MVR)</span>
+              <span>vs previous month ({fmtFull(stats.prevMonthNet)} MVR)</span>
             </div>
             <div style={{ marginTop: 20, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.18)" }}>
-              <HeroStat label="Gross profit" value={fmtCompact(stats.totalGross)} suffix="MVR" />
-              <HeroStat label="Cost basis" value={fmtCompact(stats.totalCost)} suffix="MVR" />
+              <HeroStat label="Gross profit" value={fmtFull(stats.totalGross)} suffix="MVR" />
+              <HeroStat label="Cost basis" value={fmtFull(stats.totalCost)} suffix="MVR" />
               <HeroStat label="Margin" value={stats.avgMargin.toFixed(1) + "%"} />
             </div>
           </div>
@@ -100,8 +100,8 @@ export function ModernDashboard({ theme, transactions, owners, ownerStats, getCa
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: isMobile ? 8 : 12 }}>
           <StatTile theme={t} label="Transactions" value={transactions.length.toString()} sub="12-month window" spark={monthly.map((m) => m.count)} positive />
           <StatTile theme={t} label="Avg. sell rate" value={stats.avgSellRate.toFixed(2)} sub="MVR / USD" spark={monthly.map((m) => m.avgSellRate)} positive />
-          <StatTile theme={t} label="This month" value={fmtCompact(stats.thisMonthNet)} sub={`${stats.thisMonthCount} transactions`} spark={monthly.slice(-6).map((m) => m.net)} positive={stats.thisMonthNet >= 0} />
-          <StatTile theme={t} label="Best month" value={fmtCompact(stats.bestMonth.net)} sub={stats.bestMonth.label} spark={monthly.map((m) => m.net)} positive />
+          <StatTile theme={t} label="This month" value={fmtFull(stats.thisMonthNet)} sub={`${stats.thisMonthCount} transactions`} spark={monthly.slice(-6).map((m) => m.net)} positive={stats.thisMonthNet >= 0} />
+          <StatTile theme={t} label="Best month" value={fmtFull(stats.bestMonth.net)} sub={stats.bestMonth.label} spark={monthly.map((m) => m.net)} positive />
         </div>
       </div>
 
@@ -176,7 +176,7 @@ export function ModernDashboard({ theme, transactions, owners, ownerStats, getCa
                         <CardTypeBadge type={card?.type} theme={t} />
                         <span style={{ color: t.textSec, fontSize: 11, fontVariantNumeric: "tabular-nums" }}>••{card?.number}</span>
                       </div>
-                      <div style={{ color: pos ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums", fontSize: 13, whiteSpace: "nowrap" }}>{pos ? "+" : ""}{fmtCompact(tx.netProfit)}</div>
+                      <div style={{ color: pos ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums", fontSize: 13, whiteSpace: "nowrap" }}>{pos ? "+" : ""}{fmtFull(tx.netProfit)}</div>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: t.textMuted }}>
                       <span>{owner?.name} · {fmtDate(tx.date)}</span>
@@ -194,7 +194,7 @@ export function ModernDashboard({ theme, transactions, owners, ownerStats, getCa
                     <span style={{ color: t.textMuted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>· {owner?.name}</span>
                   </div>
                   <div style={{ color: t.textSec, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>{fmtUSD(tx.sellAmount)}</div>
-                  <div style={{ color: pos ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>{pos ? "+" : ""}{fmtCompact(tx.netProfit)}</div>
+                  <div style={{ color: pos ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>{pos ? "+" : ""}{fmtFull(tx.netProfit)}</div>
                 </div>
               );
             })}
