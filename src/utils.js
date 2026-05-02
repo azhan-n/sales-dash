@@ -44,6 +44,33 @@ export const getTodayDate = () => {
   return `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}/${String(now.getFullYear()).slice(-2)}`;
 };
 
+// --- Infer the archive-period label from transactions' dominant month ---
+// Transactions store their date as "dd/mm/yy". We group rows by month/year,
+// pick the month with the most rows, and format it as e.g. "April 2026".
+// Falls back to the current month if no parseable dates.
+export const inferArchivePeriod = (transactions = []) => {
+  const counts = {};
+  transactions.forEach((t) => {
+    const parts = String(t.date || "").split("/");
+    if (parts.length !== 3) return;
+    const m = parseInt(parts[1], 10), y = parseInt(parts[2], 10);
+    if (!m || !y) return;
+    const key = `${m}/${y}`;
+    counts[key] = (counts[key] || 0) + 1;
+  });
+  let bestKey = null, bestCount = 0;
+  Object.entries(counts).forEach(([k, c]) => { if (c > bestCount) { bestKey = k; bestCount = c; } });
+  let date;
+  if (bestKey) {
+    const [m, y] = bestKey.split("/").map(Number);
+    date = new Date(2000 + y, m - 1, 1);
+  } else {
+    const now = new Date();
+    date = new Date(now.getFullYear(), now.getMonth(), 1);
+  }
+  return date.toLocaleString("default", { month: "long", year: "numeric" });
+};
+
 // --- Export to CSV ---
 export const exportToCSV = (transactions, getCardById, getOwnerById, filename = "transactions") => {
   const headers = ["Date", "Card Type", "Card No.", "Owner", "Buy Rate", "Buy Amount", "Sell Rate", "Sell Amount", "Cost", "Gross Profit", "Net Profit", "Margin %"];

@@ -3,6 +3,7 @@
 // Owns its own modal tree (TransactionForm, MonthlyForm, ConfirmDialog) styled to the Modern theme.
 import React, { useEffect, useMemo, useState } from "react";
 import { getThemeColors } from "../themes";
+import { inferArchivePeriod } from "../utils";
 import { Sidebar, TopBar, BottomTabs } from "./Nav";
 import { I } from "./ui";
 import { ModernDashboard } from "./Dashboard";
@@ -327,9 +328,7 @@ export function ModernApp({
         theme={theme}
         title="Archive current period?"
         message={(() => {
-          const now = new Date();
-          const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-          const period = prev.toLocaleString("default", { month: "long", year: "numeric" });
+          const period = inferArchivePeriod(transactions);
           const net = transactions.reduce((s, t) => s + (parseFloat(t.netProfit) || 0), 0);
           return `${transactions.length} transactions will move to history under "${period}". A monthly record with net profit ${net.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} will be created. The main table will be cleared.`;
         })()}

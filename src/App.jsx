@@ -10,7 +10,7 @@ import {
 import { supabase } from "./supabaseClient";
 import { ICON_PACKS, ICON_PACK_KEYS } from "./iconPacks";
 import { FONTS, THEME_OPTIONS, getThemeLayout, getThemeColors } from "./themes";
-import { normalizeCardType, CARD_TYPES, getCardTypeColor, getCardTypeBadge, getTodayDate, exportToCSV, exportMonthlyToCSV, exportTransactionsPDF, exportMonthlyPDF } from "./utils";
+import { normalizeCardType, CARD_TYPES, getCardTypeColor, getCardTypeBadge, getTodayDate, exportToCSV, exportMonthlyToCSV, exportTransactionsPDF, exportMonthlyPDF, inferArchivePeriod } from "./utils";
 import { SimplePieChart, ChartToggle, StatIcon } from "./Charts";
 import { ToastProvider, useToast } from "./Toast";
 import { SpeedInsights } from "@vercel/speed-insights/react";
@@ -216,9 +216,7 @@ function AppInner() {
     if (!transactions.length) { toast.error("No transactions to archive"); return; }
     setSubmitting(true);
     try {
-      const now = new Date();
-      const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      const period = prev.toLocaleString("default", { month: "long", year: "numeric" });
+      const period = inferArchivePeriod(transactions);
       const netProfitTotal = transactions.reduce((s, t) => s + (parseFloat(t.netProfit) || 0), 0);
       const { error: monthlyErr } = await supabase.from("monthly").insert({ month: period, profit: netProfitTotal });
       if (monthlyErr) throw monthlyErr;
