@@ -50,7 +50,7 @@ BEGIN
     p_period, card_type, card_number, owner,
     buy_rate, buy_amount, sell_rate, sell_amount,
     cost, gross_profit, net_profit,
-    COALESCE(date, to_char(CURRENT_DATE, 'DD/MM/YY'))
+    COALESCE(date, to_char(CURRENT_DATE, 'DD/MM/YYYY'))
   FROM transactions;
 
   -- Clear current transactions (WHERE clause required by Supabase

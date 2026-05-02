@@ -38,32 +38,59 @@ export const cardTypeColors = {
 export const getCardTypeColor = (type) =>
   cardTypeColors[normalizeCardType(type)] || cardTypeColors["UNKNOWN"];
 
-// --- Today's date in dd/mm/yy ---
+// --- Date helpers ---
+// Canonical display format: dd/mm/yyyy. Internal sort/compare key: yyyy-mm-dd.
+// normalizeDate accepts dd/mm/yyyy, dd/mm/yy (legacy, assumed 20yy), or yyyy-mm-dd
+// and returns dd/mm/yyyy. Returns "" for falsy/unparseable input.
+export const normalizeDate = (s) => {
+  if (!s) return "";
+  const str = String(s).trim();
+  if (str.includes("-")) {
+    const [yyyy, mm, dd] = str.split("-");
+    if (yyyy?.length === 4 && mm && dd) return `${dd.padStart(2, "0")}/${mm.padStart(2, "0")}/${yyyy}`;
+    return "";
+  }
+  const [dd, mm, yy] = str.split("/");
+  if (!dd || !mm || !yy) return "";
+  const yyyy = yy.length === 2 ? `20${yy}` : yy;
+  return `${dd.padStart(2, "0")}/${mm.padStart(2, "0")}/${yyyy}`;
+};
+
+// Sort/compare key for a dd/mm/yyyy (or legacy) date. Empty → "".
+export const dateSortKey = (s) => {
+  const n = normalizeDate(s);
+  if (!n) return "";
+  const [dd, mm, yyyy] = n.split("/");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
+// Today as dd/mm/yyyy.
 export const getTodayDate = () => {
   const now = new Date();
-  return `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}/${String(now.getFullYear()).slice(-2)}`;
+  return `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`;
 };
 
 // --- Infer the archive-period label from transactions' dominant month ---
-// Transactions store their date as "dd/mm/yy". We group rows by month/year,
-// pick the month with the most rows, and format it as e.g. "April 2026".
+// Uses normalizeDate so it handles dd/mm/yyyy, dd/mm/yy, or yyyy-mm-dd input.
+// Picks the month with the most rows and formats it as e.g. "April 2026".
 // Falls back to the current month if no parseable dates.
 export const inferArchivePeriod = (transactions = []) => {
   const counts = {};
   transactions.forEach((t) => {
-    const parts = String(t.date || "").split("/");
-    if (parts.length !== 3) return;
-    const m = parseInt(parts[1], 10), y = parseInt(parts[2], 10);
-    if (!m || !y) return;
-    const key = `${m}/${y}`;
+    const norm = normalizeDate(t.date); // always dd/mm/yyyy
+    if (!norm) return;
+    const parts = norm.split("/");
+    const m = parseInt(parts[1], 10), yyyy = parseInt(parts[2], 10);
+    if (!m || !yyyy) return;
+    const key = `${m}/${yyyy}`;
     counts[key] = (counts[key] || 0) + 1;
   });
   let bestKey = null, bestCount = 0;
   Object.entries(counts).forEach(([k, c]) => { if (c > bestCount) { bestKey = k; bestCount = c; } });
   let date;
   if (bestKey) {
-    const [m, y] = bestKey.split("/").map(Number);
-    date = new Date(2000 + y, m - 1, 1);
+    const [m, yyyy] = bestKey.split("/").map(Number);
+    date = new Date(yyyy, m - 1, 1);
   } else {
     const now = new Date();
     date = new Date(now.getFullYear(), now.getMonth(), 1);

@@ -10,7 +10,7 @@ import {
 import { supabase } from "./supabaseClient";
 import { ICON_PACKS, ICON_PACK_KEYS } from "./iconPacks";
 import { FONTS, THEME_OPTIONS, getThemeLayout, getThemeColors } from "./themes";
-import { normalizeCardType, CARD_TYPES, getCardTypeColor, getCardTypeBadge, getTodayDate, exportToCSV, exportMonthlyToCSV, exportTransactionsPDF, exportMonthlyPDF, inferArchivePeriod } from "./utils";
+import { normalizeCardType, CARD_TYPES, getCardTypeColor, getCardTypeBadge, getTodayDate, normalizeDate, dateSortKey, exportToCSV, exportMonthlyToCSV, exportTransactionsPDF, exportMonthlyPDF, inferArchivePeriod } from "./utils";
 import { SimplePieChart, ChartToggle, StatIcon } from "./Charts";
 import { ToastProvider, useToast } from "./Toast";
 import { SpeedInsights } from "@vercel/speed-insights/react";
@@ -185,7 +185,7 @@ function AppInner() {
           id: r.id, cardType: r.card_type, cardNumber: r.card_number, owner: r.owner,
           buyRate: r.buy_rate, buyAmount: r.buy_amount, sellRate: r.sell_rate, sellAmount: r.sell_amount,
           cost: parseFloat(r.cost) || 0, grossProfit: parseFloat(r.gross_profit) || 0,
-          netProfit: parseFloat(r.net_profit) || 0, date: r.date || "",
+          netProfit: parseFloat(r.net_profit) || 0, date: normalizeDate(r.date),
           profitMargin: (parseFloat(r.cost) || 0) > 0 ? ((parseFloat(r.net_profit) || 0) / (parseFloat(r.cost) || 0)) * 100 : 0,
         })));
       }
@@ -422,7 +422,7 @@ function AppInner() {
       const txData = (txRes.data || []).map((r, i) => ({
         id: r.id, cardType: r.card_type, cardNumber: r.card_number, owner: r.owner,
         buyRate: r.buy_rate, buyAmount: r.buy_amount, sellRate: r.sell_rate, sellAmount: r.sell_amount,
-        cost: r.cost, grossProfit: r.gross_profit, netProfit: r.net_profit, date: r.date || "",
+        cost: r.cost, grossProfit: r.gross_profit, netProfit: r.net_profit, date: normalizeDate(r.date),
       }));
       if (txData.length > 0) processTransactions(txData);
       else { setTransactions([]); setOwners([]); setCards([]); setStats({}); }
@@ -434,8 +434,8 @@ function AppInner() {
   useEffect(() => { if (theme === "auto") { const mq = window.matchMedia("(prefers-color-scheme: dark)"); const h = () => setTheme("auto"); mq.addEventListener("change", h); return () => mq.removeEventListener("change", h); } }, [theme]);
 
   const processTransactions = (data) => {
-    const today = new Date().toISOString().split("T")[0];
-    const nd = data.map((t, i) => ({ ...t, cardType: normalizeCardType(t.cardType), date: t.date || today, _idx: i }));
+    const today = getTodayDate();
+    const nd = data.map((t, i) => ({ ...t, cardType: normalizeCardType(t.cardType), date: normalizeDate(t.date) || today, _idx: i }));
     const uo = [...new Set(nd.map((t) => t.owner))].map((name, i) => ({ id: i + 1, name }));
     const uc = []; const cm = new Map();
     nd.forEach((t) => { const k = `${t.cardType}-${t.cardNumber}`; if (!cm.has(k)) { cm.set(k, { id: uc.length + 1, type: t.cardType, number: t.cardNumber }); uc.push(cm.get(k)); } });
@@ -509,8 +509,11 @@ function AppInner() {
       if (filterCardType !== "all" && cd?.type !== filterCardType) return false;
       if (filterOwner !== "all" && t.ownerId !== parseInt(filterOwner)) return false;
       if (filterCardNumber !== "all" && cd?.number !== filterCardNumber) return false;
-      if (filterDateFrom && t.date && t.date < filterDateFrom) return false;
-      if (filterDateTo && t.date && t.date > filterDateTo) return false;
+      if (filterDateFrom || filterDateTo) {
+        const k = dateSortKey(t.date);
+        if (filterDateFrom && k && k < filterDateFrom) return false;
+        if (filterDateTo && k && k > filterDateTo) return false;
+      }
       if (q) {
         const haystack = [cd?.type, cd?.number, ow?.name, t.date].filter(Boolean).join(" ").toLowerCase();
         if (!haystack.includes(q)) return false;
@@ -523,7 +526,7 @@ function AppInner() {
   const sortedTransactions = useMemo(() => [...filteredTransactions].sort((a, b) => {
     if (!sortCol) return 0;
     let va, vb;
-    const colMap = { date: (t) => t.date || "", cardType: (t) => getCardById(t.cardId)?.type || "", cardNumber: (t) => getCardById(t.cardId)?.number || "", owner: (t) => getOwnerById(t.ownerId)?.name || "",
+    const colMap = { date: (t) => dateSortKey(t.date), cardType: (t) => getCardById(t.cardId)?.type || "", cardNumber: (t) => getCardById(t.cardId)?.number || "", owner: (t) => getOwnerById(t.ownerId)?.name || "",
       buyRate: (t) => parseFloat(t.buyRate) || 0, buyAmount: (t) => parseFloat(t.buyAmount) || 0, sellRate: (t) => parseFloat(t.sellRate) || 0, sellAmount: (t) => parseFloat(t.sellAmount) || 0,
       cost: (t) => t.cost, grossProfit: (t) => t.grossProfit, netProfit: (t) => t.netProfit, profitMargin: (t) => t.profitMargin };
     const fn = colMap[sortCol];
@@ -924,9 +927,9 @@ function AppInner() {
                       const prevDate = new Date(now2.getFullYear(), now2.getMonth() - 1, 1);
                       const prevYm = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, "0")}`;
                       const ownerTxAll = transactions.filter((t) => t.ownerId === o.id);
-                      const thisMonthNet = ownerTxAll.filter((t) => t.date && t.date.startsWith(thisYm)).reduce((s, t) => s + t.netProfit, 0);
-                      const prevMonthNet = ownerTxAll.filter((t) => t.date && t.date.startsWith(prevYm)).reduce((s, t) => s + t.netProfit, 0);
-                      const hasTrend = ownerTxAll.some((t) => t.date && t.date.startsWith(prevYm));
+                      const thisMonthNet = ownerTxAll.filter((t) => dateSortKey(t.date).startsWith(thisYm)).reduce((s, t) => s + t.netProfit, 0);
+                      const prevMonthNet = ownerTxAll.filter((t) => dateSortKey(t.date).startsWith(prevYm)).reduce((s, t) => s + t.netProfit, 0);
+                      const hasTrend = ownerTxAll.some((t) => dateSortKey(t.date).startsWith(prevYm));
                       const trendPct = hasTrend && prevMonthNet !== 0 ? ((thisMonthNet - prevMonthNet) / Math.abs(prevMonthNet)) * 100 : null;
                       return (
                         <div key={o.id} style={{ cursor: "pointer" }} onClick={() => setExpandedOwner(expandedOwner === o.id ? null : o.id)}>

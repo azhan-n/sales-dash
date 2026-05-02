@@ -31,16 +31,18 @@ export function TransactionForm({
     return () => window.removeEventListener("keydown", onKey);
   }, [showTxForm]);
 
-  // Date format conversion: dd/mm/yy ↔ yyyy-mm-dd (for input[type=date])
-  const toInputDate = (ddmmyy) => {
-    if (!ddmmyy) return "";
-    const [dd, mm, yy] = ddmmyy.split("/");
-    return dd && mm && yy ? `20${yy}-${mm}-${dd}` : "";
+  // dd/mm/yyyy ↔ yyyy-mm-dd (for input[type=date]). Tolerates legacy dd/mm/yy on read.
+  const toInputDate = (s) => {
+    if (!s) return "";
+    const [dd, mm, yy] = s.split("/");
+    if (!dd || !mm || !yy) return "";
+    const yyyy = yy.length === 2 ? `20${yy}` : yy;
+    return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
   };
   const fromInputDate = (yyyymmdd) => {
     if (!yyyymmdd) return "";
     const [yyyy, mm, dd] = yyyymmdd.split("-");
-    return dd && mm && yyyy ? `${dd}/${mm}/${yyyy.slice(-2)}` : "";
+    return dd && mm && yyyy ? `${dd}/${mm}/${yyyy}` : "";
   };
 
   const ownerList = Object.keys(ownerInfoMap || {}).sort();
