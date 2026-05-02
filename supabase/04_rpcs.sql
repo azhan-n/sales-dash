@@ -53,8 +53,9 @@ BEGIN
     COALESCE(date, to_char(CURRENT_DATE, 'DD/MM/YY'))
   FROM transactions;
 
-  -- Clear current transactions
-  DELETE FROM transactions;
+  -- Clear current transactions (WHERE clause required by Supabase
+  -- safety check, even inside a SECURITY DEFINER function).
+  DELETE FROM transactions WHERE id IS NOT NULL;
 END;
 $$;
 
