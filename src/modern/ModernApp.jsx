@@ -95,7 +95,7 @@ export function ModernApp({
   editingMonthlyId, setEditingMonthlyId,
   submitMonthly, deleteMonthlyRecord,
   // archive history
-  historyPeriods, selectedPeriod, setSelectedPeriod,
+  historyPeriods, selectedPeriod, setSelectedPeriod, fetchHistoryForPeriod,
   historyTransactions, loadingHistory,
   onArchive,
 }) {
@@ -224,7 +224,7 @@ export function ModernApp({
               isMobile={isMobile}
               historyPeriods={historyPeriods}
               selectedPeriod={selectedPeriod}
-              setSelectedPeriod={setSelectedPeriod}
+              setSelectedPeriod={(p) => { setSelectedPeriod(p); if (p !== "current") fetchHistoryForPeriod(p); }}
               loadingHistory={loadingHistory}
               selectedTxIds={selectedTxIds}
               setSelectedTxIds={setSelectedTxIds}

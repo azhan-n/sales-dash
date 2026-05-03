@@ -632,6 +632,7 @@ function AppInner() {
         historyPeriods={historyPeriods}
         selectedPeriod={selectedPeriod}
         setSelectedPeriod={setSelectedPeriod}
+        fetchHistoryForPeriod={fetchHistoryForPeriod}
         historyTransactions={historyTransactions}
         loadingHistory={loadingHistory}
         onArchive={archiveCurrentPeriodWithMonthly}
