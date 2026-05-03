@@ -64,6 +64,18 @@ export const dateSortKey = (s) => {
   return `${yyyy}-${mm}-${dd}`;
 };
 
+// Parse a stored date string (dd/mm/yyyy, dd/mm/yy, yyyy-mm-dd) or a Date
+// into a real Date. Returns null if unparseable. Avoids `new Date(str)` which
+// would misparse dd/mm/yyyy as the US mm/dd/yyyy locale.
+export const parseDate = (s) => {
+  if (s instanceof Date) return isNaN(s.getTime()) ? null : s;
+  const n = normalizeDate(s);
+  if (!n) return null;
+  const [dd, mm, yyyy] = n.split("/").map(Number);
+  const d = new Date(yyyy, mm - 1, dd);
+  return isNaN(d.getTime()) ? null : d;
+};
+
 // Today as dd/mm/yyyy.
 export const getTodayDate = () => {
   const now = new Date();

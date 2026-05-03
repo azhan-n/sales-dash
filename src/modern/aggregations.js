@@ -1,9 +1,11 @@
 // Pure aggregation helpers shared across modern views.
+import { parseDate } from "../utils";
+
 export function aggregateByMonth(txs) {
   const map = new Map();
   txs.forEach((tx) => {
-    const d = tx.date instanceof Date ? tx.date : new Date(tx.date);
-    if (isNaN(d.getTime())) return;
+    const d = parseDate(tx.date);
+    if (!d) return;
     const key = d.getFullYear() + "-" + d.getMonth();
     if (!map.has(key)) map.set(key, {
       key, date: new Date(d.getFullYear(), d.getMonth(), 1),

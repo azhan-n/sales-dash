@@ -1,5 +1,6 @@
 // Modern view UI primitives — icons, Btn, Badge, Card, formatters
 import React from "react";
+import { parseDate } from "../utils";
 
 export const I = {
   home: (p = 16) => <svg width={p} height={p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11L12 4l9 7" /><path d="M5 10v10h14V10" /></svg>,
@@ -113,8 +114,8 @@ export function fmtInt(v) {
   return Number(v).toLocaleString();
 }
 export function fmtDate(d) {
-  const dt = d instanceof Date ? d : new Date(d);
-  if (isNaN(dt.getTime())) return "—";
+  const dt = parseDate(d);
+  if (!dt) return "—";
   return dt.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" });
 }
 

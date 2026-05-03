@@ -3,7 +3,7 @@
 // Owns its own modal tree (TransactionForm, MonthlyForm, ConfirmDialog) styled to the Modern theme.
 import React, { useEffect, useMemo, useState } from "react";
 import { getThemeColors } from "../themes";
-import { inferArchivePeriod } from "../utils";
+import { inferArchivePeriod, parseDate, getTodayDate } from "../utils";
 import { Sidebar, TopBar, BottomTabs } from "./Nav";
 import { I } from "./ui";
 import { ModernDashboard } from "./Dashboard";
@@ -128,12 +128,12 @@ export function ModernApp({
 
   const txs = useMemo(() => sourceTxs.map((t) => ({
     ...t,
-    date: t.date instanceof Date ? t.date : new Date(t.date),
+    date: parseDate(t.date),
   })), [sourceTxs]);
 
   const handleAddTx = () => {
     setEditingTxId(null);
-    setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "15.42", buyAmount: "", sellRate: "", sellAmount: "", date: defaultDate() });
+    setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "15.42", buyAmount: "", sellRate: "", sellAmount: "", date: getTodayDate() });
     setShowTxForm(true);
   };
 
@@ -338,14 +338,6 @@ export function ModernApp({
       />
     </div>
   );
-}
-
-function defaultDate() {
-  const d = new Date();
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yy = String(d.getFullYear()).slice(-2);
-  return `${dd}/${mm}/${yy}`;
 }
 
 export { getThemeColors };

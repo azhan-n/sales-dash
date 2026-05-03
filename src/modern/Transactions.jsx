@@ -2,7 +2,7 @@
 // archive history selector, bulk select + delete, working PDF export.
 import React, { useState, useMemo } from "react";
 import { Card, Btn, CardTypeBadge, SelectChip, I, fmtFull, fmtUSD, fmtDate } from "./ui";
-import { exportTransactionsPDF } from "../utils";
+import { exportTransactionsPDF, parseDate } from "../utils";
 
 function Checkbox({ checked, indeterminate, onChange, theme, ariaLabel }) {
   const t = theme;
@@ -64,9 +64,9 @@ export function ModernTransactions({
     out = [...out].sort((a, b) => {
       let av = a[sort.key], bv = b[sort.key];
       if (sort.key === "date") {
-        const ad = a.date instanceof Date ? a.date : new Date(a.date);
-        const bd = b.date instanceof Date ? b.date : new Date(b.date);
-        av = ad.getTime() || 0; bv = bd.getTime() || 0;
+        const ad = parseDate(a.date);
+        const bd = parseDate(b.date);
+        av = ad ? ad.getTime() : 0; bv = bd ? bd.getTime() : 0;
       } else {
         av = Number(av) || 0; bv = Number(bv) || 0;
       }
