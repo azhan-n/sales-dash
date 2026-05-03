@@ -68,7 +68,7 @@ export function ModernSettings({ theme, currentTheme, setTheme, font, setFont, c
 
       <Card theme={t} pad={20}>
         <div style={{ fontSize: 13, fontWeight: 600, color: t.text, marginBottom: 4 }}>Layout</div>
-        <div style={{ fontSize: 11, color: t.textMuted, marginBottom: 12 }}>You're using the Modern (Ledgerline) layout.</div>
+        <div style={{ fontSize: 11, color: t.textMuted, marginBottom: 12 }}>You're using the Modern (Tether Line) layout.</div>
         <Btn theme={t} onClick={onSwitchToClassic}>Switch to Classic layout</Btn>
       </Card>
     </div>

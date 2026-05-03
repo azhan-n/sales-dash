@@ -1,4 +1,4 @@
-// Themed confirm dialog for the Modern (Ledgerline) view.
+// Themed confirm dialog for the Modern (Tether Line) view.
 import React, { useEffect, useRef } from "react";
 import { Modal } from "./Modal";
 import { Btn } from "./ui";

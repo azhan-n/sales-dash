@@ -94,13 +94,15 @@ export function OwnerStatsPanel({ theme, ownerStats, owners, transactions, getCa
                   )}
                   {recent.map((tx) => {
                     const card = getCard(tx.cardId);
+                    const cardType = card?.type   ?? tx.cardType   ?? "";
+                    const cardNum  = card?.number ?? tx.cardNumber ?? "";
                     const txPos = (Number(tx.netProfit) || 0) >= 0;
                     return (
                       <div key={tx.id} style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr auto" : "70px 1fr 100px 100px", gap: 10, alignItems: "center", padding: isMobile ? "10px 16px 10px 56px" : "10px 20px 10px 64px", borderTop: `1px dashed ${t.border}`, fontSize: 12 }}>
                         {!isMobile && <div style={{ color: t.textMuted, fontVariantNumeric: "tabular-nums" }}>{fmtDate(tx.date)}</div>}
                         <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
-                          <CardTypeBadge type={card?.type} theme={t} />
-                          <span style={{ color: t.textSec, fontVariantNumeric: "tabular-nums" }}>••{card?.number}</span>
+                          <CardTypeBadge type={cardType} theme={t} />
+                          <span style={{ color: t.textSec, fontVariantNumeric: "tabular-nums" }}>••{cardNum}</span>
                           {isMobile && <span style={{ color: t.textMuted, fontSize: 11, marginLeft: "auto" }}>{fmtDate(tx.date)}</span>}
                         </div>
                         {!isMobile && <div style={{ textAlign: "right", color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{fmtUSD(tx.sellAmount)}</div>}

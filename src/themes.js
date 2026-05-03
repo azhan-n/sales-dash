@@ -25,7 +25,7 @@ export const THEME_OPTIONS = [
   { key: "midnight", label: "Midnight", preview: ["#0a0e1a", "#34d399", "#a78bfa", "#1a2332"] },
   { key: "liquid_glass", label: "Liquid Glass", preview: ["#f0f2f5", "#e8ecf4", "#ffffff80", "#d0d5e0"] },
   { key: "circular", label: "Circular", preview: ["#faf5ff", "#8b5cf6", "#c084fc", "#ede9fe"] },
-  { key: "ledgerline", label: "Ledgerline", preview: ["#f4f9fd", "#0284c7", "#0e9f6e", "#e3ebf3"] },
+  { key: "ledgerline", label: "Tether Line", preview: ["#f4f9fd", "#0284c7", "#0e9f6e", "#e3ebf3"] },
 ];
 
 // --- Layout descriptors per theme ---

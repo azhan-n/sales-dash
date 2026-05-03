@@ -1,4 +1,4 @@
-// ModernApp — top-level Modern (Ledgerline) shell. Reads existing app state via props,
+// ModernApp — top-level Modern (Tether Line) shell. Reads existing app state via props,
 // derives a design-system theme object from the active palette, and renders the right view.
 // Owns its own modal tree (TransactionForm, MonthlyForm, ConfirmDialog) styled to the Modern theme.
 import React, { useEffect, useMemo, useState } from "react";
@@ -126,10 +126,18 @@ export function ModernApp({
   const isHistory = selectedPeriod && selectedPeriod !== "current";
   const sourceTxs = isHistory ? (historyTransactions || []) : transactions;
 
+  // txs switches to history when a period is selected (used by Transactions tab).
   const txs = useMemo(() => sourceTxs.map((t) => ({
     ...t,
     date: parseDate(t.date),
   })), [sourceTxs]);
+
+  // currentTxs is always the live current-period data regardless of period selection.
+  // Used by Dashboard so the Overview never shows archived data.
+  const currentTxs = useMemo(() => transactions.map((t) => ({
+    ...t,
+    date: parseDate(t.date),
+  })), [transactions]);
 
   const handleAddTx = () => {
     setEditingTxId(null);
@@ -200,7 +208,7 @@ export function ModernApp({
           {route === "dashboard" && (
             <ModernDashboard
               theme={theme}
-              transactions={txs}
+              transactions={currentTxs}
               owners={owners}
               ownerStats={ownerStats}
               getCard={getCardById}

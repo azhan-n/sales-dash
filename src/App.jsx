@@ -1540,7 +1540,7 @@ function AppInner() {
                     <div style={{ marginTop: "1rem" }}>
                       <label style={itemLabel}>Layout</label>
                       <div style={{ display: "flex", gap: "0.75rem" }}>
-                        {[{ k: false, l: "Classic", d: "Original tab layout" }, { k: true, l: "Modern", d: "Ledgerline sidebar" }].map((o) => (
+                        {[{ k: false, l: "Classic", d: "Original tab layout" }, { k: true, l: "Modern", d: "Tether Line sidebar" }].map((o) => (
                           <div key={String(o.k)} onClick={() => { setModernView(o.k); if (o.k) setShowSettings(false); }} style={{ flex: 1, padding: "0.625rem", border: modernView === o.k ? `2px solid ${c.accent}` : `2px solid ${c.border}`, borderRadius: isBrut ? "0" : (isCirc ? "2rem" : "0.625rem"), backgroundColor: modernView === o.k ? c.accentBg : c.surface, cursor: "pointer", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.375rem", color: modernView === o.k ? c.accent : c.text }}>
                             <span style={{ fontSize: "0.8125rem", fontWeight: bws }}>{o.l}</span>
                             <div style={{ fontSize: "0.6875rem", opacity: 0.7 }}>{o.d}</div>

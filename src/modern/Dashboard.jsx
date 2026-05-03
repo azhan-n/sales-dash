@@ -45,10 +45,11 @@ export function ModernDashboard({ theme, transactions, owners, ownerStats, getCa
   const trendData = monthly.map((m) => ({ label: m.label, value: m.net }));
   const profitCostData = monthly.map((m) => ({ label: m.label, gross: m.gross, cost: m.cost, net: m.net }));
   const cardTypeBreakdown = aggregateByCardType(transactions, getCard);
-  const scatterData = transactions.slice(0, 80).map((tx) => ({
-    x: Number(tx.buyRate) || 0, y: Number(tx.sellRate) || 0,
-    color: cardColors[getCard(tx.cardId)?.type] || t.accent,
-  }));
+  const scatterData = transactions.slice(0, 80).map((tx) => {
+    const card = getCard(tx.cardId);
+    const cardType = card?.type ?? tx.cardType ?? "";
+    return { x: Number(tx.buyRate) || 0, y: Number(tx.sellRate) || 0, color: cardColors[cardType] || t.accent };
+  });
   const margins = transactions.map((tx) => Number(tx.profitMargin) || 0);
   const recent = transactions.slice(0, 5);
 
@@ -167,19 +168,22 @@ export function ModernDashboard({ theme, transactions, owners, ownerStats, getCa
             {recent.map((tx) => {
               const card = getCard(tx.cardId);
               const owner = getOwner(tx.ownerId);
+              const cardType  = card?.type   ?? tx.cardType   ?? "";
+              const cardNum   = card?.number ?? tx.cardNumber ?? "";
+              const ownerName = owner?.name  ?? tx.owner      ?? "";
               const pos = (Number(tx.netProfit) || 0) >= 0;
               if (isMobile) {
                 return (
                   <div key={tx.id} style={{ padding: "12px 16px", borderTop: `1px solid ${t.border}`, display: "flex", flexDirection: "column", gap: 6 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
-                        <CardTypeBadge type={card?.type} theme={t} />
-                        <span style={{ color: t.textSec, fontSize: 11, fontVariantNumeric: "tabular-nums" }}>••{card?.number}</span>
+                        <CardTypeBadge type={cardType} theme={t} />
+                        <span style={{ color: t.textSec, fontSize: 11, fontVariantNumeric: "tabular-nums" }}>••{cardNum}</span>
                       </div>
                       <div style={{ color: pos ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums", fontSize: 13, whiteSpace: "nowrap" }}>{pos ? "+" : ""}{fmtFull(tx.netProfit)}</div>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: t.textMuted }}>
-                      <span>{owner?.name} · {fmtDate(tx.date)}</span>
+                      <span>{ownerName} · {fmtDate(tx.date)}</span>
                       <span style={{ fontVariantNumeric: "tabular-nums" }}>{fmtUSD(tx.sellAmount)}</span>
                     </div>
                   </div>
@@ -189,9 +193,9 @@ export function ModernDashboard({ theme, transactions, owners, ownerStats, getCa
                 <div key={tx.id} style={{ display: "grid", gridTemplateColumns: "70px 1fr 120px 100px", alignItems: "center", gap: 12, padding: "12px 20px", borderTop: `1px solid ${t.border}`, fontSize: 12 }}>
                   <div style={{ color: t.textMuted, fontVariantNumeric: "tabular-nums" }}>{fmtDate(tx.date)}</div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-                    <CardTypeBadge type={card?.type} theme={t} />
-                    <span style={{ color: t.textSec, fontVariantNumeric: "tabular-nums" }}>••{card?.number}</span>
-                    <span style={{ color: t.textMuted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>· {owner?.name}</span>
+                    <CardTypeBadge type={cardType} theme={t} />
+                    <span style={{ color: t.textSec, fontVariantNumeric: "tabular-nums" }}>••{cardNum}</span>
+                    <span style={{ color: t.textMuted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>· {ownerName}</span>
                   </div>
                   <div style={{ color: t.textSec, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>{fmtUSD(tx.sellAmount)}</div>
                   <div style={{ color: pos ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>{pos ? "+" : ""}{fmtFull(tx.netProfit)}</div>

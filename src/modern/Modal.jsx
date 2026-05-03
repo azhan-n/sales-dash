@@ -1,4 +1,4 @@
-// Themed modal scaffold for the Modern (Ledgerline) view.
+// Themed modal scaffold for the Modern (Tether Line) view.
 // Backdrop-blur scrim + centered card with theme tokens.
 import React, { useEffect } from "react";
 import { I } from "./ui";

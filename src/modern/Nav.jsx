@@ -31,7 +31,7 @@ export function Sidebar({ theme, navItems, route, setRoute, onAdd, isMobile, ope
           color: "#fff", fontWeight: 700, fontSize: 13, letterSpacing: "-0.02em",
         }}>₳</div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: "-0.01em", color: t.text }}>Ledgerline</div>
+          <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: "-0.01em", color: t.text }}>Tether Line</div>
           <div style={{ fontSize: 11, color: t.textMuted }}>Personal P&L</div>
         </div>
         {isMobile && (
@@ -119,7 +119,7 @@ export function TopBar({ theme, route, navItems, isMobile, onMenuClick, onAdd })
       <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0, overflow: "hidden" }}>
         <div style={{ fontSize: 13, color: t.textMuted, display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
           {!isMobile && (<>
-            <span>Ledgerline</span>
+            <span>Tether Line</span>
             <span style={{ color: t.border }}>/</span>
           </>)}
           <span style={{ color: t.text, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{current?.label}</span>
