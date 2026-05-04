@@ -209,6 +209,7 @@ export function ModernApp({
             <ModernDashboard
               theme={theme}
               transactions={currentTxs}
+              monthly={monthly}
               owners={owners}
               ownerStats={ownerStats}
               getCard={getCardById}

@@ -38,12 +38,18 @@ function LegendDot({ color, label, t }) {
   </span>;
 }
 
-export function ModernDashboard({ theme, transactions, owners, ownerStats, getCard, getOwner, setRoute, chartStyle, isMobile }) {
+export function ModernDashboard({ theme, transactions, monthly: monthlyProp, owners, ownerStats, getCard, getOwner, setRoute, chartStyle, isMobile }) {
   const t = theme;
   const stats = computeStats(transactions);
-  const monthly = aggregateByMonth(transactions);
-  const trendData = monthly.map((m) => ({ label: m.label, value: m.net }));
-  const profitCostData = monthly.map((m) => ({ label: m.label, gross: m.gross, cost: m.cost, net: m.net }));
+  const localMonthly = aggregateByMonth(transactions);
+
+  // Build combined trend: Supabase monthly records (full history) + current-period computed months.
+  // Current period wins on label collision so live data is always fresh.
+  const trendMap = new Map((monthlyProp || []).map((m) => [m.month, { label: m.month, value: m.profit }]));
+  localMonthly.forEach((m) => trendMap.set(m.label, { label: m.label, value: m.net }));
+  const trendData = [...trendMap.values()];
+
+  const profitCostData = localMonthly.map((m) => ({ label: m.label, gross: m.gross, cost: m.cost, net: m.net }));
   const cardTypeBreakdown = aggregateByCardType(transactions, getCard);
   const scatterData = transactions.slice(0, 80).map((tx) => {
     const card = getCard(tx.cardId);
@@ -99,10 +105,14 @@ export function ModernDashboard({ theme, transactions, owners, ownerStats, getCa
         </Card>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: isMobile ? 8 : 12 }}>
-          <StatTile theme={t} label="Transactions" value={transactions.length.toString()} sub="12-month window" spark={monthly.map((m) => m.count)} positive />
-          <StatTile theme={t} label="Avg. sell rate" value={stats.avgSellRate.toFixed(2)} sub="MVR / USD" spark={monthly.map((m) => m.avgSellRate)} positive />
-          <StatTile theme={t} label="This month" value={fmtFull(stats.thisMonthNet)} sub={`${stats.thisMonthCount} transactions`} spark={monthly.slice(-6).map((m) => m.net)} positive={stats.thisMonthNet >= 0} />
-          <StatTile theme={t} label="Best month" value={fmtFull(stats.bestMonth.net)} sub={stats.bestMonth.label} spark={monthly.map((m) => m.net)} positive />
+          <StatTile theme={t} label="Transactions" value={transactions.length.toString()} sub="current period" spark={localMonthly.map((m) => m.count)} positive />
+          <StatTile theme={t} label="Avg. sell rate" value={stats.avgSellRate.toFixed(2)} sub="MVR / USD" spark={localMonthly.map((m) => m.avgSellRate)} positive />
+          <StatTile theme={t} label="This month" value={fmtFull(stats.thisMonthNet)} sub={`${stats.thisMonthCount} transactions`} spark={localMonthly.slice(-6).map((m) => m.net)} positive={stats.thisMonthNet >= 0} />
+          <StatTile theme={t} label="Best month" value={fmtFull(stats.bestMonth.net)} sub={stats.bestMonth.label} spark={localMonthly.map((m) => m.net)} positive />
+          <StatTile theme={t} label="USDT Sold" value={fmtUSD(stats.totalSellAmount)} sub="Total sell volume" positive />
+          <StatTile theme={t} label="USD Bought" value={fmtUSD(stats.totalBuyAmount)} sub="Total buy volume" positive />
+          <StatTile theme={t} label="Avg profit / tx" value={fmtFull(stats.avgNetProfit)} sub="Per transaction" spark={localMonthly.map((m) => m.count ? m.net / m.count : 0)} positive={stats.avgNetProfit >= 0} />
+          <StatTile theme={t} label="Avg buy rate" value={stats.avgBuyRate.toFixed(2)} sub="MVR / USD" spark={localMonthly.map((m) => m.avgSellRate)} positive />
         </div>
       </div>
 

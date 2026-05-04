@@ -42,8 +42,12 @@ export function computeStats(txs) {
   const totalNet = txs.reduce((s, t) => s + (Number(t.netProfit) || 0), 0);
   const totalGross = txs.reduce((s, t) => s + (Number(t.grossProfit) || 0), 0);
   const totalCost = txs.reduce((s, t) => s + (Number(t.cost) || 0), 0);
+  const totalSellAmount = txs.reduce((s, t) => s + (Number(t.sellAmount) || 0), 0);
+  const totalBuyAmount = txs.reduce((s, t) => s + (Number(t.buyAmount) || 0), 0);
   const avgMargin = txs.reduce((s, t) => s + (Number(t.profitMargin) || 0), 0) / txs.length;
   const avgSellRate = txs.reduce((s, t) => s + (Number(t.sellRate) || 0), 0) / txs.length;
+  const avgNetProfit = totalNet / txs.length;
+  const avgBuyRate = totalSellAmount > 0 ? totalCost / totalSellAmount : 0;
 
   const monthly = aggregateByMonth(txs);
   const last = monthly[monthly.length - 1] || { net: 0, count: 0, label: "—" };
@@ -55,7 +59,8 @@ export function computeStats(txs) {
   const secondHalf = monthly.slice(half).reduce((s, m) => s + m.net, 0);
   const trendPct = firstHalf ? ((secondHalf - firstHalf) / Math.abs(firstHalf)) * 100 : 0;
   return {
-    totalNet, totalGross, totalCost, avgMargin, avgSellRate, momPct,
+    totalNet, totalGross, totalCost, totalSellAmount, totalBuyAmount,
+    avgMargin, avgSellRate, avgNetProfit, avgBuyRate, momPct,
     thisMonthNet: last.net, prevMonthNet: prev.net, thisMonthCount: last.count,
     bestMonth, trendPct,
   };
