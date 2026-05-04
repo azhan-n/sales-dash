@@ -5,7 +5,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { getThemeColors } from "../themes";
 import { inferArchivePeriod, parseDate, getTodayDate } from "../utils";
 import { Sidebar, TopBar, BottomTabs } from "./Nav";
-import { I } from "./ui";
+import { I, IconContext, useIcons } from "./ui";
+import { ICON_PACKS } from "../iconPacks";
 import { ModernDashboard } from "./Dashboard";
 import { ModernTransactions } from "./Transactions";
 import { ModernMonthly } from "./Monthly";
@@ -27,7 +28,28 @@ function useIsMobile(bp = 760) {
   return m;
 }
 
-function buildTheme({ themeKey, palette, font }) {
+function makeModernIcons(packKey) {
+  const pack = ICON_PACKS[packKey];
+  if (!pack) return I;
+  const c = (Comp) => (p) => React.createElement(Comp, { size: p });
+  return {
+    ...I,
+    home:     c(pack.LayoutGrid),
+    list:     c(pack.List),
+    calendar: c(pack.Calendar),
+    settings: c(pack.Settings),
+    plus:     c(pack.Plus),
+    search:   c(pack.Search),
+    download: c(pack.Download),
+    edit:     c(pack.Pencil),
+    trash:    c(pack.Trash2),
+    x:        c(pack.X),
+    filter:   c(pack.Filter),
+    chevron:  c(pack.ChevronDown),
+  };
+}
+
+function buildTheme({ themeKey, palette, font, boldText }) {
   const c = palette;
   const isDark = !!c.isDark;
   const radius = c.radius || "10px";
@@ -66,6 +88,10 @@ function buildTheme({ themeKey, palette, font }) {
     isDark,
     glass: themeKey === "glass" || themeKey === "liquid_glass",
     brutal: themeKey === "brutalist",
+    bold: !!boldText,
+    fw: boldText
+      ? { label: 600, body: 500, value: 700, heading: 800, heavy: 900 }
+      : { label: 500, body: 400, value: 600, heading: 700, heavy: 800 },
   };
 }
 
@@ -106,7 +132,11 @@ export function ModernApp({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editModeMonthly, setEditModeMonthly] = useState(false);
   const [fontScale, setFontScale] = useState(() => parseFloat(lsGet("modern_fontScale")) || 1.0);
+  const [iconPack, setIconPack] = useState(() => lsGet("iconPack") || "lucide");
+  const [boldText, setBoldText] = useState(() => lsGet("boldText") === "true");
   useEffect(() => { lsSet("modern_fontScale", fontScale.toString()); }, [fontScale]);
+  useEffect(() => { lsSet("iconPack", iconPack); }, [iconPack]);
+  useEffect(() => { lsSet("boldText", boldText.toString()); }, [boldText]);
 
   // Confirm dialog state for delete actions originating in Modern.
   const [confirmDelete, setConfirmDelete] = useState(null);    // { kind, payload }
@@ -116,13 +146,14 @@ export function ModernApp({
   useEffect(() => { lsSet("modern_route", route); }, [route]);
   useEffect(() => { lsSet("modern_chartStyle", chartStyle); }, [chartStyle]);
 
-  const theme = useMemo(() => buildTheme({ themeKey, palette, font }), [themeKey, palette, font]);
+  const theme = useMemo(() => buildTheme({ themeKey, palette, font, boldText }), [themeKey, palette, font, boldText]);
+  const icons = useMemo(() => makeModernIcons(iconPack), [iconPack]);
 
   const navItems = [
-    { key: "dashboard", label: "Overview", icon: I.home },
-    { key: "transactions", label: "Transactions", icon: I.list },
-    { key: "monthly", label: "Monthly", icon: I.calendar },
-    { key: "settings", label: "Settings", icon: I.settings },
+    { key: "dashboard", label: "Overview", icon: icons.home },
+    { key: "transactions", label: "Transactions", icon: icons.list },
+    { key: "monthly", label: "Monthly", icon: icons.calendar },
+    { key: "settings", label: "Settings", icon: icons.settings },
   ];
 
   const isHistory = selectedPeriod && selectedPeriod !== "current";
@@ -183,6 +214,7 @@ export function ModernApp({
   const bulkCount = confirmDelete?.kind === "bulk" ? (selectedTxIds?.size || 0) : 0;
 
   return (
+    <IconContext.Provider value={icons}>
     <div style={pageStyle}>
       <Sidebar
         theme={theme}
@@ -276,6 +308,10 @@ export function ModernApp({
               isMobile={isMobile}
               fontScale={fontScale}
               setFontScale={setFontScale}
+              iconPack={iconPack}
+              setIconPack={setIconPack}
+              boldText={boldText}
+              setBoldText={setBoldText}
             />
           )}
         </main>
@@ -354,6 +390,7 @@ export function ModernApp({
         onCancel={() => setConfirmArchive(false)}
       />
     </div>
+    </IconContext.Provider>
   );
 }
 

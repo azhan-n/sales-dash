@@ -1,6 +1,6 @@
 // Modern Monthly view — hero card + saved records + KPI tiles + trend chart + bar list
 import React, { useState } from "react";
-import { Card, Btn, I, fmtFull } from "./ui";
+import { Card, Btn, fmtFull, useIcons } from "./ui";
 import { TrendChart } from "./charts";
 import { aggregateByMonth, computeStats } from "./aggregations";
 import { exportMonthlyPDF } from "../utils";
@@ -21,6 +21,7 @@ export function ModernMonthly({
   archiveCount = 0,
 }) {
   const t = theme;
+  const I = useIcons();
   const stats = computeStats(transactions);
   const txMonthly = aggregateByMonth(transactions);
   const max = Math.max(...txMonthly.map((m) => Math.abs(m.net)), 1);

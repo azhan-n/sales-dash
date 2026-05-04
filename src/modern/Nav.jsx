@@ -1,9 +1,10 @@
 // Modern view navigation — Sidebar (with off-canvas drawer on mobile), TopBar, BottomTabs
 import React from "react";
-import { I, Btn } from "./ui";
+import { Btn, useIcons } from "./ui";
 
 export function Sidebar({ theme, navItems, route, setRoute, onAdd, isMobile, open, onClose }) {
   const t = theme;
+  const I = useIcons();
 
   const inner = (
     <aside style={{
@@ -59,7 +60,7 @@ export function Sidebar({ theme, navItems, route, setRoute, onAdd, isMobile, ope
             border: "none", cursor: "pointer",
             borderLeft: route === n.key ? `3px solid ${t.accent}` : "3px solid transparent",
             borderRadius: 8,
-            fontSize: 13, fontWeight: 500,
+            fontSize: 13, fontWeight: t.fw?.label ?? 500,
             fontFamily: "inherit",
             textAlign: "left",
             transition: "background .15s",
@@ -99,6 +100,7 @@ export function Sidebar({ theme, navItems, route, setRoute, onAdd, isMobile, ope
 
 export function TopBar({ theme, route, navItems, isMobile, onMenuClick, onAdd, userEmail = "" }) {
   const t = theme;
+  const I = useIcons();
   const current = navItems.find((n) => n.key === route);
   return (
     <header style={{
@@ -153,6 +155,7 @@ export function TopBar({ theme, route, navItems, isMobile, onMenuClick, onAdd, u
 
 export function BottomTabs({ theme, navItems, route, setRoute }) {
   const t = theme;
+  const I = useIcons();
   return (
     <nav style={{
       position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 15,
@@ -168,7 +171,7 @@ export function BottomTabs({ theme, navItems, route, setRoute }) {
           padding: "6px 4px",
           background: "transparent", border: "none", cursor: "pointer",
           color: route === n.key ? t.accent : t.textMuted,
-          fontFamily: "inherit", fontSize: 10, fontWeight: 500,
+          fontFamily: "inherit", fontSize: 10, fontWeight: t.fw?.label ?? 500,
           position: "relative",
         }}>
           {/* accent bar */}

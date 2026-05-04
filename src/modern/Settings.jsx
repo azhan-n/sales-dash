@@ -1,9 +1,16 @@
-// Modern Settings — theme picker, font, chart style, layout switch back to Classic
+// Modern Settings — theme picker, font, chart style, icon pack, bold text, layout
 import React from "react";
 import { Card, Btn } from "./ui";
 import { THEME_OPTIONS, FONTS } from "../themes";
+import { ICON_PACKS, ICON_PACK_KEYS } from "../iconPacks";
 
-export function ModernSettings({ theme, currentTheme, setTheme, font, setFont, chartStyle, setChartStyle, onSwitchToClassic, isMobile, fontScale = 1.0, setFontScale }) {
+export function ModernSettings({
+  theme, currentTheme, setTheme, font, setFont,
+  chartStyle, setChartStyle, onSwitchToClassic, isMobile,
+  fontScale = 1.0, setFontScale,
+  iconPack = "lucide", setIconPack,
+  boldText = false, setBoldText,
+}) {
   const t = theme;
 
   return (
@@ -59,25 +66,18 @@ export function ModernSettings({ theme, currentTheme, setTheme, font, setFont, c
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ fontSize: 11, color: t.textMuted, minWidth: 28 }}>80%</span>
           <input
-            type="range"
-            min={0.8}
-            max={1.3}
-            step={0.05}
-            value={fontScale}
+            type="range" min={0.8} max={1.3} step={0.05} value={fontScale}
             onChange={(e) => setFontScale(parseFloat(e.target.value))}
             style={{ flex: 1, accentColor: t.accent, cursor: "pointer" }}
           />
           <span style={{ fontSize: 11, color: t.textMuted, minWidth: 32 }}>130%</span>
         </div>
         <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
-          <button
-            onClick={() => setFontScale(1.0)}
-            style={{
-              fontSize: 11, color: t.accent, background: t.accentSoft,
-              border: `1px solid ${t.accent}40`, borderRadius: t.radius,
-              padding: "4px 12px", cursor: "pointer", fontFamily: "inherit",
-            }}
-          >Reset to 100%</button>
+          <button onClick={() => setFontScale(1.0)} style={{
+            fontSize: 11, color: t.accent, background: t.accentSoft,
+            border: `1px solid ${t.accent}40`, borderRadius: t.radius,
+            padding: "4px 12px", cursor: "pointer", fontFamily: "inherit",
+          }}>Reset to 100%</button>
         </div>
       </Card>
 
@@ -93,6 +93,57 @@ export function ModernSettings({ theme, currentTheme, setTheme, font, setFont, c
               fontFamily: "inherit", fontSize: 13, fontWeight: 500,
             }}>{o.l}</button>
           ))}
+        </div>
+      </Card>
+
+      <Card theme={t} pad={20}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: t.text, marginBottom: 4 }}>Icon pack</div>
+        <div style={{ fontSize: 11, color: t.textMuted, marginBottom: 12 }}>Synced with Classic view.</div>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: 8 }}>
+          {ICON_PACK_KEYS.map((key) => {
+            const pack = ICON_PACKS[key];
+            const isSelected = iconPack === key;
+            const PreviewA = pack.Settings;
+            const PreviewB = pack.Download;
+            const PreviewC = pack.User;
+            return (
+              <button key={key} onClick={() => setIconPack(key)} style={{
+                padding: "8px", border: isSelected ? `2px solid ${t.accent}` : `1px solid ${t.border}`,
+                borderRadius: t.radius, background: isSelected ? t.accentSoft : t.surface,
+                cursor: "pointer", textAlign: "center", display: "flex", flexDirection: "column",
+                alignItems: "center", gap: 6, fontFamily: "inherit",
+                color: isSelected ? t.accent : t.textSec, transition: "all .15s",
+              }}>
+                <div style={{ display: "flex", gap: 4, color: "inherit" }}>
+                  <PreviewA size={13} /> <PreviewB size={13} /> <PreviewC size={13} />
+                </div>
+                <div style={{ fontSize: 11, fontWeight: 500, color: isSelected ? t.accent : t.text }}>{pack.label}</div>
+              </button>
+            );
+          })}
+        </div>
+      </Card>
+
+      <Card theme={t} pad={20}>
+        <div
+          onClick={() => setBoldText?.(!boldText)}
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", gap: 12 }}
+        >
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Bold text</div>
+            <div style={{ fontSize: 11, color: t.textMuted, marginTop: 2 }}>Increase font weight across the UI</div>
+          </div>
+          <div style={{
+            width: 40, height: 22, borderRadius: 11,
+            background: boldText ? t.accent : t.border,
+            position: "relative", flexShrink: 0, transition: "background .2s",
+          }}>
+            <div style={{
+              width: 18, height: 18, borderRadius: "50%", background: "#fff",
+              position: "absolute", top: 2, left: boldText ? 20 : 2,
+              transition: "left .2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+            }} />
+          </div>
         </div>
       </Card>
 

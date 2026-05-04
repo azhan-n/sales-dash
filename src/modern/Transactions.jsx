@@ -1,7 +1,7 @@
 // Modern Transactions — filterable table with date range, card number filter,
 // pagination, bulk select, archive history selector, and PDF export.
 import React, { useState, useMemo } from "react";
-import { Card, Btn, CardTypeBadge, SelectChip, I, fmtFull, fmtUSD, fmtDate } from "./ui";
+import { Card, Btn, CardTypeBadge, SelectChip, fmtFull, fmtUSD, fmtDate, useIcons } from "./ui";
 import { exportTransactionsPDF, parseDate, dateSortKey } from "../utils";
 
 const PAGE_SIZE = 50;
@@ -24,6 +24,7 @@ export function ModernTransactions({
   selectedTxIds, setSelectedTxIds, onBulkDelete,
 }) {
   const t = theme;
+  const I = useIcons();
   const isHistory = selectedPeriod !== "current";
   const [viewMode, setViewMode] = useState(() => {
     try { return localStorage.getItem("modern_txViewMode") || (isMobile ? "cards" : "table"); } catch { return isMobile ? "cards" : "table"; }

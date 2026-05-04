@@ -20,6 +20,9 @@ export const I = {
   menu: (p = 16) => <svg width={p} height={p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M3 12h18M3 18h18" /></svg>,
 };
 
+export const IconContext = React.createContext(null);
+export function useIcons() { return React.useContext(IconContext) || I; }
+
 export function Btn({ children, variant = "secondary", size = "md", onClick, theme, style, ...rest }) {
   const t = theme;
   const isPri = variant === "primary";

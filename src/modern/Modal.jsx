@@ -1,7 +1,7 @@
 // Themed modal scaffold for the Modern (Tether Line) view.
 // Backdrop-blur scrim + centered card with theme tokens.
 import React, { useEffect } from "react";
-import { I } from "./ui";
+import { useIcons } from "./ui";
 
 export function Modal({ open, onClose, title, children, theme, maxWidth = 520, footer, zIndex = 200 }) {
   useEffect(() => {
@@ -14,6 +14,7 @@ export function Modal({ open, onClose, title, children, theme, maxWidth = 520, f
   if (!open) return null;
 
   const t = theme;
+  const I = useIcons();
   const isMobileWidth = typeof window !== "undefined" && window.innerWidth < 760;
 
   return (

@@ -1,6 +1,6 @@
 // Modern Overview — hero KPI + sparkline tiles + charts + recent activity
 import React from "react";
-import { Card, Btn, CardTypeBadge, I, fmtFull, fmtUSD, fmtDate, cardColors } from "./ui";
+import { Card, Btn, CardTypeBadge, fmtFull, fmtUSD, fmtDate, cardColors, useIcons } from "./ui";
 import { TrendChart, Donut, Scatter, Histogram, Sparkline, StackedBars } from "./charts";
 import { aggregateByMonth, aggregateByCardType, computeStats } from "./aggregations";
 import { OwnerStatsPanel } from "./OwnerStatsPanel";
@@ -22,8 +22,8 @@ function StatTile({ theme: t, label, value, sub, spark, positive }) {
     <Card theme={t} pad={16} style={{ borderTop: `3px solid ${t.accent}` }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 11, fontWeight: 500, color: t.textMuted }}>{label}</div>
-          <div style={{ fontSize: "clamp(14px, 4cqi, 20px)", fontWeight: 600, color: t.text, letterSpacing: "-0.02em", marginTop: 2, fontVariantNumeric: "tabular-nums", lineHeight: 1.15, wordBreak: "break-all" }}>{value}</div>
+          <div style={{ fontSize: 11, fontWeight: t.fw?.label ?? 500, color: t.textMuted }}>{label}</div>
+          <div style={{ fontSize: "clamp(14px, 4cqi, 20px)", fontWeight: t.fw?.value ?? 600, color: t.text, letterSpacing: "-0.02em", marginTop: 2, fontVariantNumeric: "tabular-nums", lineHeight: 1.15, wordBreak: "break-all" }}>{value}</div>
           <div style={{ fontSize: 10, color: t.textMuted, marginTop: 2 }}>{sub}</div>
         </div>
         {spark && <Sparkline values={spark} theme={t} positive={positive} w={70} h={30} />}
@@ -60,6 +60,7 @@ function LegendDot({ color, label, t }) {
 
 export function ModernDashboard({ theme, transactions, monthly: monthlyProp, owners, ownerStats, getCard, getOwner, setRoute, chartStyle, isMobile }) {
   const t = theme;
+  const I = useIcons();
   const stats = computeStats(transactions);
   const localMonthly = aggregateByMonth(transactions);
 

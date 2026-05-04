@@ -1,7 +1,7 @@
 // Per-owner breakdown panel for Modern Overview.
 // Donut by net profit + per-owner cards with expandable recent transactions.
 import React, { useState } from "react";
-import { Card, CardTypeBadge, fmtFull, fmtUSD, fmtDate, I } from "./ui";
+import { Card, CardTypeBadge, fmtFull, fmtUSD, fmtDate, useIcons } from "./ui";
 import { Donut } from "./charts";
 
 function ownerInitials(name) {
@@ -13,6 +13,7 @@ function ownerInitials(name) {
 
 export function OwnerStatsPanel({ theme, ownerStats, owners, transactions, getCard, isMobile }) {
   const t = theme;
+  const I = useIcons();
   const [expandedId, setExpandedId] = useState(null);
 
   const rows = (owners || [])
