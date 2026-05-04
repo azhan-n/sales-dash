@@ -2,7 +2,7 @@
 import React from "react";
 import { Btn, useIcons } from "./ui";
 
-export function Sidebar({ theme, navItems, route, setRoute, onAdd, isMobile, open, onClose }) {
+export function Sidebar({ theme, navItems, route, setRoute, onAdd, isMobile, open, onClose, fontScale = 1 }) {
   const t = theme;
   const I = useIcons();
 
@@ -23,6 +23,7 @@ export function Sidebar({ theme, navItems, route, setRoute, onAdd, isMobile, ope
       backdropFilter: t.glass ? "blur(20px)" : undefined,
       WebkitBackdropFilter: t.glass ? "blur(20px)" : undefined,
       boxShadow: isMobile && open ? "0 8px 32px rgba(0,0,0,0.18)" : undefined,
+      zoom: fontScale,
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 8px", marginBottom: 24 }}>
         <div style={{
@@ -98,7 +99,7 @@ export function Sidebar({ theme, navItems, route, setRoute, onAdd, isMobile, ope
   );
 }
 
-export function TopBar({ theme, route, navItems, isMobile, onMenuClick, onAdd, userEmail = "" }) {
+export function TopBar({ theme, route, navItems, isMobile, onMenuClick, onAdd, userEmail = "", fontScale = 1 }) {
   const t = theme;
   const I = useIcons();
   const current = navItems.find((n) => n.key === route);
@@ -113,6 +114,7 @@ export function TopBar({ theme, route, navItems, isMobile, onMenuClick, onAdd, u
       backdropFilter: "blur(8px)",
       WebkitBackdropFilter: "blur(8px)",
       position: "sticky", top: 0, zIndex: 20,
+      zoom: fontScale,
     }}>
       {isMobile && (
         <button onClick={onMenuClick} aria-label="Open menu" style={{
@@ -142,10 +144,11 @@ export function TopBar({ theme, route, navItems, isMobile, onMenuClick, onAdd, u
             borderRadius: 999,
             fontSize: 11, fontWeight: 500, color: t.accent,
             maxWidth: isMobile ? 140 : 220,
-            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            overflow: "hidden", whiteSpace: "nowrap",
+            minWidth: 0,
           }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: t.accent, flexShrink: 0 }} />
-            {userEmail}
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis", minWidth: 0, flex: 1 }}>{userEmail}</span>
           </div>
         )}
       </div>
@@ -153,7 +156,7 @@ export function TopBar({ theme, route, navItems, isMobile, onMenuClick, onAdd, u
   );
 }
 
-export function BottomTabs({ theme, navItems, route, setRoute }) {
+export function BottomTabs({ theme, navItems, route, setRoute, fontScale = 1 }) {
   const t = theme;
   const I = useIcons();
   return (
@@ -164,6 +167,7 @@ export function BottomTabs({ theme, navItems, route, setRoute }) {
       paddingTop: 8, paddingLeft: 4, paddingRight: 4,
       paddingBottom: "calc(8px + env(safe-area-inset-bottom))",
       backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+      zoom: fontScale,
     }}>
       {navItems.map((n) => (
         <button key={n.key} onClick={() => setRoute(n.key)} style={{

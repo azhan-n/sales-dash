@@ -46,6 +46,10 @@ function makeModernIcons(packKey) {
     x:        c(pack.X),
     filter:   c(pack.Filter),
     chevron:  c(pack.ChevronDown),
+    trending: c(pack.TrendingUp),
+    dollar:   c(pack.DollarSign),
+    user:     c(pack.User),
+    timer:    c(pack.Timer),
   };
 }
 
@@ -225,6 +229,7 @@ export function ModernApp({
         isMobile={isMobile}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
+        fontScale={fontScale}
       />
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
         <TopBar
@@ -235,6 +240,7 @@ export function ModernApp({
           userEmail={userEmail}
           onMenuClick={() => setDrawerOpen(true)}
           onAdd={handleAddTx}
+          fontScale={fontScale}
         />
         <main style={{
           flex: 1,
@@ -315,7 +321,7 @@ export function ModernApp({
             />
           )}
         </main>
-        {isMobile && <BottomTabs theme={theme} navItems={navItems} route={route} setRoute={setRoute} />}
+        {isMobile && <BottomTabs theme={theme} navItems={navItems} route={route} setRoute={setRoute} fontScale={fontScale} />}
       </div>
 
       {/* Themed transaction form */}

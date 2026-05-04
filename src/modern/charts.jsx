@@ -47,9 +47,11 @@ export function TrendChart({ data, theme, mode = "area", height = 220, yFormat =
       {(mode === "area" || mode === "line") && data.map((d, i) => (
         <circle key={i} cx={x(i)} cy={y(d.value)} r="3" fill={t.surface} stroke={t.accent} strokeWidth="1.5" />
       ))}
-      {data.map((d, i) => (
-        <text key={i} x={x(i)} y={height - 8} textAnchor="middle" fontSize="10" fill={t.textMuted}>{d.label}</text>
-      ))}
+      {data.map((d, i) => {
+        const step = Math.max(1, Math.ceil(data.length / 12));
+        if (i % step !== 0 && i !== data.length - 1) return null;
+        return <text key={i} x={x(i)} y={height - 8} textAnchor="middle" fontSize="10" fill={t.textMuted}>{d.label}</text>;
+      })}
     </svg>
   );
 }
@@ -124,8 +126,8 @@ export function Scatter({ data, theme, height = 220, xLabel = "Buy rate", yLabel
         const v = xmin + (xmax - xmin) * f;
         return <text key={i} x={gx} y={height - 16} textAnchor="middle" fontSize="10" fill={t.textMuted}>{v.toFixed(2)}</text>;
       })}
-      <text x={pad.l} y={height - 2} fontSize="10" fill={t.textMuted}>{xLabel} →</text>
-      <text x={pad.l + 4} y={pad.t + 10} fontSize="10" fill={t.textMuted}>↑ {yLabel}</text>
+      <text x={(pad.l + w - pad.r) / 2} y={height - 2} textAnchor="middle" fontSize="10" fill={t.textMuted}>{xLabel} →</text>
+      <text x={10} y={(pad.t + height - pad.b) / 2} textAnchor="middle" fontSize="10" fill={t.textMuted} transform={`rotate(-90, 10, ${(pad.t + height - pad.b) / 2})`}>↑ {yLabel}</text>
       {data.map((d, i) => (
         <circle key={i} cx={px(d.x)} cy={py(d.y)} r="4" fill={d.color || t.accent} opacity="0.75" />
       ))}
@@ -217,7 +219,7 @@ export function StackedBars({ data, theme, height = 200 }) {
           <rect x={x} y={y(d.gross)} width={bwi} height={gh} fill={t.accent} opacity="0.2" rx="2" />
           <rect x={x + bwi * 0.15} y={y(d.cost)} width={bwi * 0.7} height={ch} fill={t.textMuted} opacity="0.35" rx="2" />
           <rect x={x} y={y(d.net + d.cost) - 2} width={bwi} height={3} fill={t.positive} />
-          {i % 2 === 0 && <text x={x + bwi / 2} y={height - 8} textAnchor="middle" fontSize="10" fill={t.textMuted}>{d.label}</text>}
+          {i % Math.max(1, Math.ceil(data.length / 8)) === 0 && <text x={x + bwi / 2} y={height - 8} textAnchor="middle" fontSize="10" fill={t.textMuted}>{d.label}</text>}
         </g>;
       })}
     </svg>

@@ -1,7 +1,7 @@
 // Modern Monthly view — hero card + saved records + KPI tiles + trend chart + bar list
 import React, { useState } from "react";
 import { Card, Btn, fmtFull, useIcons } from "./ui";
-import { TrendChart } from "./charts";
+import { TrendChart, StackedBars } from "./charts";
 import { aggregateByMonth, computeStats } from "./aggregations";
 import { exportMonthlyPDF } from "../utils";
 
@@ -38,6 +38,13 @@ export function ModernMonthly({
   const trendData = monthly.length > 0
     ? monthly.map((m) => ({ label: m.month, value: Number(m.profit) || 0 }))
     : txMonthly.map((m) => ({ label: m.label, value: m.net }));
+
+  // Combined gross/cost data: Supabase records (net only, no cost breakdown) + current txMonthly (full)
+  const grossCostMap = new Map(
+    monthly.map((m) => [m.month, { label: m.month, gross: Number(m.profit) || 0, cost: 0, net: Number(m.profit) || 0 }])
+  );
+  txMonthly.forEach((m) => grossCostMap.set(m.label, { label: m.label, gross: m.gross, cost: m.cost, net: m.net }));
+  const grossCostData = [...grossCostMap.values()];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -196,6 +203,22 @@ export function ModernMonthly({
         </div>
         <TrendChart data={trendData} theme={t} mode={chartStyle} height={isMobile ? 180 : 240} />
       </Card>
+
+      {/* Gross vs cost — all-time from combined Supabase + current-period data */}
+      {grossCostData.length > 0 && (
+        <Card theme={t} pad={isMobile ? 14 : 20}>
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Gross vs cost</div>
+            <div style={{ fontSize: 11, color: t.textMuted }}>All-time stacked monthly flows</div>
+          </div>
+          <StackedBars data={grossCostData} theme={t} height={isMobile ? 160 : 200} />
+          <div style={{ display: "flex", gap: 16, marginTop: 12, fontSize: 11, flexWrap: "wrap" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: t.textSec }}><span style={{ width: 10, height: 10, borderRadius: 2, background: t.accent }} />Gross</span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: t.textSec }}><span style={{ width: 10, height: 10, borderRadius: 2, background: t.textMuted }} />Cost</span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: t.textSec }}><span style={{ width: 10, height: 10, borderRadius: 2, background: t.positive }} />Net</span>
+          </div>
+        </Card>
+      )}
 
       {/* Current-period breakdown from transactions */}
       <Card theme={t} pad={0} style={{ overflow: "hidden" }}>
