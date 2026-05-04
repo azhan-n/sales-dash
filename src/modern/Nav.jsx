@@ -11,11 +11,11 @@ export function Sidebar({ theme, navItems, route, setRoute, onAdd, isMobile, ope
       flexShrink: 0,
       background: t.sidebarBg || t.surface,
       borderRight: `1px solid ${t.border}`,
-      padding: "20px 14px",
+      padding: "max(20px, env(safe-area-inset-top)) 14px 20px",
       display: "flex", flexDirection: "column",
       position: isMobile ? "fixed" : "sticky",
       top: 0, left: 0,
-      height: "100vh",
+      height: "100dvh",
       zIndex: isMobile ? 50 : 1,
       transform: isMobile ? (open ? "translateX(0)" : "translateX(-100%)") : "none",
       transition: "transform 0.22s ease",
@@ -101,7 +101,9 @@ export function TopBar({ theme, route, navItems, isMobile, onMenuClick, onAdd })
   return (
     <header style={{
       display: "flex", alignItems: "center", gap: 12,
-      padding: isMobile ? "12px 16px" : "14px clamp(16px, 3vw, 40px)",
+      padding: isMobile
+        ? `calc(12px + env(safe-area-inset-top)) 16px 12px`
+        : "14px clamp(16px, 3vw, 40px)",
       borderBottom: `1px solid ${t.border}`,
       background: t.glass ? "transparent" : t.surface,
       backdropFilter: "blur(8px)",
@@ -153,11 +155,12 @@ export function BottomTabs({ theme, navItems, route, setRoute }) {
   const t = theme;
   return (
     <nav style={{
-      position: "sticky", bottom: 0, left: 0, right: 0, zIndex: 15,
+      position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 15,
       background: t.surface, borderTop: `1px solid ${t.border}`,
-      display: "flex", padding: "8px 4px",
-      backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+      display: "flex",
+      paddingTop: 8, paddingLeft: 4, paddingRight: 4,
       paddingBottom: "calc(8px + env(safe-area-inset-bottom))",
+      backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
     }}>
       {navItems.map((n) => (
         <button key={n.key} onClick={() => setRoute(n.key)} style={{

@@ -168,7 +168,7 @@ export function ModernApp({
   };
 
   const pageStyle = {
-    minHeight: "100vh",
+    minHeight: "100dvh",
     background: theme.bg,
     backgroundImage: theme.bgGrad || undefined,
     color: theme.text,
@@ -202,7 +202,9 @@ export function ModernApp({
         />
         <main style={{
           flex: 1,
-          padding: isMobile ? "16px 14px 24px" : "24px clamp(16px, 3vw, 40px) 48px",
+          padding: isMobile
+            ? "16px 14px calc(76px + env(safe-area-inset-bottom))"
+            : "24px clamp(16px, 3vw, 40px) 48px",
           maxWidth: 1440, width: "100%", margin: "0 auto",
         }}>
           {route === "dashboard" && (
