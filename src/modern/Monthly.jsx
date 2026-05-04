@@ -1,5 +1,4 @@
-// Modern Monthly view — KPI tiles + trend chart + month-by-month bar list
-// + edit mode (add/edit/delete) + PDF export.
+// Modern Monthly view — hero card + saved records + KPI tiles + trend chart + bar list
 import React, { useState } from "react";
 import { Card, Btn, I, fmtFull } from "./ui";
 import { TrendChart } from "./charts";
@@ -12,7 +11,6 @@ export function ModernMonthly({
   monthly = [],
   chartStyle,
   isMobile,
-  // form state passed through from ModernApp
   editModeMonthly = false,
   setEditModeMonthly,
   setMonthlyForm,
@@ -27,8 +25,22 @@ export function ModernMonthly({
   const txMonthly = aggregateByMonth(transactions);
   const max = Math.max(...txMonthly.map((m) => Math.abs(m.net)), 1);
 
+  // All-time stats from saved Supabase monthly records
+  const totalAllTime = monthly.reduce((s, m) => s + (Number(m.profit) || 0), 0);
+  const avgMonthly = monthly.length ? totalAllTime / monthly.length : 0;
+  const bestSaved = monthly.reduce(
+    (a, b) => (Number(b.profit) > Number(a.profit) ? b : a),
+    { profit: -Infinity, month: "—" }
+  );
+
+  // Trend chart data: prefer saved monthly records (full history) over computed from current txs
+  const trendData = monthly.length > 0
+    ? monthly.map((m) => ({ label: m.month, value: Number(m.profit) || 0 }))
+    : txMonthly.map((m) => ({ label: m.label, value: m.net }));
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Page header */}
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div>
           <div style={{ fontSize: 11, fontWeight: 600, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Monthly</div>
@@ -55,9 +67,104 @@ export function ModernMonthly({
         </div>
       </div>
 
+      {/* Hero card — all-time profit from saved records */}
+      {monthly.length > 0 && (
+        <Card theme={t} pad={isMobile ? 16 : 20} style={{
+          background: `linear-gradient(135deg, ${t.accent}, ${t.chartB})`,
+          border: "none", color: "#fff",
+          position: "relative", overflow: "hidden",
+        }}>
+          <div style={{ position: "absolute", inset: 0, background: "radial-gradient(400px 200px at 100% 0%, rgba(255,255,255,0.25), transparent 60%)", pointerEvents: "none" }} />
+          <div style={{ position: "relative" }}>
+            <div style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", opacity: 0.85 }}>All-time net profit</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 6 }}>
+              <div style={{ fontSize: isMobile ? "clamp(22px, 8vw, 30px)" : "clamp(28px, 3.5vw, 40px)", fontWeight: 600, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums", lineHeight: 1.1, wordBreak: "break-all" }}>
+                {fmtFull(totalAllTime)}
+              </div>
+              <div style={{ fontSize: 14, opacity: 0.85 }}>MVR</div>
+            </div>
+            <div style={{ marginTop: 20, display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(3, 1fr)", gap: 12, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.18)" }}>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 600, opacity: 0.8, textTransform: "uppercase", letterSpacing: "0.06em" }}>Months saved</div>
+                <div style={{ fontSize: 18, fontWeight: 600, fontVariantNumeric: "tabular-nums", marginTop: 4 }}>{monthly.length}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 600, opacity: 0.8, textTransform: "uppercase", letterSpacing: "0.06em" }}>Avg / month</div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginTop: 4 }}>
+                  <span style={{ fontSize: 18, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{fmtFull(avgMonthly)}</span>
+                  <span style={{ fontSize: 10, opacity: 0.75 }}>MVR</span>
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 600, opacity: 0.8, textTransform: "uppercase", letterSpacing: "0.06em" }}>Best month</div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginTop: 4 }}>
+                  <span style={{ fontSize: 18, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{fmtFull(Number(bestSaved.profit))}</span>
+                  <span style={{ fontSize: 10, opacity: 0.75 }}>{bestSaved.month}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Saved monthly records — shown right after hero card */}
+      {monthly.length > 0 && (
+        <Card theme={t} pad={0} style={{ overflow: "hidden" }}>
+          <div style={{ padding: isMobile ? "14px 16px" : "16px 20px", borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Saved monthly records</div>
+              <div style={{ fontSize: 11, color: t.textMuted }}>Archived profit per period</div>
+            </div>
+            {!editModeMonthly && (
+              <div style={{ fontSize: 11, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>MVR</div>
+            )}
+          </div>
+          <div>
+            {monthly.map((m, i) => {
+              const profit = Number(m.profit) || 0;
+              const pos = profit >= 0;
+              const prev = monthly[i - 1];
+              const prevProfit = prev ? Number(prev.profit) || 0 : null;
+              const momPct = prevProfit !== null && prevProfit !== 0
+                ? ((profit - prevProfit) / Math.abs(prevProfit)) * 100
+                : null;
+              return (
+                <div key={m.id} style={{ padding: isMobile ? "10px 16px" : "12px 20px", borderTop: `1px solid ${t.border}`, display: "grid", gridTemplateColumns: editModeMonthly ? "1fr auto auto auto" : "1fr auto auto", gap: 10, alignItems: "center" }}>
+                  <div style={{ fontSize: 13, color: t.text, fontWeight: 500 }}>{m.month}</div>
+                  {/* MoM % badge */}
+                  <div style={{ minWidth: 56, textAlign: "right" }}>
+                    {momPct !== null ? (
+                      <span style={{
+                        display: "inline-flex", alignItems: "center", gap: 2,
+                        fontSize: 11, fontWeight: 600,
+                        color: momPct >= 0 ? t.positive : t.negative,
+                        padding: "2px 6px", borderRadius: 999,
+                        background: momPct >= 0 ? `${t.positive}18` : `${t.negative}18`,
+                      }}>
+                        {momPct >= 0 ? "↑" : "↓"} {Math.abs(momPct).toFixed(1)}%
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 11, color: t.textMuted }}>—</span>
+                    )}
+                  </div>
+                  <div style={{ textAlign: "right", color: pos ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums", fontSize: 13, minWidth: 90 }}>{pos ? "+" : ""}{fmtFull(profit)}</div>
+                  {editModeMonthly && (
+                    <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
+                      <button onClick={() => { setEditingMonthlyId?.(m.id); setMonthlyForm({ month: m.month, profit: String(m.profit) }); setShowMonthlyForm?.(true); }} style={{ padding: 6, background: "transparent", border: `1px solid ${t.border}`, color: t.textSec, cursor: "pointer", borderRadius: 6, display: "inline-flex", alignItems: "center" }}>{I.edit(13)}</button>
+                      <button onClick={() => onDeleteMonthly?.(m)} style={{ padding: 6, background: "transparent", border: `1px solid ${t.border}`, color: t.textSec, cursor: "pointer", borderRadius: 6, display: "inline-flex", alignItems: "center" }}>{I.trash(13)}</button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
+      {/* KPI tiles from current transactions */}
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 12 }}>
         <Card theme={t} pad={16}>
-          <div style={{ fontSize: 11, fontWeight: 500, color: t.textMuted }}>Total net</div>
+          <div style={{ fontSize: 11, fontWeight: 500, color: t.textMuted }}>Current period net</div>
           <div style={{ fontSize: "clamp(14px, 4cqi, 20px)", fontWeight: 600, color: t.text, marginTop: 2, fontVariantNumeric: "tabular-nums", lineHeight: 1.15, wordBreak: "break-all" }}>{fmtFull(stats.totalNet)}</div>
           <div style={{ fontSize: 10, color: t.textMuted, marginTop: 2 }}>MVR</div>
         </Card>
@@ -78,18 +185,22 @@ export function ModernMonthly({
         </Card>
       </div>
 
+      {/* Trend chart — uses saved monthly records when available, falls back to transaction-derived data */}
       <Card theme={t} pad={isMobile ? 14 : 20}>
         <div style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Net profit by month</div>
-          <div style={{ fontSize: 11, color: t.textMuted }}>Derived from transactions</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Net profit trend</div>
+          <div style={{ fontSize: 11, color: t.textMuted }}>
+            {monthly.length > 0 ? "From saved monthly records (all-time)" : "Derived from current transactions"}
+          </div>
         </div>
-        <TrendChart data={txMonthly.map((m) => ({ label: m.label, value: m.net }))} theme={t} mode={chartStyle} height={isMobile ? 180 : 240} />
+        <TrendChart data={trendData} theme={t} mode={chartStyle} height={isMobile ? 180 : 240} />
       </Card>
 
+      {/* Current-period breakdown from transactions */}
       <Card theme={t} pad={0} style={{ overflow: "hidden" }}>
         <div style={{ padding: isMobile ? "14px 16px" : "16px 20px", borderBottom: `1px solid ${t.border}` }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>From transactions</div>
-          <div style={{ fontSize: 11, color: t.textMuted }}>Net profit by month, scaled to the best</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Current period breakdown</div>
+          <div style={{ fontSize: 11, color: t.textMuted }}>Net profit by month, from active transactions</div>
         </div>
         <div>
           {txMonthly.length === 0 && (
@@ -117,36 +228,6 @@ export function ModernMonthly({
           })}
         </div>
       </Card>
-
-      {monthly.length > 0 && (
-        <Card theme={t} pad={0} style={{ overflow: "hidden" }}>
-          <div style={{ padding: isMobile ? "14px 16px" : "16px 20px", borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Saved monthly records</div>
-              <div style={{ fontSize: 11, color: t.textMuted }}>Manually entered profit per month</div>
-            </div>
-            <div style={{ fontSize: 11, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>USD</div>
-          </div>
-          <div>
-            {monthly.map((m) => {
-              const profit = Number(m.profit) || 0;
-              const pos = profit >= 0;
-              return (
-                <div key={m.id} style={{ padding: isMobile ? "10px 16px" : "12px 20px", borderTop: `1px solid ${t.border}`, display: "grid", gridTemplateColumns: editModeMonthly ? "1fr auto auto" : "1fr auto", gap: 10, alignItems: "center" }}>
-                  <div style={{ fontSize: 13, color: t.text, fontWeight: 500 }}>{m.month}</div>
-                  <div style={{ textAlign: "right", color: pos ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums", fontSize: 13, minWidth: 90 }}>${profit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                  {editModeMonthly && (
-                    <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
-                      <button onClick={() => { setEditingMonthlyId?.(m.id); setMonthlyForm({ month: m.month, profit: String(m.profit) }); setShowMonthlyForm?.(true); }} style={{ padding: 6, background: "transparent", border: `1px solid ${t.border}`, color: t.textSec, cursor: "pointer", borderRadius: 6, display: "inline-flex", alignItems: "center" }}>{I.edit(13)}</button>
-                      <button onClick={() => onDeleteMonthly?.(m)} style={{ padding: 6, background: "transparent", border: `1px solid ${t.border}`, color: t.textSec, cursor: "pointer", borderRadius: 6, display: "inline-flex", alignItems: "center" }}>{I.trash(13)}</button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </Card>
-      )}
     </div>
   );
 }
