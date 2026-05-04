@@ -47,15 +47,17 @@ export function Sidebar({ theme, navItems, route, setRoute, onAdd, isMobile, ope
         {I.plus(14)} New transaction
       </Btn>
 
-      <div style={{ fontSize: 10, fontWeight: 600, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", padding: "0 8px", marginBottom: 6 }}>Workspace</div>
+      <div style={{ fontSize: 10, fontWeight: 600, color: t.accent, textTransform: "uppercase", letterSpacing: "0.08em", padding: "0 8px", marginBottom: 6 }}>Workspace</div>
       <nav style={{ display: "flex", flexDirection: "column", gap: 2 }}>
         {navItems.map((n) => (
           <button key={n.key} onClick={() => { setRoute(n.key); if (isMobile) onClose?.(); }} style={{
             display: "flex", alignItems: "center", gap: 10,
             padding: "8px 10px",
+            paddingLeft: route === n.key ? 7 : 10,
             background: route === n.key ? t.accentSoft : "transparent",
             color: route === n.key ? t.accent : t.textSec,
             border: "none", cursor: "pointer",
+            borderLeft: route === n.key ? `3px solid ${t.accent}` : "3px solid transparent",
             borderRadius: 8,
             fontSize: 13, fontWeight: 500,
             fontFamily: "inherit",
@@ -95,7 +97,7 @@ export function Sidebar({ theme, navItems, route, setRoute, onAdd, isMobile, ope
   );
 }
 
-export function TopBar({ theme, route, navItems, isMobile, onMenuClick, onAdd }) {
+export function TopBar({ theme, route, navItems, isMobile, onMenuClick, onAdd, userEmail = "" }) {
   const t = theme;
   const current = navItems.find((n) => n.key === route);
   return (
@@ -129,23 +131,21 @@ export function TopBar({ theme, route, navItems, isMobile, onMenuClick, onAdd })
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-        {!isMobile && (
+        {userEmail && (
           <div style={{
-            position: "relative", display: "flex", alignItems: "center",
-            background: t.surfaceAlt, border: `1px solid ${t.border}`,
-            borderRadius: 8,
-            padding: "0 10px", height: 32, gap: 6,
+            display: "inline-flex", alignItems: "center", gap: 6,
+            padding: "5px 12px",
+            background: t.accentSoft,
+            border: `1px solid ${t.accent}30`,
+            borderRadius: 999,
+            fontSize: 11, fontWeight: 500, color: t.accent,
+            maxWidth: isMobile ? 140 : 220,
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           }}>
-            <span style={{ color: t.textMuted, display: "flex" }}>{I.search(13)}</span>
-            <input placeholder="Search transactions…" style={{
-              border: "none", background: "transparent", outline: "none",
-              fontSize: 12, color: t.text, width: 180,
-              fontFamily: "inherit",
-            }} />
-            <span style={{ fontSize: 10, color: t.textMuted, padding: "2px 5px", border: `1px solid ${t.border}`, borderRadius: 4 }}>⌘K</span>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: t.accent, flexShrink: 0 }} />
+            {userEmail}
           </div>
         )}
-        <Btn theme={t} size="sm" variant="primary" onClick={onAdd}>{I.plus(13)}{!isMobile && " Add"}</Btn>
       </div>
     </header>
   );
@@ -169,7 +169,15 @@ export function BottomTabs({ theme, navItems, route, setRoute }) {
           background: "transparent", border: "none", cursor: "pointer",
           color: route === n.key ? t.accent : t.textMuted,
           fontFamily: "inherit", fontSize: 10, fontWeight: 500,
+          position: "relative",
         }}>
+          {/* accent bar */}
+          <div style={{
+            position: "absolute", top: 0, left: "20%", right: "20%",
+            height: 2, borderRadius: 999,
+            background: route === n.key ? t.accent : "transparent",
+            transition: "background .2s",
+          }} />
           {n.icon(18)}
           <span>{n.label}</span>
         </button>

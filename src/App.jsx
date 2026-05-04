@@ -587,6 +587,7 @@ function AppInner() {
         themeKey={theme}
         palette={c}
         font={font}
+        userEmail={userEmail}
         isMobile={isMobile}
         transactions={transactions}
         owners={owners}

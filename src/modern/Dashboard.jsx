@@ -19,7 +19,7 @@ function HeroStat({ label, value, suffix }) {
 
 function StatTile({ theme: t, label, value, sub, spark, positive }) {
   return (
-    <Card theme={t} pad={16}>
+    <Card theme={t} pad={16} style={{ borderTop: `3px solid ${t.accent}` }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 11, fontWeight: 500, color: t.textMuted }}>{label}</div>
@@ -27,6 +27,26 @@ function StatTile({ theme: t, label, value, sub, spark, positive }) {
           <div style={{ fontSize: 10, color: t.textMuted, marginTop: 2 }}>{sub}</div>
         </div>
         {spark && <Sparkline values={spark} theme={t} positive={positive} w={70} h={30} />}
+      </div>
+    </Card>
+  );
+}
+
+function DualStatTile({ theme: t, labelA, valueA, subA, labelB, valueB, subB }) {
+  return (
+    <Card theme={t} pad={16} style={{ borderTop: `3px solid ${t.accent}` }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 11, fontWeight: 500, color: t.textMuted }}>{labelA}</div>
+          <div style={{ fontSize: "clamp(13px, 3.5cqi, 18px)", fontWeight: 600, color: t.text, marginTop: 2, fontVariantNumeric: "tabular-nums", lineHeight: 1.2 }}>{valueA}</div>
+          <div style={{ fontSize: 10, color: t.textMuted, marginTop: 2 }}>{subA}</div>
+        </div>
+        <div style={{ width: 1, background: t.border, alignSelf: "stretch", flexShrink: 0 }} />
+        <div style={{ flex: 1, minWidth: 0, textAlign: "right" }}>
+          <div style={{ fontSize: 11, fontWeight: 500, color: t.textMuted }}>{labelB}</div>
+          <div style={{ fontSize: "clamp(13px, 3.5cqi, 18px)", fontWeight: 600, color: t.text, marginTop: 2, fontVariantNumeric: "tabular-nums", lineHeight: 1.2 }}>{valueB}</div>
+          <div style={{ fontSize: 10, color: t.textMuted, marginTop: 2 }}>{subB}</div>
+        </div>
       </div>
     </Card>
   );
@@ -98,7 +118,7 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
             </div>
             <div style={{ marginTop: 20, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.18)" }}>
               <HeroStat label="Gross profit" value={fmtFull(stats.totalGross)} suffix="MVR" />
-              <HeroStat label="Cost basis" value={fmtFull(stats.totalCost)} suffix="MVR" />
+              <HeroStat label="Cost" value={fmtFull(stats.totalCost)} suffix="MVR" />
               <HeroStat label="Margin" value={stats.avgMargin.toFixed(1) + "%"} />
             </div>
           </div>
@@ -106,13 +126,11 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: isMobile ? 8 : 12 }}>
           <StatTile theme={t} label="Transactions" value={transactions.length.toString()} sub="current period" spark={localMonthly.map((m) => m.count)} positive />
-          <StatTile theme={t} label="Avg. sell rate" value={stats.avgSellRate.toFixed(2)} sub="MVR / USD" spark={localMonthly.map((m) => m.avgSellRate)} positive />
-          <StatTile theme={t} label="This month" value={fmtFull(stats.thisMonthNet)} sub={`${stats.thisMonthCount} transactions`} spark={localMonthly.slice(-6).map((m) => m.net)} positive={stats.thisMonthNet >= 0} />
-          <StatTile theme={t} label="Best month" value={fmtFull(stats.bestMonth.net)} sub={stats.bestMonth.label} spark={localMonthly.map((m) => m.net)} positive />
           <StatTile theme={t} label="USDT Sold" value={fmtUSD(stats.totalSellAmount)} sub="Total sell volume" positive />
-          <StatTile theme={t} label="USD Bought" value={fmtUSD(stats.totalBuyAmount)} sub="Total buy volume" positive />
+          <StatTile theme={t} label="USD Used" value={fmtUSD(stats.totalBuyAmount)} sub="Total buy volume" positive />
           <StatTile theme={t} label="Avg profit / tx" value={fmtFull(stats.avgNetProfit)} sub="Per transaction" spark={localMonthly.map((m) => m.count ? m.net / m.count : 0)} positive={stats.avgNetProfit >= 0} />
-          <StatTile theme={t} label="Avg buy rate" value={stats.avgBuyRate.toFixed(2)} sub="MVR / USD" spark={localMonthly.map((m) => m.avgSellRate)} positive />
+          <StatTile theme={t} label="Best month" value={fmtFull(stats.bestMonth.net)} sub={stats.bestMonth.label} spark={localMonthly.map((m) => m.net)} positive />
+          <DualStatTile theme={t} labelA="Avg sell rate" valueA={stats.avgSellRate.toFixed(2)} subA="MVR / USD" labelB="Avg buy rate" valueB={stats.avgBuyRate.toFixed(2)} subB="MVR / USD" />
         </div>
       </div>
 
@@ -120,7 +138,10 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
         <Card theme={t} pad={isMobile ? 14 : 20}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4, gap: 8, flexWrap: "wrap" }}>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Net profit trend</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 3, height: 14, borderRadius: 2, background: t.accent, flexShrink: 0 }} />
+                <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Net profit trend</div>
+              </div>
               <div style={{ fontSize: 11, color: t.textMuted }}>Monthly</div>
             </div>
           </div>
@@ -129,7 +150,10 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
 
         <Card theme={t} pad={isMobile ? 14 : 20}>
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Cards by volume</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 3, height: 14, borderRadius: 2, background: t.accent, flexShrink: 0 }} />
+              <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Cards by volume</div>
+            </div>
             <div style={{ fontSize: 11, color: t.textMuted }}>Share of sell amount (USD)</div>
           </div>
           <Donut data={cardTypeBreakdown} theme={t} size={isMobile ? 160 : 180} thickness={24} />
@@ -139,7 +163,10 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "minmax(0, 1fr) minmax(0, 1fr)", gap: isMobile ? 12 : 16 }}>
         <Card theme={t} pad={isMobile ? 14 : 20}>
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Gross vs cost</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 3, height: 14, borderRadius: 2, background: t.accent, flexShrink: 0 }} />
+              <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Gross vs cost</div>
+            </div>
             <div style={{ fontSize: 11, color: t.textMuted }}>Stacked monthly flows</div>
           </div>
           <StackedBars data={profitCostData} theme={t} height={isMobile ? 160 : 200} />
@@ -151,7 +178,10 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
         </Card>
         <Card theme={t} pad={isMobile ? 14 : 20}>
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Rate dispersion</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 3, height: 14, borderRadius: 2, background: t.accent, flexShrink: 0 }} />
+              <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Rate dispersion</div>
+            </div>
             <div style={{ fontSize: 11, color: t.textMuted }}>Each dot = one transaction</div>
           </div>
           <Scatter data={scatterData} theme={t} height={isMobile ? 160 : 200} xLabel="Buy rate (MVR/USD)" yLabel="Sell rate" />
@@ -161,7 +191,10 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "minmax(0, 1fr) minmax(0, 1.6fr)", gap: isMobile ? 12 : 16 }}>
         <Card theme={t} pad={isMobile ? 14 : 20}>
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Margin distribution</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 3, height: 14, borderRadius: 2, background: t.accent, flexShrink: 0 }} />
+              <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Margin distribution</div>
+            </div>
             <div style={{ fontSize: 11, color: t.textMuted }}>Across all transactions</div>
           </div>
           <Histogram data={margins} theme={t} height={isMobile ? 140 : 180} />
@@ -169,7 +202,10 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
         <Card theme={t} pad={0} style={{ overflow: "hidden" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: isMobile ? "14px 16px" : "16px 20px", borderBottom: `1px solid ${t.border}` }}>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Recent activity</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 3, height: 14, borderRadius: 2, background: t.accent, flexShrink: 0 }} />
+                <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Recent activity</div>
+              </div>
               <div style={{ fontSize: 11, color: t.textMuted }}>Latest 5 transactions</div>
             </div>
             <Btn theme={t} variant="ghost" size="sm" onClick={() => setRoute("transactions")}>View all →</Btn>

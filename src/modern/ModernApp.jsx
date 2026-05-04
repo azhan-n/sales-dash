@@ -70,7 +70,7 @@ function buildTheme({ themeKey, palette, font }) {
 }
 
 export function ModernApp({
-  themeKey, palette, font, isMobile: parentIsMobile,
+  themeKey, palette, font, userEmail = "", isMobile: parentIsMobile,
   // shared data
   transactions, owners, cards, monthly,
   ownerStats,
@@ -105,6 +105,8 @@ export function ModernApp({
   const [chartStyle, setChartStyle] = useState(() => lsGet("modern_chartStyle", "area"));
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editModeMonthly, setEditModeMonthly] = useState(false);
+  const [fontScale, setFontScale] = useState(() => parseFloat(lsGet("modern_fontScale")) || 1.0);
+  useEffect(() => { lsSet("modern_fontScale", fontScale.toString()); }, [fontScale]);
 
   // Confirm dialog state for delete actions originating in Modern.
   const [confirmDelete, setConfirmDelete] = useState(null);    // { kind, payload }
@@ -175,6 +177,7 @@ export function ModernApp({
     fontFamily: `"${font}", -apple-system, BlinkMacSystemFont, sans-serif`,
     display: "flex",
     WebkitFontSmoothing: "antialiased",
+    zoom: fontScale,
   };
 
   const bulkCount = confirmDelete?.kind === "bulk" ? (selectedTxIds?.size || 0) : 0;
@@ -197,6 +200,7 @@ export function ModernApp({
           route={route}
           navItems={navItems}
           isMobile={isMobile}
+          userEmail={userEmail}
           onMenuClick={() => setDrawerOpen(true)}
           onAdd={handleAddTx}
         />
@@ -270,6 +274,8 @@ export function ModernApp({
               setChartStyle={setChartStyle}
               onSwitchToClassic={onExitModern}
               isMobile={isMobile}
+              fontScale={fontScale}
+              setFontScale={setFontScale}
             />
           )}
         </main>
