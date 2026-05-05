@@ -281,6 +281,7 @@ export function ModernTransactions({
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 11, color: t.textMuted, paddingTop: 8, borderTop: `1px dashed ${t.border}` }}>
                     <div><span style={{ opacity: 0.7 }}>Buy</span> <span style={{ color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{fmtUSD(tx.buyAmount)} @ {(Number(tx.buyRate) || 0).toFixed(2)}</span></div>
                     <div><span style={{ opacity: 0.7 }}>Sell</span> <span style={{ color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{fmtUSD(tx.sellAmount)} @ {(Number(tx.sellRate) || 0).toFixed(2)}</span></div>
+                    <div><span style={{ opacity: 0.7 }}>Gross</span> <span style={{ color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{fmtFull(tx.grossProfit)} MVR</span></div>
                     <div><span style={{ opacity: 0.7 }}>Cost</span> <span style={{ color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{fmtFull(tx.cost)} MVR</span></div>
                     {showActions && (
                       <div style={{ textAlign: "right", display: "flex", gap: 4, justifyContent: "flex-end" }}>
@@ -297,9 +298,13 @@ export function ModernTransactions({
             )}
           </div>
           {filtered.length > 0 && (
-            <div style={{ background: t.surfaceAlt, padding: "12px 16px", borderTop: `1px solid ${t.border}`, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, fontSize: 11 }}>
+            <div style={{ background: t.surfaceAlt, padding: "12px 16px", borderTop: `1px solid ${t.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, fontSize: 11 }}>
               <div>
-                <div style={{ color: t.textMuted, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Net · {filtered.length} rows</div>
+                <div style={{ color: t.textMuted, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Gross · {filtered.length} rows</div>
+                <div style={{ color: t.text, fontWeight: 600, fontSize: 15, fontVariantNumeric: "tabular-nums" }}>{fmtFull(totals.gross)}</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ color: t.textMuted, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Net profit</div>
                 <div style={{ color: totals.net >= 0 ? t.positive : t.negative, fontWeight: 600, fontSize: 15, fontVariantNumeric: "tabular-nums" }}>{totals.net >= 0 ? "+" : ""}{fmtFull(totals.net)}</div>
               </div>
               <div style={{ textAlign: "right" }}>
@@ -329,6 +334,7 @@ export function ModernTransactions({
                   {th("Buy amt", "buyAmount", "right")}
                   {th("Sell rate", "sellRate", "right")}
                   {th("Sell amt", "sellAmount", "right")}
+                  {th("Gross", "grossProfit", "right")}
                   {th("Cost", "cost", "right")}
                   {th("Net", "netProfit", "right")}
                   {th("Margin", "profitMargin", "right")}
@@ -365,6 +371,7 @@ export function ModernTransactions({
                       <td style={{ padding: "10px 12px", textAlign: "right", color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{fmtUSD(tx.buyAmount)}</td>
                       <td style={{ padding: "10px 12px", textAlign: "right", color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{(Number(tx.sellRate) || 0).toFixed(2)}</td>
                       <td style={{ padding: "10px 12px", textAlign: "right", color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{fmtUSD(tx.sellAmount)}</td>
+                      <td style={{ padding: "10px 12px", textAlign: "right", color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{fmtFull(tx.grossProfit)}</td>
                       <td style={{ padding: "10px 12px", textAlign: "right", color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{fmtFull(tx.cost)}</td>
                       <td style={{ padding: "10px 12px", textAlign: "right", color: pos ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{pos ? "+" : ""}{fmtFull(tx.netProfit)}</td>
                       <td style={{ padding: "10px 12px", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
