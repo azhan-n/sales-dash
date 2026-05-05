@@ -1,6 +1,6 @@
 // Modern Overview — hero KPI + sparkline tiles + charts + recent activity
 import React from "react";
-import { Card, Btn, CardTypeBadge, fmtFull, fmtUSD, fmtDate, cardColors, useIcons } from "./ui";
+import { Card, Btn, CardTypeBadge, CardNumBadge, NetBadge, GrossBadge, CostBadge, UsdBadge, RateBadge, MarginBadge, CountBadge, fmtFull, fmtUSD, fmtDate, cardColors, useIcons } from "./ui";
 import { TrendChart, Donut, Scatter, Histogram, Sparkline } from "./charts";
 import { aggregateByMonth, aggregateByCardType, computeStats } from "./aggregations";
 import { OwnerStatsPanel } from "./OwnerStatsPanel";
@@ -17,13 +17,14 @@ function HeroStat({ label, value, suffix }) {
   );
 }
 
-function StatTile({ theme: t, label, value, sub, spark, positive, icon }) {
+function StatTile({ theme: t, label, value, sub, spark, positive, icon, tileColor }) {
+  const tc = tileColor || t.accent;
   return (
-    <Card theme={t} pad={16} style={{ borderTop: `3px solid ${t.accent}` }}>
+    <Card theme={t} pad={16} style={{ borderTop: `3px solid ${tc}`, background: t.surface }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 2 }}>
-            {icon && <span style={{ color: t.accent, display: "flex", flexShrink: 0 }}>{icon(13)}</span>}
+            {icon && <span style={{ color: tc, display: "flex", flexShrink: 0 }}>{icon(13)}</span>}
             <div style={{ fontSize: 11, fontWeight: t.fw?.label ?? 500, color: t.textMuted }}>{label}</div>
           </div>
           <div style={{ fontSize: "clamp(14px, 4cqi, 20px)", fontWeight: t.fw?.value ?? 600, color: t.text, letterSpacing: "-0.02em", marginTop: 2, fontVariantNumeric: "tabular-nums", lineHeight: 1.15, wordBreak: "break-all" }}>{value}</div>
@@ -35,20 +36,24 @@ function StatTile({ theme: t, label, value, sub, spark, positive, icon }) {
   );
 }
 
+const USD_COLOR  = (isDark) => isDark ? "#c4b5fd" : "#7c3aed";
+const RATE_COLOR = (isDark) => isDark ? "#5eead4" : "#0f766e";
+
 function DualStatTile({ theme: t, labelA, valueA, subA, labelB, valueB, subB }) {
+  const rc = RATE_COLOR(t.isDark);
   return (
-    <Card theme={t} pad={16} style={{ borderTop: `3px solid ${t.accent}` }}>
+    <Card theme={t} pad={16} style={{ borderTop: `3px solid ${rc}` }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 11, fontWeight: 500, color: t.textMuted }}>{labelA}</div>
-          <div style={{ fontSize: "clamp(13px, 3.5cqi, 18px)", fontWeight: 600, color: t.text, marginTop: 2, fontVariantNumeric: "tabular-nums", lineHeight: 1.2 }}>{valueA}</div>
-          <div style={{ fontSize: 10, color: t.textMuted, marginTop: 2 }}>{subA}</div>
+          <div style={{ marginTop: 4 }}><RateBadge value={valueA} theme={t} /></div>
+          <div style={{ fontSize: 10, color: t.textMuted, marginTop: 3 }}>{subA}</div>
         </div>
         <div style={{ width: 1, background: t.border, alignSelf: "stretch", flexShrink: 0 }} />
         <div style={{ flex: 1, minWidth: 0, textAlign: "right" }}>
           <div style={{ fontSize: 11, fontWeight: 500, color: t.textMuted }}>{labelB}</div>
-          <div style={{ fontSize: "clamp(13px, 3.5cqi, 18px)", fontWeight: 600, color: t.text, marginTop: 2, fontVariantNumeric: "tabular-nums", lineHeight: 1.2 }}>{valueB}</div>
-          <div style={{ fontSize: 10, color: t.textMuted, marginTop: 2 }}>{subB}</div>
+          <div style={{ marginTop: 4 }}><RateBadge value={valueB} theme={t} /></div>
+          <div style={{ fontSize: 10, color: t.textMuted, marginTop: 3 }}>{subB}</div>
         </div>
       </div>
     </Card>
@@ -130,11 +135,11 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
         </Card>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: isMobile ? 8 : 12 }}>
-          <StatTile theme={t} label="Transactions" value={transactions.length.toString()} sub="current period" spark={localMonthly.map((m) => m.count)} positive icon={I.list} />
-          <StatTile theme={t} label="USDT Sold" value={fmtUSD(stats.totalSellAmount)} sub="Total sell volume" positive icon={I.dollar} />
-          <StatTile theme={t} label="USD Used" value={fmtUSD(stats.totalBuyAmount)} sub="Total buy volume" positive icon={I.dollar} />
-          <StatTile theme={t} label="Avg profit / tx" value={fmtFull(stats.avgNetProfit)} sub="Per transaction" spark={localMonthly.map((m) => m.count ? m.net / m.count : 0)} positive={stats.avgNetProfit >= 0} icon={I.trending} />
-          <StatTile theme={t} label="Best month" value={fmtFull(stats.bestMonth.net)} sub={stats.bestMonth.label} spark={localMonthly.map((m) => m.net)} positive icon={I.calendar} />
+          <StatTile theme={t} label="Transactions" value={<CountBadge value={transactions.length} theme={t} label="tx" />} sub="current period" spark={localMonthly.map((m) => m.count)} positive icon={I.list} tileColor={t.accent} />
+          <StatTile theme={t} label="USDT Sold" value={<UsdBadge value={stats.totalSellAmount} theme={t} />} sub="Total sell volume" positive icon={I.dollar} tileColor={USD_COLOR(t.isDark)} />
+          <StatTile theme={t} label="USD Used" value={<UsdBadge value={stats.totalBuyAmount} theme={t} />} sub="Total buy volume" positive icon={I.dollar} tileColor={USD_COLOR(t.isDark)} />
+          <StatTile theme={t} label="Avg profit / tx" value={<NetBadge value={stats.avgNetProfit} theme={t} />} sub="Per transaction" spark={localMonthly.map((m) => m.count ? m.net / m.count : 0)} positive={stats.avgNetProfit >= 0} icon={I.trending} tileColor={stats.avgNetProfit >= 0 ? t.positive : t.negative} />
+          <StatTile theme={t} label="Best month" value={<GrossBadge value={stats.bestMonth.net} theme={t} />} sub={stats.bestMonth.label} spark={localMonthly.map((m) => m.net)} positive icon={I.calendar} tileColor={t.isDark ? "#fdba74" : "#ea580c"} />
           <DualStatTile theme={t} labelA="Avg sell rate" valueA={stats.avgSellRate.toFixed(2)} subA="MVR / USD" labelB="Avg buy rate" valueB={stats.avgBuyRate.toFixed(2)} subB="MVR / USD" />
         </div>
       </div>
@@ -210,29 +215,33 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
                 return (
                   <div key={tx.id} style={{ padding: "12px 16px", borderTop: `1px solid ${t.border}`, display: "flex", flexDirection: "column", gap: 6 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, flex: 1, flexWrap: "wrap" }}>
                         <CardTypeBadge type={cardType} theme={t} />
-                        <span style={{ color: t.textSec, fontSize: 11, fontVariantNumeric: "tabular-nums" }}>••{cardNum}</span>
+                        <CardNumBadge value={cardNum} theme={t} />
                       </div>
-                      <div style={{ color: pos ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums", fontSize: 13, whiteSpace: "nowrap" }}>{pos ? "+" : ""}{fmtFull(tx.netProfit)}</div>
+                      <NetBadge value={tx.netProfit} theme={t} />
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: t.textMuted }}>
-                      <span>{ownerName} · {fmtDate(tx.date)}</span>
-                      <span style={{ fontVariantNumeric: "tabular-nums" }}>{fmtUSD(tx.sellAmount)}</span>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 11, color: t.textMuted }}>{ownerName} · {fmtDate(tx.date)}</span>
+                      <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                        <UsdBadge value={tx.sellAmount} theme={t} />
+                        <MarginBadge value={tx.profitMargin} theme={t} />
+                      </div>
                     </div>
                   </div>
                 );
               }
               return (
-                <div key={tx.id} style={{ display: "grid", gridTemplateColumns: "70px 1fr 120px 100px", alignItems: "center", gap: 12, padding: "12px 20px", borderTop: `1px solid ${t.border}`, fontSize: 12 }}>
+                <div key={tx.id} style={{ display: "grid", gridTemplateColumns: "70px 1fr 110px 80px 110px", alignItems: "center", gap: 10, padding: "10px 20px", borderTop: `1px solid ${t.border}`, fontSize: 12 }}>
                   <div style={{ color: t.textMuted, fontVariantNumeric: "tabular-nums" }}>{fmtDate(tx.date)}</div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, flexWrap: "wrap" }}>
                     <CardTypeBadge type={cardType} theme={t} />
-                    <span style={{ color: t.textSec, fontVariantNumeric: "tabular-nums" }}>••{cardNum}</span>
-                    <span style={{ color: t.textMuted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>· {ownerName}</span>
+                    <CardNumBadge value={cardNum} theme={t} />
+                    <span style={{ color: t.textMuted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ownerName}</span>
                   </div>
-                  <div style={{ color: t.textSec, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>{fmtUSD(tx.sellAmount)}</div>
-                  <div style={{ color: pos ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>{pos ? "+" : ""}{fmtFull(tx.netProfit)}</div>
+                  <div style={{ textAlign: "right" }}><UsdBadge value={tx.sellAmount} theme={t} /></div>
+                  <div style={{ textAlign: "right" }}><MarginBadge value={tx.profitMargin} theme={t} /></div>
+                  <div style={{ textAlign: "right" }}><NetBadge value={tx.netProfit} theme={t} /></div>
                 </div>
               );
             })}

@@ -1,22 +1,10 @@
 // Modern Transactions — filterable table with date range, card number filter,
 // pagination, bulk select, archive history selector, and PDF export.
 import React, { useState, useMemo } from "react";
-import { Card, Btn, CardTypeBadge, SelectChip, fmtFull, fmtUSD, fmtDate, useIcons } from "./ui";
+import { Card, Btn, CardTypeBadge, CardNumBadge, NetBadge, GrossBadge, CostBadge, UsdBadge, RateBadge, MarginBadge, CountBadge, fmtFull, fmtUSD, fmtDate, useIcons } from "./ui";
 import { exportTransactionsPDF, parseDate, dateSortKey } from "../utils";
 
 const PAGE_SIZE = 50;
-
-function ValueBadge({ value, color, bg, fmt = fmtFull }) {
-  return (
-    <span style={{
-      display: "inline-flex", alignItems: "center",
-      padding: "2px 8px", borderRadius: 999,
-      background: bg, color,
-      fontVariantNumeric: "tabular-nums", fontWeight: 600,
-      whiteSpace: "nowrap",
-    }}>{fmt(value)}</span>
-  );
-}
 
 function Checkbox({ checked, indeterminate, onChange, theme, ariaLabel }) {
   const t = theme;
@@ -37,14 +25,6 @@ export function ModernTransactions({
 }) {
   const t = theme;
   const I = useIcons();
-  const clCost  = t.isDark ? "#93c5fd" : "#3b82f6";
-  const bgCost  = t.isDark ? "rgba(147,197,253,0.15)" : "#eff6ff";
-  const clGross = t.isDark ? "#fdba74" : "#f97316";
-  const bgGross = t.isDark ? "rgba(253,186,116,0.15)" : "#fff7ed";
-  const clNetPos = t.positive;
-  const bgNetPos = t.isDark ? `${t.positive}22` : `${t.positive}18`;
-  const clNetNeg = t.negative;
-  const bgNetNeg = t.isDark ? "rgba(252,165,165,0.15)" : "#fee2e2";
   const isHistory = selectedPeriod !== "current";
   const [viewMode, setViewMode] = useState(() => {
     try { return localStorage.getItem("modern_txViewMode") || (isMobile ? "cards" : "table"); } catch { return isMobile ? "cards" : "table"; }
@@ -287,22 +267,22 @@ export function ModernTransactions({
                       <div style={{ minWidth: 0, flex: 1 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginBottom: 3 }}>
                           <CardTypeBadge type={cardType} theme={t} />
-                          <span style={{ color: t.textSec, fontFamily: "ui-monospace, monospace", fontSize: 11 }}>••{cardNum}</span>
+                          <CardNumBadge value={cardNum} theme={t} />
                         </div>
                         <div style={{ fontSize: 13, color: t.text, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ownerName}</div>
                         <div style={{ fontSize: 11, color: t.textMuted, marginTop: 1 }}>{fmtDate(tx.date)}</div>
                       </div>
                     </div>
-                    <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <ValueBadge value={tx.netProfit} color={pos ? clNetPos : clNetNeg} bg={pos ? bgNetPos : bgNetNeg} fmt={(v) => (v >= 0 ? "+" : "") + fmtFull(v)} />
-                      <div style={{ color: pos ? t.positive : t.negative, fontSize: 11, fontVariantNumeric: "tabular-nums", opacity: 0.8 }}>{(Number(tx.profitMargin) || 0).toFixed(1)}%</div>
+                    <div style={{ textAlign: "right", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                      <NetBadge value={tx.netProfit} theme={t} />
+                      <MarginBadge value={tx.profitMargin} theme={t} />
                     </div>
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 11, color: t.textMuted, paddingTop: 8, borderTop: `1px dashed ${t.border}` }}>
-                    <div><span style={{ opacity: 0.7 }}>Buy</span> <span style={{ color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{fmtUSD(tx.buyAmount)} @ {(Number(tx.buyRate) || 0).toFixed(2)}</span></div>
-                    <div><span style={{ opacity: 0.7 }}>Sell</span> <span style={{ color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{fmtUSD(tx.sellAmount)} @ {(Number(tx.sellRate) || 0).toFixed(2)}</span></div>
-                    <div><span style={{ opacity: 0.7 }}>Gross</span> <ValueBadge value={tx.grossProfit} color={clGross} bg={bgGross} /></div>
-                    <div><span style={{ opacity: 0.7 }}>Cost</span> <ValueBadge value={tx.cost} color={clCost} bg={bgCost} /></div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 5 }}><span style={{ opacity: 0.7 }}>Buy</span> <UsdBadge value={tx.buyAmount} theme={t} /> <span style={{ opacity: 0.6 }}>@</span> <RateBadge value={tx.buyRate} theme={t} /></div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 5 }}><span style={{ opacity: 0.7 }}>Sell</span> <UsdBadge value={tx.sellAmount} theme={t} /> <span style={{ opacity: 0.6 }}>@</span> <RateBadge value={tx.sellRate} theme={t} /></div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 5 }}><span style={{ opacity: 0.7 }}>Gross</span> <GrossBadge value={tx.grossProfit} theme={t} /></div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 5 }}><span style={{ opacity: 0.7 }}>Cost</span> <CostBadge value={tx.cost} theme={t} /></div>
                     {showActions && (
                       <div style={{ textAlign: "right", display: "flex", gap: 4, justifyContent: "flex-end" }}>
                         <button onClick={() => onEdit(tx)} style={{ padding: 6, background: "transparent", border: `1px solid ${t.border}`, color: t.textSec, cursor: "pointer", borderRadius: 6, display: "inline-flex", alignItems: "center" }}>{I.edit(13)}</button>
@@ -320,16 +300,16 @@ export function ModernTransactions({
           {filtered.length > 0 && (
             <div style={{ background: t.surfaceAlt, padding: "12px 16px", borderTop: `1px solid ${t.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, fontSize: 11 }}>
               <div>
-                <div style={{ color: t.textMuted, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Gross · {filtered.length} rows</div>
-                <ValueBadge value={totals.gross} color={clGross} bg={bgGross} />
+                <div style={{ display: "flex", align: "center", gap: 5, color: t.textMuted, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Gross <CountBadge value={filtered.length} theme={t} label="rows" /></div>
+                <GrossBadge value={totals.gross} theme={t} />
               </div>
               <div style={{ textAlign: "center" }}>
                 <div style={{ color: t.textMuted, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Net profit</div>
-                <ValueBadge value={totals.net} color={totals.net >= 0 ? clNetPos : clNetNeg} bg={totals.net >= 0 ? bgNetPos : bgNetNeg} fmt={(v) => (v >= 0 ? "+" : "") + fmtFull(v)} />
+                <NetBadge value={totals.net} theme={t} />
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ color: t.textMuted, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Avg margin</div>
-                <div style={{ color: totals.avgMargin >= 0 ? t.positive : t.negative, fontWeight: 600, fontSize: 15, fontVariantNumeric: "tabular-nums" }}>{totals.avgMargin.toFixed(1)}%</div>
+                <MarginBadge value={totals.avgMargin} theme={t} />
               </div>
             </div>
           )}
@@ -379,24 +359,22 @@ export function ModernTransactions({
                           <Checkbox theme={t} checked={!!isSelected} onChange={() => toggleOne(tx.id)} ariaLabel="Select transaction" />
                         </td>
                       )}
-                      <td style={{ padding: "10px 12px", color: t.textSec, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>{fmtDate(tx.date)}</td>
+                      <td style={{ padding: "10px 12px", color: t.textMuted, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", fontSize: 11 }}>{fmtDate(tx.date)}</td>
                       <td style={{ padding: "10px 12px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                           <CardTypeBadge type={cardType} theme={t} />
-                          <span style={{ color: t.textSec, fontFamily: "ui-monospace, monospace", fontSize: 12 }}>••{cardNum}</span>
+                          <CardNumBadge value={cardNum} theme={t} />
                         </div>
                       </td>
-                      <td style={{ padding: "10px 12px", color: t.text }}>{ownerName}</td>
-                      <td style={{ padding: "10px 12px", textAlign: "right", color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{(Number(tx.buyRate) || 0).toFixed(2)}</td>
-                      <td style={{ padding: "10px 12px", textAlign: "right", color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{fmtUSD(tx.buyAmount)}</td>
-                      <td style={{ padding: "10px 12px", textAlign: "right", color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{(Number(tx.sellRate) || 0).toFixed(2)}</td>
-                      <td style={{ padding: "10px 12px", textAlign: "right", color: t.textSec, fontVariantNumeric: "tabular-nums" }}>{fmtUSD(tx.sellAmount)}</td>
-                      <td style={{ padding: "10px 12px", textAlign: "right" }}><ValueBadge value={tx.grossProfit} color={clGross} bg={bgGross} /></td>
-                      <td style={{ padding: "10px 12px", textAlign: "right" }}><ValueBadge value={tx.cost} color={clCost} bg={bgCost} /></td>
-                      <td style={{ padding: "10px 12px", textAlign: "right" }}><ValueBadge value={tx.netProfit} color={pos ? clNetPos : clNetNeg} bg={pos ? bgNetPos : bgNetNeg} fmt={(v) => (v >= 0 ? "+" : "") + fmtFull(v)} /></td>
-                      <td style={{ padding: "10px 12px", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
-                        <span style={{ color: pos ? t.positive : t.negative }}>{(Number(tx.profitMargin) || 0).toFixed(1)}%</span>
-                      </td>
+                      <td style={{ padding: "10px 12px", color: t.text, fontSize: 12 }}>{ownerName}</td>
+                      <td style={{ padding: "8px 12px", textAlign: "right" }}><RateBadge value={tx.buyRate} theme={t} /></td>
+                      <td style={{ padding: "8px 12px", textAlign: "right" }}><UsdBadge value={tx.buyAmount} theme={t} /></td>
+                      <td style={{ padding: "8px 12px", textAlign: "right" }}><RateBadge value={tx.sellRate} theme={t} /></td>
+                      <td style={{ padding: "8px 12px", textAlign: "right" }}><UsdBadge value={tx.sellAmount} theme={t} /></td>
+                      <td style={{ padding: "8px 12px", textAlign: "right" }}><GrossBadge value={tx.grossProfit} theme={t} /></td>
+                      <td style={{ padding: "8px 12px", textAlign: "right" }}><CostBadge value={tx.cost} theme={t} /></td>
+                      <td style={{ padding: "8px 12px", textAlign: "right" }}><NetBadge value={tx.netProfit} theme={t} /></td>
+                      <td style={{ padding: "8px 12px", textAlign: "right" }}><MarginBadge value={tx.profitMargin} theme={t} /></td>
                       {showActions && (
                         <td style={{ padding: "6px 10px", textAlign: "right", whiteSpace: "nowrap" }}>
                           <button onClick={() => onEdit(tx)} style={{ padding: 6, background: "transparent", border: "none", color: t.textMuted, cursor: "pointer", borderRadius: 4 }} onMouseEnter={(e) => (e.currentTarget.style.color = t.text)} onMouseLeave={(e) => (e.currentTarget.style.color = t.textMuted)}>{I.edit(14)}</button>
@@ -415,17 +393,17 @@ export function ModernTransactions({
                   <tr style={{ background: t.surfaceAlt }}>
                     {showActions && <td></td>}
                     <td colSpan={3} style={{ padding: "10px 12px", fontSize: 11, fontWeight: 600, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                      <div>Summary · {filtered.length} rows</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>Summary <CountBadge value={filtered.length} theme={t} label="rows" /></div>
                       <div style={{ fontSize: 9, color: t.textMuted, opacity: 0.7, marginTop: 2, textTransform: "none", letterSpacing: 0 }}>avg for rates/margin · total for amounts</div>
                     </td>
-                    <td style={{ padding: "10px 12px", textAlign: "right", color: t.text, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{totals.avgBuyRate.toFixed(2)}</td>
-                    <td style={{ padding: "10px 12px", textAlign: "right", color: t.text, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{fmtUSD(totals.buyAmt)}</td>
-                    <td style={{ padding: "10px 12px", textAlign: "right", color: t.text, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{totals.avgSellRate.toFixed(2)}</td>
-                    <td style={{ padding: "10px 12px", textAlign: "right", color: t.text, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{fmtUSD(totals.sellAmt)}</td>
-                    <td style={{ padding: "10px 12px", textAlign: "right" }}><ValueBadge value={totals.gross} color={clGross} bg={bgGross} /></td>
-                    <td style={{ padding: "10px 12px", textAlign: "right" }}><ValueBadge value={totals.cost} color={clCost} bg={bgCost} /></td>
-                    <td style={{ padding: "10px 12px", textAlign: "right" }}><ValueBadge value={totals.net} color={totals.net >= 0 ? clNetPos : clNetNeg} bg={totals.net >= 0 ? bgNetPos : bgNetNeg} fmt={(v) => (v >= 0 ? "+" : "") + fmtFull(v)} /></td>
-                    <td style={{ padding: "10px 12px", textAlign: "right", color: totals.avgMargin >= 0 ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{totals.avgMargin.toFixed(1)}%</td>
+                    <td style={{ padding: "8px 12px", textAlign: "right" }}><RateBadge value={totals.avgBuyRate} theme={t} /></td>
+                    <td style={{ padding: "8px 12px", textAlign: "right" }}><UsdBadge value={totals.buyAmt} theme={t} /></td>
+                    <td style={{ padding: "8px 12px", textAlign: "right" }}><RateBadge value={totals.avgSellRate} theme={t} /></td>
+                    <td style={{ padding: "8px 12px", textAlign: "right" }}><UsdBadge value={totals.sellAmt} theme={t} /></td>
+                    <td style={{ padding: "8px 12px", textAlign: "right" }}><GrossBadge value={totals.gross} theme={t} /></td>
+                    <td style={{ padding: "8px 12px", textAlign: "right" }}><CostBadge value={totals.cost} theme={t} /></td>
+                    <td style={{ padding: "8px 12px", textAlign: "right" }}><NetBadge value={totals.net} theme={t} /></td>
+                    <td style={{ padding: "8px 12px", textAlign: "right" }}><MarginBadge value={totals.avgMargin} theme={t} /></td>
                     {showActions && <td></td>}
                   </tr>
                 </tfoot>

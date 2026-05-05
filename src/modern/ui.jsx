@@ -91,6 +91,64 @@ export function CardTypeBadge({ type, theme }) {
   return <Badge color={cardColors[type] || theme.textMuted} theme={theme}>{type || "—"}</Badge>;
 }
 
+// ── Semantic value badges ──────────────────────────────────────────────────
+const pill = (color, bg, t) => ({
+  display: "inline-flex", alignItems: "center",
+  padding: "2px 8px", borderRadius: t.brutal ? 0 : 999,
+  background: bg, color,
+  fontVariantNumeric: "tabular-nums", fontWeight: 600, fontSize: 12,
+  whiteSpace: "nowrap",
+});
+
+export function NetBadge({ value, theme: t }) {
+  const v = Number(value) || 0;
+  const pos = v >= 0;
+  const color = pos ? t.positive : t.negative;
+  return <span style={pill(color, color + "22", t)}>{pos ? "+" : "−"}{fmtFull(Math.abs(v))}</span>;
+}
+export function GrossBadge({ value, theme: t }) {
+  const color = t.isDark ? "#fdba74" : "#ea580c";
+  const bg    = t.isDark ? "rgba(253,186,116,0.18)" : "#fff7ed";
+  return <span style={pill(color, bg, t)}>{fmtFull(Number(value) || 0)}</span>;
+}
+export function CostBadge({ value, theme: t }) {
+  const color = t.isDark ? "#93c5fd" : "#2563eb";
+  const bg    = t.isDark ? "rgba(147,197,253,0.18)" : "#eff6ff";
+  return <span style={pill(color, bg, t)}>{fmtFull(Number(value) || 0)}</span>;
+}
+export function UsdBadge({ value, theme: t }) {
+  const color = t.isDark ? "#c4b5fd" : "#7c3aed";
+  const bg    = t.isDark ? "rgba(196,181,253,0.18)" : "#f5f3ff";
+  return <span style={pill(color, bg, t)}>{fmtUSD(value)}</span>;
+}
+export function RateBadge({ value, theme: t, decimals = 2 }) {
+  const color = t.isDark ? "#5eead4" : "#0f766e";
+  const bg    = t.isDark ? "rgba(94,234,212,0.18)" : "#f0fdfa";
+  return <span style={pill(color, bg, t)}>{(Number(value) || 0).toFixed(decimals)}</span>;
+}
+export function MarginBadge({ value, theme: t }) {
+  const v = Number(value) || 0;
+  let color, bg;
+  if (v >= 15)     { color = t.positive;  bg = t.positive + "22"; }
+  else if (v >= 5) { color = t.isDark ? "#fcd34d" : "#d97706"; bg = t.isDark ? "rgba(252,211,77,0.18)" : "#fffbeb"; }
+  else             { color = t.negative;  bg = t.negative + "22"; }
+  return <span style={pill(color, bg, t)}>{v.toFixed(1)}%</span>;
+}
+export function CountBadge({ value, theme: t, label = "" }) {
+  return <span style={pill(t.accent, t.accentSoft, t)}>{Number(value).toLocaleString()}{label && ` ${label}`}</span>;
+}
+export function CardNumBadge({ value, theme: t }) {
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center",
+      padding: "2px 7px", borderRadius: t.brutal ? 0 : 6,
+      background: t.surfaceDeep, color: t.textSec,
+      fontFamily: "ui-monospace, monospace", fontSize: 11, fontWeight: 500,
+      letterSpacing: "0.04em", whiteSpace: "nowrap",
+    }}>••{value}</span>
+  );
+}
+
 export function fmtMVR(v, digits = 2) {
   if (v == null || isNaN(v)) return "—";
   const sign = v < 0 ? "−" : "";

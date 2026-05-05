@@ -1,6 +1,6 @@
 // Modern Monthly view — hero card + saved records + KPI tiles + trend chart + bar list
 import React, { useState } from "react";
-import { Card, Btn, fmtFull, useIcons } from "./ui";
+import { Card, Btn, NetBadge, GrossBadge, CountBadge, MarginBadge, fmtFull, useIcons } from "./ui";
 import { TrendChart, StackedBars } from "./charts";
 import { aggregateByMonth, computeStats } from "./aggregations";
 import { exportMonthlyPDF } from "../utils";
@@ -155,7 +155,7 @@ export function ModernMonthly({
                       <span style={{ fontSize: 11, color: t.textMuted }}>—</span>
                     )}
                   </div>
-                  <div style={{ textAlign: "right", color: pos ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums", fontSize: 13, minWidth: 90 }}>{pos ? "+" : ""}{fmtFull(profit)}</div>
+                  <div style={{ textAlign: "right", minWidth: 90 }}><NetBadge value={profit} theme={t} /></div>
                   {editModeMonthly && (
                     <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
                       <button onClick={() => { setEditingMonthlyId?.(m.id); setMonthlyForm({ month: m.month, profit: String(m.profit) }); setShowMonthlyForm?.(true); }} style={{ padding: 6, background: "transparent", border: `1px solid ${t.border}`, color: t.textSec, cursor: "pointer", borderRadius: 6, display: "inline-flex", alignItems: "center" }}>{I.edit(13)}</button>
@@ -171,25 +171,25 @@ export function ModernMonthly({
 
       {/* KPI tiles from current transactions */}
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 12 }}>
-        <Card theme={t} pad={16}>
-          <div style={{ fontSize: 11, fontWeight: 500, color: t.textMuted }}>Current period net</div>
-          <div style={{ fontSize: "clamp(14px, 4cqi, 20px)", fontWeight: 600, color: t.text, marginTop: 2, fontVariantNumeric: "tabular-nums", lineHeight: 1.15, wordBreak: "break-all" }}>{fmtFull(stats.totalNet)}</div>
-          <div style={{ fontSize: 10, color: t.textMuted, marginTop: 2 }}>MVR</div>
+        <Card theme={t} pad={16} style={{ borderTop: `3px solid ${t.positive}` }}>
+          <div style={{ fontSize: 11, fontWeight: 500, color: t.textMuted, marginBottom: 6 }}>Current period net</div>
+          <NetBadge value={stats.totalNet} theme={t} />
+          <div style={{ fontSize: 10, color: t.textMuted, marginTop: 4 }}>MVR</div>
         </Card>
-        <Card theme={t} pad={16}>
-          <div style={{ fontSize: 11, fontWeight: 500, color: t.textMuted }}>Avg / month</div>
-          <div style={{ fontSize: "clamp(14px, 4cqi, 20px)", fontWeight: 600, color: t.text, marginTop: 2, fontVariantNumeric: "tabular-nums", lineHeight: 1.15, wordBreak: "break-all" }}>{fmtFull(txMonthly.length ? stats.totalNet / txMonthly.length : 0)}</div>
-          <div style={{ fontSize: 10, color: t.textMuted, marginTop: 2 }}>MVR</div>
+        <Card theme={t} pad={16} style={{ borderTop: `3px solid ${t.isDark ? "#fdba74" : "#ea580c"}` }}>
+          <div style={{ fontSize: 11, fontWeight: 500, color: t.textMuted, marginBottom: 6 }}>Avg / month</div>
+          <GrossBadge value={txMonthly.length ? stats.totalNet / txMonthly.length : 0} theme={t} />
+          <div style={{ fontSize: 10, color: t.textMuted, marginTop: 4 }}>MVR</div>
         </Card>
-        <Card theme={t} pad={16}>
-          <div style={{ fontSize: 11, fontWeight: 500, color: t.textMuted }}>Best month</div>
-          <div style={{ fontSize: "clamp(14px, 4cqi, 20px)", fontWeight: 600, color: t.positive, marginTop: 2, fontVariantNumeric: "tabular-nums", lineHeight: 1.15, wordBreak: "break-all" }}>{fmtFull(stats.bestMonth.net)}</div>
-          <div style={{ fontSize: 10, color: t.textMuted, marginTop: 2 }}>{stats.bestMonth.label}</div>
+        <Card theme={t} pad={16} style={{ borderTop: `3px solid ${t.positive}` }}>
+          <div style={{ fontSize: 11, fontWeight: 500, color: t.textMuted, marginBottom: 6 }}>Best month</div>
+          <NetBadge value={stats.bestMonth.net} theme={t} />
+          <div style={{ fontSize: 10, color: t.textMuted, marginTop: 4 }}>{stats.bestMonth.label}</div>
         </Card>
-        <Card theme={t} pad={16}>
-          <div style={{ fontSize: 11, fontWeight: 500, color: t.textMuted }}>Trend</div>
-          <div style={{ fontSize: 22, fontWeight: 600, color: stats.trendPct >= 0 ? t.positive : t.negative, marginTop: 2, fontVariantNumeric: "tabular-nums" }}>{stats.trendPct >= 0 ? "+" : ""}{stats.trendPct.toFixed(1)}%</div>
-          <div style={{ fontSize: 10, color: t.textMuted, marginTop: 2 }}>vs first half</div>
+        <Card theme={t} pad={16} style={{ borderTop: `3px solid ${stats.trendPct >= 0 ? t.positive : t.negative}` }}>
+          <div style={{ fontSize: 11, fontWeight: 500, color: t.textMuted, marginBottom: 6 }}>Trend</div>
+          <MarginBadge value={stats.trendPct} theme={t} />
+          <div style={{ fontSize: 10, color: t.textMuted, marginTop: 4 }}>vs first half</div>
         </Card>
       </div>
 
@@ -241,7 +241,7 @@ export function ModernMonthly({
                     <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${w}%`, background: pos ? t.positive : t.negative, borderRadius: 4, transition: "width .3s" }} />
                   </div>
                 )}
-                <div style={{ textAlign: "right", color: pos ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums", fontSize: 13 }}>{pos ? "+" : ""}{fmtFull(m.net)}</div>
+                <div style={{ textAlign: "right" }}><NetBadge value={m.net} theme={t} /></div>
                 {isMobile && (
                   <div style={{ gridColumn: "1 / -1", height: 6, background: t.surfaceDeep, borderRadius: 3, overflow: "hidden", position: "relative", marginTop: -4 }}>
                     <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${w}%`, background: pos ? t.positive : t.negative, borderRadius: 3 }} />
