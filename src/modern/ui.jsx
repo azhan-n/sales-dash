@@ -149,6 +149,49 @@ export function CardNumBadge({ value, theme: t }) {
   );
 }
 
+// ── Owner color system ─────────────────────────────────────────────────────
+const OWNER_PALETTE = [
+  { color: "#7c3aed", bg: "rgba(124,58,237,0.14)" },   // violet
+  { color: "#0891b2", bg: "rgba(8,145,178,0.14)" },    // cyan
+  { color: "#d97706", bg: "rgba(217,119,6,0.14)" },    // amber
+  { color: "#db2777", bg: "rgba(219,39,119,0.14)" },   // pink
+  { color: "#059669", bg: "rgba(5,150,105,0.14)" },    // emerald
+  { color: "#dc2626", bg: "rgba(220,38,38,0.14)" },    // red
+  { color: "#2563eb", bg: "rgba(37,99,235,0.14)" },    // blue
+  { color: "#ea580c", bg: "rgba(234,88,12,0.14)" },    // orange
+  { color: "#6d28d9", bg: "rgba(109,40,217,0.14)" },   // purple
+  { color: "#0f766e", bg: "rgba(15,118,110,0.14)" },   // teal
+];
+
+export function ownerColor(idOrName) {
+  const s = String(idOrName ?? "");
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) & 0xffff;
+  return OWNER_PALETTE[h % OWNER_PALETTE.length];
+}
+
+export function OwnerBadge({ id, name, theme: t }) {
+  const key = id ?? name ?? "";
+  const { color, bg } = ownerColor(key);
+  const initials = String(name || "?").trim().split(/\s+/).map((p) => p[0] ?? "").join("").slice(0, 2).toUpperCase() || "?";
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 5,
+      padding: "2px 8px 2px 2px", borderRadius: t.brutal ? 0 : 999,
+      background: bg, color, fontWeight: 600, fontSize: 12,
+      whiteSpace: "nowrap", maxWidth: 160, overflow: "hidden",
+    }}>
+      <span style={{
+        width: 18, height: 18, borderRadius: "50%",
+        background: color, color: "#fff", flexShrink: 0,
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        fontSize: 9, fontWeight: 700,
+      }}>{initials}</span>
+      <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{name || "—"}</span>
+    </span>
+  );
+}
+
 export function fmtMVR(v, digits = 2) {
   if (v == null || isNaN(v)) return "—";
   const sign = v < 0 ? "−" : "";

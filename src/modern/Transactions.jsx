@@ -1,7 +1,7 @@
 // Modern Transactions — filterable table with date range, card number filter,
 // pagination, bulk select, archive history selector, and PDF export.
 import React, { useState, useMemo } from "react";
-import { Card, Btn, CardTypeBadge, CardNumBadge, NetBadge, GrossBadge, CostBadge, UsdBadge, RateBadge, MarginBadge, CountBadge, fmtFull, fmtUSD, fmtDate, useIcons } from "./ui";
+import { Card, Btn, CardTypeBadge, CardNumBadge, NetBadge, GrossBadge, CostBadge, UsdBadge, RateBadge, MarginBadge, CountBadge, OwnerBadge, SelectChip, fmtFull, fmtUSD, fmtDate, useIcons } from "./ui";
 import { exportTransactionsPDF, parseDate, dateSortKey } from "../utils";
 
 const PAGE_SIZE = 50;
@@ -269,7 +269,7 @@ export function ModernTransactions({
                           <CardTypeBadge type={cardType} theme={t} />
                           <CardNumBadge value={cardNum} theme={t} />
                         </div>
-                        <div style={{ fontSize: 13, color: t.text, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ownerName}</div>
+                        <OwnerBadge id={owner?.id ?? tx.ownerId} name={ownerName} theme={t} />
                         <div style={{ fontSize: 11, color: t.textMuted, marginTop: 1 }}>{fmtDate(tx.date)}</div>
                       </div>
                     </div>
@@ -366,7 +366,7 @@ export function ModernTransactions({
                           <CardNumBadge value={cardNum} theme={t} />
                         </div>
                       </td>
-                      <td style={{ padding: "10px 12px", color: t.text, fontSize: 12 }}>{ownerName}</td>
+                      <td style={{ padding: "8px 12px" }}><OwnerBadge id={owner?.id ?? tx.ownerId} name={ownerName} theme={t} /></td>
                       <td style={{ padding: "8px 12px", textAlign: "right" }}><RateBadge value={tx.buyRate} theme={t} /></td>
                       <td style={{ padding: "8px 12px", textAlign: "right" }}><UsdBadge value={tx.buyAmount} theme={t} /></td>
                       <td style={{ padding: "8px 12px", textAlign: "right" }}><RateBadge value={tx.sellRate} theme={t} /></td>

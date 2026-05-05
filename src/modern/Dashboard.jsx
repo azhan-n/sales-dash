@@ -1,6 +1,6 @@
 // Modern Overview — hero KPI + sparkline tiles + charts + recent activity
 import React from "react";
-import { Card, Btn, CardTypeBadge, CardNumBadge, NetBadge, GrossBadge, CostBadge, UsdBadge, RateBadge, MarginBadge, CountBadge, fmtFull, fmtUSD, fmtDate, cardColors, useIcons } from "./ui";
+import { Card, Btn, CardTypeBadge, CardNumBadge, NetBadge, GrossBadge, CostBadge, UsdBadge, RateBadge, MarginBadge, CountBadge, OwnerBadge, fmtFull, fmtUSD, fmtDate, cardColors, useIcons } from "./ui";
 import { TrendChart, Donut, Scatter, Histogram, Sparkline } from "./charts";
 import { aggregateByMonth, aggregateByCardType, computeStats } from "./aggregations";
 import { OwnerStatsPanel } from "./OwnerStatsPanel";
@@ -222,7 +222,10 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
                       <NetBadge value={tx.netProfit} theme={t} />
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 11, color: t.textMuted }}>{ownerName} · {fmtDate(tx.date)}</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+                        <OwnerBadge id={owner?.id ?? tx.ownerId} name={ownerName} theme={t} />
+                        <span style={{ fontSize: 11, color: t.textMuted }}>{fmtDate(tx.date)}</span>
+                      </div>
                       <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
                         <UsdBadge value={tx.sellAmount} theme={t} />
                         <MarginBadge value={tx.profitMargin} theme={t} />
@@ -237,7 +240,7 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
                   <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, flexWrap: "wrap" }}>
                     <CardTypeBadge type={cardType} theme={t} />
                     <CardNumBadge value={cardNum} theme={t} />
-                    <span style={{ color: t.textMuted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ownerName}</span>
+                    <OwnerBadge id={owner?.id ?? tx.ownerId} name={ownerName} theme={t} />
                   </div>
                   <div style={{ textAlign: "right" }}><UsdBadge value={tx.sellAmount} theme={t} /></div>
                   <div style={{ textAlign: "right" }}><MarginBadge value={tx.profitMargin} theme={t} /></div>

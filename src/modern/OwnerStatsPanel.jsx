@@ -1,7 +1,7 @@
 // Per-owner breakdown panel for Modern Overview.
 // Donut by net profit + per-owner cards with expandable recent transactions.
 import React, { useState } from "react";
-import { Card, CardTypeBadge, CardNumBadge, NetBadge, GrossBadge, CostBadge, UsdBadge, CountBadge, fmtFull, fmtUSD, fmtDate, useIcons } from "./ui";
+import { Card, CardTypeBadge, CardNumBadge, NetBadge, GrossBadge, CostBadge, UsdBadge, CountBadge, OwnerBadge, ownerColor, fmtFull, fmtUSD, fmtDate, useIcons } from "./ui";
 import { Donut } from "./charts";
 
 function ownerInitials(name) {
@@ -68,13 +68,14 @@ export function OwnerStatsPanel({ theme, ownerStats, owners, transactions, getCa
               >
                 <div style={{
                   width: 32, height: 32, borderRadius: "50%",
-                  background: t.surfaceDeep, color: t.textSec,
+                  background: ownerColor(r.owner.id ?? r.owner.name).color,
+                  color: "#fff",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 11, fontWeight: 600, flexShrink: 0,
+                  fontSize: 11, fontWeight: 700, flexShrink: 0,
                 }}>{ownerInitials(r.owner.name)}</div>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: t.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.owner.name}</div>
-                  <div style={{ marginTop: 3 }}><CountBadge value={r.stats.count} theme={t} label="tx" /></div>
+                  <OwnerBadge id={r.owner.id} name={r.owner.name} theme={t} />
+                  <div style={{ marginTop: 4 }}><CountBadge value={r.stats.count} theme={t} label="tx" /></div>
                 </div>
                 {!isMobile && (
                   <>
