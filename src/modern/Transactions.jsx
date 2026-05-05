@@ -387,7 +387,7 @@ export function ModernTransactions({
                   );
                 })}
                 {paged.length === 0 && (
-                  <tr><td colSpan={showActions ? 12 : 10} style={{ padding: 40, textAlign: "center", color: t.textMuted, fontSize: 13 }}>No transactions match your filters.</td></tr>
+                  <tr><td colSpan={showActions ? 13 : 11} style={{ padding: 40, textAlign: "center", color: t.textMuted, fontSize: 13 }}>No transactions match your filters.</td></tr>
                 )}
               </tbody>
               {filtered.length > 0 && (
@@ -402,6 +402,7 @@ export function ModernTransactions({
                     <td style={{ padding: "10px 12px", textAlign: "right", color: t.text, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{fmtUSD(totals.buyAmt)}</td>
                     <td style={{ padding: "10px 12px", textAlign: "right", color: t.text, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{totals.avgSellRate.toFixed(2)}</td>
                     <td style={{ padding: "10px 12px", textAlign: "right", color: t.text, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{fmtUSD(totals.sellAmt)}</td>
+                    <td style={{ padding: "10px 12px", textAlign: "right", color: t.text, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{fmtFull(totals.gross)}</td>
                     <td style={{ padding: "10px 12px", textAlign: "right", color: t.text, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{fmtFull(totals.cost)}</td>
                     <td style={{ padding: "10px 12px", textAlign: "right", color: totals.net >= 0 ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{totals.net >= 0 ? "+" : ""}{fmtFull(totals.net)}</td>
                     <td style={{ padding: "10px 12px", textAlign: "right", color: totals.avgMargin >= 0 ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{totals.avgMargin.toFixed(1)}%</td>
