@@ -386,7 +386,7 @@ export const getThemeColors = (themeName) => {
     },
     circular: {
       ...base, isDark: false, radius: "999px", radiusSm: "2rem", radiusCompact: "999px", radiusCompactSm: "1.5rem",
-      bg: "#faf5ff", surface: "#ffffff", surfaceAlt: "#f5f0ff", surfaceDeep: "#ede9fe",
+      bg: "#f8f7ff", surface: "#ffffff", surfaceAlt: "#f2f0ff", surfaceDeep: "#ede9fe",
       text: "#1e1b4b", textSec: "#6d28d9", textMuted: "#8b5cf6", textMid: "#7c3aed", textStrong: "#1e1b4b",
       border: "#ddd6fe", borderStrong: "#a78bfa",
       accent: "#7c3aed", accentBg: "#ede9fe",
