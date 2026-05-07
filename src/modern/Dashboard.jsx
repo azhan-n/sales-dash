@@ -27,7 +27,7 @@ function StatTile({ theme: t, label, value, sub, spark, positive, icon, tileColo
             {icon && <span style={{ color: tc, display: "flex", flexShrink: 0 }}>{icon(13)}</span>}
             <div style={{ fontSize: t.fz(11), fontWeight: t.fw?.label ?? 500, color: t.textMuted }}>{label}</div>
           </div>
-          <div style={{ fontSize: "clamp(14px, 4cqi, 20px)", fontWeight: t.fw?.value ?? 600, color: t.text, letterSpacing: "-0.02em", marginTop: 2, fontVariantNumeric: "tabular-nums", lineHeight: 1.15, wordBreak: "break-all" }}>{value}</div>
+          <div style={{ fontSize: "calc(clamp(14px, 4cqi, 20px) * var(--fz-scale, 1))", fontWeight: t.fw?.value ?? 600, color: t.text, letterSpacing: "-0.02em", marginTop: 2, fontVariantNumeric: "tabular-nums", lineHeight: 1.15, wordBreak: "break-all" }}>{value}</div>
           <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 2 }}>{sub}</div>
         </div>
         {spark && <Sparkline values={spark} theme={t} positive={positive} w={70} h={30} />}
@@ -115,7 +115,7 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
           <div style={{ position: "relative" }}>
             <div style={{ fontSize: t.fz(11), fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", opacity: 0.85 }}>Profit this month</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 6 }}>
-              <div style={{ fontSize: isMobile ? "clamp(22px, 8vw, 30px)" : "clamp(28px, 3.5vw, 40px)", fontWeight: 600, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums", lineHeight: 1.1, wordBreak: "break-all" }}>
+              <div style={{ fontSize: isMobile ? "calc(clamp(22px, 8vw, 30px) * var(--fz-scale, 1))" : "calc(clamp(28px, 3.5vw, 40px) * var(--fz-scale, 1))", fontWeight: 600, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums", lineHeight: 1.1, wordBreak: "break-all" }}>
                 {fmtFull(thisMonthNet)}
               </div>
               <div style={{ fontSize: t.fz(14), opacity: 0.85 }}>MVR</div>

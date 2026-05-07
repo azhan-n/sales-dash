@@ -53,7 +53,7 @@ function makeModernIcons(packKey) {
   };
 }
 
-function buildTheme({ themeKey, palette, font, boldText, textScale = 1 }) {
+function buildTheme({ themeKey, palette, font, boldText }) {
   const c = palette;
   const isDark = !!c.isDark;
   const radius = c.radius || "10px";
@@ -96,7 +96,7 @@ function buildTheme({ themeKey, palette, font, boldText, textScale = 1 }) {
     fw: boldText
       ? { label: 600, body: 500, value: 700, heading: 800, heavy: 900 }
       : { label: 500, body: 400, value: 600, heading: 700, heavy: 800 },
-    fz: (n) => Math.round(n * textScale),
+    fz: (n) => `calc(${n}px * var(--fz-scale, 1))`,
   };
 }
 
@@ -153,7 +153,7 @@ export function ModernApp({
   useEffect(() => { lsSet("modern_route", route); }, [route]);
   useEffect(() => { lsSet("modern_chartStyle", chartStyle); }, [chartStyle]);
 
-  const theme = useMemo(() => buildTheme({ themeKey, palette, font, boldText, textScale }), [themeKey, palette, font, boldText, textScale]);
+  const theme = useMemo(() => buildTheme({ themeKey, palette, font, boldText }), [themeKey, palette, font, boldText]);
   const icons = useMemo(() => makeModernIcons(iconPack), [iconPack]);
 
   const navItems = [
@@ -216,6 +216,7 @@ export function ModernApp({
     display: "flex",
     WebkitFontSmoothing: "antialiased",
     zoom: fontScale,
+    "--fz-scale": textScale,
   };
 
   const bulkCount = confirmDelete?.kind === "bulk" ? (selectedTxIds?.size || 0) : 0;
