@@ -35,9 +35,9 @@ export function MonthlyForm({ theme, monthlyForm, setMonthlyForm, showMonthlyFor
     onSubmit();
   };
 
-  const labelStyle = { display: "block", fontSize: 11, fontWeight: 500, marginBottom: 6, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" };
+  const labelStyle = { display: "block", fontSize: t.fz(11), fontWeight: 500, marginBottom: 6, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" };
   const inputStyle = (field) => ({
-    padding: "8px 10px", fontSize: 13,
+    padding: "8px 10px", fontSize: t.fz(13),
     border: `1px solid ${errors[field] ? "#ef4444" : t.border}`,
     borderRadius: t.radius,
     width: "100%",
@@ -49,7 +49,7 @@ export function MonthlyForm({ theme, monthlyForm, setMonthlyForm, showMonthlyFor
     transition: "border-color 0.15s, box-shadow 0.15s",
   });
   const errMsg = (f) => errors[f] && (
-    <div style={{ fontSize: 11, color: "#ef4444", marginTop: 4 }}>{errors[f]}</div>
+    <div style={{ fontSize: t.fz(11), color: "#ef4444", marginTop: 4 }}>{errors[f]}</div>
   );
 
   return (
@@ -63,7 +63,7 @@ export function MonthlyForm({ theme, monthlyForm, setMonthlyForm, showMonthlyFor
         <>
           <Btn theme={t} onClick={reset}>Cancel</Btn>
           <button onClick={submit} disabled={submitting} style={{
-            padding: "8px 14px", fontSize: 13, fontWeight: 500,
+            padding: "8px 14px", fontSize: t.fz(13), fontWeight: 500,
             background: t.accent, color: t.isDark ? "#0a0a0f" : "#fff",
             border: `1px solid ${t.accent}`, borderRadius: t.radius,
             cursor: submitting ? "not-allowed" : "pointer", opacity: submitting ? 0.7 : 1,

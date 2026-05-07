@@ -75,9 +75,11 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
 
   // Corrected MoM% using Supabase monthly as previous when current period has only 1 month.
   const lastSaved = (monthlyProp || [])[(monthlyProp || []).length - 1];
+  const usingArchivedPrev = localMonthly.length < 2 && !!lastSaved;
   const prevMonthNet = localMonthly.length >= 2
     ? localMonthly[localMonthly.length - 2].net
     : (lastSaved ? Number(lastSaved.profit) || 0 : 0);
+  const prevMonthLabel = usingArchivedPrev ? lastSaved.month : null;
   const thisMonthNet = localMonthly.length > 0 ? localMonthly[localMonthly.length - 1].net : 0;
   const momPct = prevMonthNet ? ((thisMonthNet - prevMonthNet) / Math.abs(prevMonthNet)) * 100 : 0;
   const cardTypeBreakdown = aggregateByCardType(transactions, getCard);
@@ -124,7 +126,7 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
               <span style={{ display: "inline-flex", alignItems: "center", gap: 3, padding: "2px 6px", background: "rgba(255,255,255,0.2)", borderRadius: 999 }}>
                 {momPct >= 0 ? I.arrowUp(11) : I.arrowDown(11)} {Math.abs(momPct).toFixed(1)}%
               </span>
-              <span>vs previous month ({fmtFull(prevMonthNet)} MVR)</span>
+              <span>vs {usingArchivedPrev ? `${prevMonthLabel} (archived)` : "previous month"} · {fmtFull(prevMonthNet)} MVR</span>
             </div>
             <div style={{ marginTop: 20, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.18)" }}>
               <HeroStat label="Gross" value={fmtFull(stats.totalGross)} suffix="MVR" theme={t} />

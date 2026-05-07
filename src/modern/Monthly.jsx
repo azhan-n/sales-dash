@@ -209,7 +209,7 @@ export function ModernMonthly({
         <Card theme={t} pad={isMobile ? 14 : 20}>
           <div style={{ marginBottom: 12 }}>
             <div style={{ fontSize: t.fz(13), fontWeight: 600, color: t.text }}>Gross vs cost</div>
-            <div style={{ fontSize: t.fz(11), color: t.textMuted }}>All-time stacked monthly flows</div>
+            <div style={{ fontSize: t.fz(11), color: t.textMuted }}>All-time stacked monthly flows · archived months show net only (no cost breakdown)</div>
           </div>
           <StackedBars data={grossCostData} theme={t} height={isMobile ? 160 : 200} />
           <div style={{ display: "flex", gap: 16, marginTop: 12, fontSize: t.fz(11), flexWrap: "wrap" }}>
