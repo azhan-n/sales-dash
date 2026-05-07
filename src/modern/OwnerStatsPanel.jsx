@@ -28,8 +28,8 @@ export function OwnerStatsPanel({ theme, ownerStats, owners, transactions, getCa
   return (
     <Card theme={t} pad={0} style={{ overflow: "hidden" }}>
       <div style={{ padding: isMobile ? "14px 16px" : "16px 20px", borderBottom: `1px solid ${t.border}` }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Per-owner breakdown</div>
-        <div style={{ fontSize: 11, color: t.textMuted }}>Net profit share + recent activity</div>
+        <div style={{ fontSize: t.fz(13), fontWeight: 600, color: t.text }}>Per-owner breakdown</div>
+        <div style={{ fontSize: t.fz(11), color: t.textMuted }}>Net profit share + recent activity</div>
       </div>
 
       {!isMobile && rows.length > 1 && (
@@ -71,7 +71,7 @@ export function OwnerStatsPanel({ theme, ownerStats, owners, transactions, getCa
                   background: ownerColor(r.owner.id ?? r.owner.name).color,
                   color: "#fff",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 11, fontWeight: 700, flexShrink: 0,
+                  fontSize: t.fz(11), fontWeight: 700, flexShrink: 0,
                 }}>{ownerInitials(r.owner.name)}</div>
                 <div style={{ minWidth: 0 }}>
                   <OwnerBadge id={r.owner.id} name={r.owner.name} theme={t} />
@@ -79,9 +79,9 @@ export function OwnerStatsPanel({ theme, ownerStats, owners, transactions, getCa
                 </div>
                 {!isMobile && (
                   <>
-                    <StatBadge label="Cost"><CostBadge value={r.stats.totalCost} theme={t} /></StatBadge>
-                    <StatBadge label="Gross"><GrossBadge value={r.stats.totalGrossProfit} theme={t} /></StatBadge>
-                    <StatBadge label="Net"><NetBadge value={r.stats.totalNetProfit} theme={t} /></StatBadge>
+                    <StatBadge label="Cost" theme={t}><CostBadge value={r.stats.totalCost} theme={t} /></StatBadge>
+                    <StatBadge label="Gross" theme={t}><GrossBadge value={r.stats.totalGrossProfit} theme={t} /></StatBadge>
+                    <StatBadge label="Net" theme={t}><NetBadge value={r.stats.totalNetProfit} theme={t} /></StatBadge>
                   </>
                 )}
                 {isMobile && <NetBadge value={r.stats.totalNetProfit} theme={t} />}
@@ -90,7 +90,7 @@ export function OwnerStatsPanel({ theme, ownerStats, owners, transactions, getCa
               {expanded && (
                 <div style={{ background: t.surfaceAlt, borderTop: `1px solid ${t.border}` }}>
                   {recent.length === 0 && (
-                    <div style={{ padding: "16px 20px", fontSize: 12, color: t.textMuted }}>No transactions for this owner.</div>
+                    <div style={{ padding: "16px 20px", fontSize: t.fz(12), color: t.textMuted }}>No transactions for this owner.</div>
                   )}
                   {recent.map((tx) => {
                     const card = getCard(tx.cardId);
@@ -98,12 +98,12 @@ export function OwnerStatsPanel({ theme, ownerStats, owners, transactions, getCa
                     const cardNum  = card?.number ?? tx.cardNumber ?? "";
                     const txPos = (Number(tx.netProfit) || 0) >= 0;
                     return (
-                      <div key={tx.id} style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr auto" : "70px 1fr 100px 100px", gap: 10, alignItems: "center", padding: isMobile ? "10px 16px 10px 56px" : "10px 20px 10px 64px", borderTop: `1px dashed ${t.border}`, fontSize: 12 }}>
+                      <div key={tx.id} style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr auto" : "70px 1fr 100px 100px", gap: 10, alignItems: "center", padding: isMobile ? "10px 16px 10px 56px" : "10px 20px 10px 64px", borderTop: `1px dashed ${t.border}`, fontSize: t.fz(12) }}>
                         {!isMobile && <div style={{ color: t.textMuted, fontVariantNumeric: "tabular-nums" }}>{fmtDate(tx.date)}</div>}
                         <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, flexWrap: "wrap" }}>
                           <CardTypeBadge type={cardType} theme={t} />
                           <CardNumBadge value={cardNum} theme={t} />
-                          {isMobile && <span style={{ color: t.textMuted, fontSize: 11, marginLeft: "auto" }}>{fmtDate(tx.date)}</span>}
+                          {isMobile && <span style={{ color: t.textMuted, fontSize: t.fz(11), marginLeft: "auto" }}>{fmtDate(tx.date)}</span>}
                         </div>
                         {!isMobile && <div style={{ textAlign: "right" }}><UsdBadge value={tx.sellAmount} theme={t} /></div>}
                         <div style={{ textAlign: "right" }}><NetBadge value={tx.netProfit} theme={t} /></div>
@@ -120,10 +120,10 @@ export function OwnerStatsPanel({ theme, ownerStats, owners, transactions, getCa
   );
 }
 
-function StatBadge({ label, children }) {
+function StatBadge({ label, children, theme: t }) {
   return (
     <div style={{ textAlign: "right" }}>
-      <div style={{ fontSize: 10, fontWeight: 600, color: "inherit", opacity: 0.6, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: t?.fz ? t.fz(10) : 10, fontWeight: 600, color: "inherit", opacity: 0.6, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>{label}</div>
       {children}
     </div>
   );

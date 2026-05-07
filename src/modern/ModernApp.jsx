@@ -53,7 +53,7 @@ function makeModernIcons(packKey) {
   };
 }
 
-function buildTheme({ themeKey, palette, font, boldText }) {
+function buildTheme({ themeKey, palette, font, boldText, textScale = 1 }) {
   const c = palette;
   const isDark = !!c.isDark;
   const radius = c.radius || "10px";
@@ -96,6 +96,7 @@ function buildTheme({ themeKey, palette, font, boldText }) {
     fw: boldText
       ? { label: 600, body: 500, value: 700, heading: 800, heavy: 900 }
       : { label: 500, body: 400, value: 600, heading: 700, heavy: 800 },
+    fz: (n) => Math.round(n * textScale),
   };
 }
 
@@ -136,9 +137,11 @@ export function ModernApp({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editModeMonthly, setEditModeMonthly] = useState(false);
   const [fontScale, setFontScale] = useState(() => parseFloat(lsGet("modern_fontScale")) || 1.0);
+  const [textScale, setTextScale] = useState(() => parseFloat(lsGet("modern_textScale")) || 1.0);
   const [iconPack, setIconPack] = useState(() => lsGet("iconPack") || "lucide");
   const [boldText, setBoldText] = useState(() => lsGet("boldText") === "true");
   useEffect(() => { lsSet("modern_fontScale", fontScale.toString()); }, [fontScale]);
+  useEffect(() => { lsSet("modern_textScale", textScale.toString()); }, [textScale]);
   useEffect(() => { lsSet("iconPack", iconPack); }, [iconPack]);
   useEffect(() => { lsSet("boldText", boldText.toString()); }, [boldText]);
 
@@ -150,7 +153,7 @@ export function ModernApp({
   useEffect(() => { lsSet("modern_route", route); }, [route]);
   useEffect(() => { lsSet("modern_chartStyle", chartStyle); }, [chartStyle]);
 
-  const theme = useMemo(() => buildTheme({ themeKey, palette, font, boldText }), [themeKey, palette, font, boldText]);
+  const theme = useMemo(() => buildTheme({ themeKey, palette, font, boldText, textScale }), [themeKey, palette, font, boldText, textScale]);
   const icons = useMemo(() => makeModernIcons(iconPack), [iconPack]);
 
   const navItems = [
@@ -314,6 +317,8 @@ export function ModernApp({
               isMobile={isMobile}
               fontScale={fontScale}
               setFontScale={setFontScale}
+              textScale={textScale}
+              setTextScale={setTextScale}
               iconPack={iconPack}
               setIconPack={setIconPack}
               boldText={boldText}

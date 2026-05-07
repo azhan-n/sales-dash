@@ -135,7 +135,7 @@ export function ModernTransactions({
   const handleExport = () => exportTransactionsPDF(filtered, getCard, getOwner, isHistory ? `Transactions Report — ${selectedPeriod}` : "Transactions Report");
 
   const th = (label, key, align = "left") => (
-    <th style={{ textAlign: align, padding: "10px 12px", fontSize: 11, fontWeight: 500, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${t.border}`, cursor: key ? "pointer" : "default", userSelect: "none", position: "sticky", top: 0, background: t.surface, zIndex: 2 }}
+    <th style={{ textAlign: align, padding: "10px 12px", fontSize: t.fz(11), fontWeight: 500, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${t.border}`, cursor: key ? "pointer" : "default", userSelect: "none", position: "sticky", top: 0, background: t.surface, zIndex: 2 }}
       onClick={() => key && toggleSort(key)}>
       <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: sort.key === key ? t.text : "inherit" }}>
         {label}{sort.key === key && (sort.dir === "asc" ? I.arrowUp(10) : I.arrowDown(10))}
@@ -146,7 +146,7 @@ export function ModernTransactions({
   const showActions = !isHistory;
 
   const PaginationBar = () => totalPages <= 1 ? null : (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderTop: `1px solid ${t.border}`, background: t.surfaceAlt, fontSize: 12, color: t.textSec, gap: 8, flexWrap: "wrap" }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderTop: `1px solid ${t.border}`, background: t.surfaceAlt, fontSize: t.fz(12), color: t.textSec, gap: 8, flexWrap: "wrap" }}>
       <span>{filtered.length} total · page {currentPage} of {totalPages}</span>
       <div style={{ display: "flex", gap: 4 }}>
         <Btn theme={t} size="sm" variant="ghost" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>«</Btn>
@@ -162,9 +162,9 @@ export function ModernTransactions({
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 600, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Ledger</div>
-          <h1 style={{ margin: 0, fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", color: t.text }}>Transactions</h1>
-          <div style={{ fontSize: 13, color: t.textSec, marginTop: 4 }}>
+          <div style={{ fontSize: t.fz(11), fontWeight: 600, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Ledger</div>
+          <h1 style={{ margin: 0, fontSize: t.fz(26), fontWeight: 600, letterSpacing: "-0.02em", color: t.text }}>Transactions</h1>
+          <div style={{ fontSize: t.fz(13), color: t.textSec, marginTop: 4 }}>
             {filtered.length} of {transactions.length} shown · net {fmtFull(totals.net)} MVR
             {isHistory && <span style={{ marginLeft: 8, color: t.textMuted }}>· read-only ({selectedPeriod})</span>}
           </div>
@@ -179,7 +179,7 @@ export function ModernTransactions({
       </div>
 
       {isHistory && (
-        <div style={{ padding: "10px 14px", background: t.surfaceAlt, border: `1px solid ${t.border}`, borderRadius: t.radius, fontSize: 12, color: t.textSec }}>
+        <div style={{ padding: "10px 14px", background: t.surfaceAlt, border: `1px solid ${t.border}`, borderRadius: t.radius, fontSize: t.fz(12), color: t.textSec }}>
           Viewing archived period <strong style={{ color: t.text }}>{selectedPeriod}</strong>. Editing and bulk actions are disabled.
           {loadingHistory && <span style={{ marginLeft: 8, color: t.textMuted }}>Loading…</span>}
         </div>
@@ -192,13 +192,13 @@ export function ModernTransactions({
           <div style={{ display: "flex", alignItems: "center", gap: 6, background: t.surfaceAlt, border: `1px solid ${t.border}`, borderRadius: 6, padding: "4px 10px", flex: "1 1 200px", minWidth: 160 }}>
             <span style={{ color: t.textMuted, display: "flex" }}>{I.search(13)}</span>
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search owner, card, type, date…"
-              style={{ border: "none", background: "transparent", outline: "none", fontSize: 12, color: t.text, flex: 1, fontFamily: "inherit" }} />
+              style={{ border: "none", background: "transparent", outline: "none", fontSize: t.fz(12), color: t.text, flex: 1, fontFamily: "inherit" }} />
             {q && <button onClick={() => setQ("")} style={{ background: "none", border: "none", color: t.textMuted, cursor: "pointer", padding: 0, display: "flex", alignItems: "center" }}>{I.x(11)}</button>}
           </div>
           {isMobile && (
             <div style={{ display: "inline-flex", borderRadius: 6, border: `1px solid ${t.border}`, overflow: "hidden", background: t.surfaceAlt }}>
               {["table", "cards"].map((m) => (
-                <button key={m} onClick={() => setViewMode(m)} style={{ padding: "6px 10px", fontSize: 12, fontWeight: 500, background: viewMode === m ? t.accentSoft : "transparent", color: viewMode === m ? t.accent : t.textSec, border: "none", cursor: "pointer", fontFamily: "inherit", textTransform: "capitalize" }}>{m}</button>
+                <button key={m} onClick={() => setViewMode(m)} style={{ padding: "6px 10px", fontSize: t.fz(12), fontWeight: 500, background: viewMode === m ? t.accentSoft : "transparent", color: viewMode === m ? t.accent : t.textSec, border: "none", cursor: "pointer", fontFamily: "inherit", textTransform: "capitalize" }}>{m}</button>
               ))}
             </div>
           )}
@@ -217,10 +217,10 @@ export function ModernTransactions({
             onChange={setFilterCardNumber} />
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)} title="From date"
-              style={{ padding: "5px 8px", border: `1px solid ${filterDateFrom ? t.accent : t.border}`, borderRadius: 6, fontSize: 12, background: t.surfaceAlt, color: t.text, outline: "none", colorScheme: "auto", fontFamily: "inherit" }} />
-            <span style={{ color: t.textMuted, fontSize: 11 }}>—</span>
+              style={{ padding: "5px 8px", border: `1px solid ${filterDateFrom ? t.accent : t.border}`, borderRadius: 6, fontSize: t.fz(12), background: t.surfaceAlt, color: t.text, outline: "none", colorScheme: "auto", fontFamily: "inherit" }} />
+            <span style={{ color: t.textMuted, fontSize: t.fz(11) }}>—</span>
             <input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)} title="To date"
-              style={{ padding: "5px 8px", border: `1px solid ${filterDateTo ? t.accent : t.border}`, borderRadius: 6, fontSize: 12, background: t.surfaceAlt, color: t.text, outline: "none", colorScheme: "auto", fontFamily: "inherit" }} />
+              style={{ padding: "5px 8px", border: `1px solid ${filterDateTo ? t.accent : t.border}`, borderRadius: 6, fontSize: t.fz(12), background: t.surfaceAlt, color: t.text, outline: "none", colorScheme: "auto", fontFamily: "inherit" }} />
           </div>
         </div>
       </Card>
@@ -228,10 +228,10 @@ export function ModernTransactions({
       {/* Bulk action bar */}
       {showActions && selectedInFiltered.length > 0 && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", background: t.accentSoft, border: `1px solid ${t.borderStrong || t.border}`, borderRadius: t.radius, gap: 12, flexWrap: "wrap" }}>
-          <div style={{ fontSize: 13, color: t.text, fontWeight: 500 }}>{selectedInFiltered.length} selected</div>
+          <div style={{ fontSize: t.fz(13), color: t.text, fontWeight: 500 }}>{selectedInFiltered.length} selected</div>
           <div style={{ display: "flex", gap: 8 }}>
             <Btn theme={t} size="sm" variant="ghost" onClick={clearSelection}>Clear</Btn>
-            <button onClick={() => onBulkDelete?.()} style={{ padding: "6px 12px", fontSize: 12, fontWeight: 500, background: t.negative || "#e11d48", color: "#fff", border: `1px solid ${t.negative || "#e11d48"}`, borderRadius: t.radius, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "inherit" }}>
+            <button onClick={() => onBulkDelete?.()} style={{ padding: "6px 12px", fontSize: t.fz(12), fontWeight: 500, background: t.negative || "#e11d48", color: "#fff", border: `1px solid ${t.negative || "#e11d48"}`, borderRadius: t.radius, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "inherit" }}>
               {I.trash(13)} Delete {selectedInFiltered.length}
             </button>
           </div>
@@ -242,7 +242,7 @@ export function ModernTransactions({
       {useCards ? (
         <Card theme={t} pad={0} style={{ overflow: "hidden" }}>
           <div style={{ padding: "10px 14px", borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: t.surfaceAlt }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>Sort</div>
+            <div style={{ fontSize: t.fz(11), fontWeight: 600, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>Sort</div>
             <SelectChip theme={t} value={sort.key + ":" + sort.dir} onChange={(v) => { const [key, dir] = v.split(":"); setSort({ key, dir }); }}
               options={[
                 { key: "date:desc", label: "Newest first" }, { key: "date:asc", label: "Oldest first" },
@@ -270,7 +270,7 @@ export function ModernTransactions({
                           <CardNumBadge value={cardNum} theme={t} />
                         </div>
                         <OwnerBadge id={owner?.id ?? tx.ownerId} name={ownerName} theme={t} />
-                        <div style={{ fontSize: 11, color: t.textMuted, marginTop: 1 }}>{fmtDate(tx.date)}</div>
+                        <div style={{ fontSize: t.fz(11), color: t.textMuted, marginTop: 1 }}>{fmtDate(tx.date)}</div>
                       </div>
                     </div>
                     <div style={{ textAlign: "right", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
@@ -278,7 +278,7 @@ export function ModernTransactions({
                       <MarginBadge value={tx.profitMargin} theme={t} />
                     </div>
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 11, color: t.textMuted, paddingTop: 8, borderTop: `1px dashed ${t.border}` }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: t.fz(11), color: t.textMuted, paddingTop: 8, borderTop: `1px dashed ${t.border}` }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 5 }}><span style={{ opacity: 0.7 }}>Buy</span> <UsdBadge value={tx.buyAmount} theme={t} /> <span style={{ opacity: 0.6 }}>@</span> <RateBadge value={tx.buyRate} theme={t} /></div>
                     <div style={{ display: "flex", alignItems: "center", gap: 5 }}><span style={{ opacity: 0.7 }}>Sell</span> <UsdBadge value={tx.sellAmount} theme={t} /> <span style={{ opacity: 0.6 }}>@</span> <RateBadge value={tx.sellRate} theme={t} /></div>
                     <div style={{ display: "flex", alignItems: "center", gap: 5 }}><span style={{ opacity: 0.7 }}>Gross</span> <GrossBadge value={tx.grossProfit} theme={t} /></div>
@@ -294,21 +294,21 @@ export function ModernTransactions({
               );
             })}
             {paged.length === 0 && (
-              <div style={{ padding: 40, textAlign: "center", color: t.textMuted, fontSize: 13 }}>No transactions match your filters.</div>
+              <div style={{ padding: 40, textAlign: "center", color: t.textMuted, fontSize: t.fz(13) }}>No transactions match your filters.</div>
             )}
           </div>
           {filtered.length > 0 && (
-            <div style={{ background: t.surfaceAlt, padding: "12px 16px", borderTop: `1px solid ${t.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, fontSize: 11 }}>
+            <div style={{ background: t.surfaceAlt, padding: "12px 16px", borderTop: `1px solid ${t.border}`, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, fontSize: t.fz(11) }}>
               <div>
-                <div style={{ display: "flex", align: "center", gap: 5, color: t.textMuted, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Gross <CountBadge value={filtered.length} theme={t} label="rows" /></div>
+                <div style={{ display: "flex", align: "center", gap: 5, color: t.textMuted, fontSize: t.fz(10), textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Gross <CountBadge value={filtered.length} theme={t} label="rows" /></div>
                 <GrossBadge value={totals.gross} theme={t} />
               </div>
               <div style={{ textAlign: "center" }}>
-                <div style={{ color: t.textMuted, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Net profit</div>
+                <div style={{ color: t.textMuted, fontSize: t.fz(10), textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Net profit</div>
                 <NetBadge value={totals.net} theme={t} />
               </div>
               <div style={{ textAlign: "right" }}>
-                <div style={{ color: t.textMuted, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Avg margin</div>
+                <div style={{ color: t.textMuted, fontSize: t.fz(10), textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>Avg margin</div>
                 <MarginBadge value={totals.avgMargin} theme={t} />
               </div>
             </div>
@@ -319,7 +319,7 @@ export function ModernTransactions({
         /* Table view */
         <Card theme={t} pad={0} style={{ overflow: "hidden" }}>
           <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: isMobile ? 12 : 13, color: t.text, minWidth: isMobile ? 900 : undefined }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: t.fz(isMobile ? 12 : 13), color: t.text, minWidth: isMobile ? 900 : undefined }}>
               <thead>
                 <tr>
                   {showActions && (
@@ -359,7 +359,7 @@ export function ModernTransactions({
                           <Checkbox theme={t} checked={!!isSelected} onChange={() => toggleOne(tx.id)} ariaLabel="Select transaction" />
                         </td>
                       )}
-                      <td style={{ padding: "10px 12px", color: t.textMuted, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", fontSize: 11 }}>{fmtDate(tx.date)}</td>
+                      <td style={{ padding: "10px 12px", color: t.textMuted, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", fontSize: t.fz(11) }}>{fmtDate(tx.date)}</td>
                       <td style={{ padding: "10px 12px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                           <CardTypeBadge type={cardType} theme={t} />
@@ -385,16 +385,16 @@ export function ModernTransactions({
                   );
                 })}
                 {paged.length === 0 && (
-                  <tr><td colSpan={showActions ? 13 : 11} style={{ padding: 40, textAlign: "center", color: t.textMuted, fontSize: 13 }}>No transactions match your filters.</td></tr>
+                  <tr><td colSpan={showActions ? 13 : 11} style={{ padding: 40, textAlign: "center", color: t.textMuted, fontSize: t.fz(13) }}>No transactions match your filters.</td></tr>
                 )}
               </tbody>
               {filtered.length > 0 && (
                 <tfoot>
                   <tr style={{ background: t.surfaceAlt }}>
                     {showActions && <td></td>}
-                    <td colSpan={3} style={{ padding: "10px 12px", fontSize: 11, fontWeight: 600, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                    <td colSpan={3} style={{ padding: "10px 12px", fontSize: t.fz(11), fontWeight: 600, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>Summary <CountBadge value={filtered.length} theme={t} label="rows" /></div>
-                      <div style={{ fontSize: 9, color: t.textMuted, opacity: 0.7, marginTop: 2, textTransform: "none", letterSpacing: 0 }}>avg for rates/margin · total for amounts</div>
+                      <div style={{ fontSize: t.fz(9), color: t.textMuted, opacity: 0.7, marginTop: 2, textTransform: "none", letterSpacing: 0 }}>avg for rates/margin · total for amounts</div>
                     </td>
                     <td style={{ padding: "8px 12px", textAlign: "right" }}><RateBadge value={totals.avgBuyRate} theme={t} /></td>
                     <td style={{ padding: "8px 12px", textAlign: "right" }}><UsdBadge value={totals.buyAmt} theme={t} /></td>

@@ -8,6 +8,7 @@ export function ModernSettings({
   theme, currentTheme, setTheme, font, setFont,
   chartStyle, setChartStyle, onSwitchToClassic, isMobile,
   fontScale = 1.0, setFontScale,
+  textScale = 1.0, setTextScale,
   iconPack = "lucide", setIconPack,
   boldText = false, setBoldText,
 }) {
@@ -59,9 +60,9 @@ export function ModernSettings({
       </Card>
 
       <Card theme={t} pad={20}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: t.text, marginBottom: 4 }}>Font size</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: t.text, marginBottom: 4 }}>UI Scale</div>
         <div style={{ fontSize: 11, color: t.textMuted, marginBottom: 16 }}>
-          Scales all UI elements. Current: {Math.round(fontScale * 100)}%
+          Scales all UI elements &amp; spacing. Current: {Math.round(fontScale * 100)}%
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ fontSize: 11, color: t.textMuted, minWidth: 28 }}>80%</span>
@@ -74,6 +75,29 @@ export function ModernSettings({
         </div>
         <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
           <button onClick={() => setFontScale(1.0)} style={{
+            fontSize: 11, color: t.accent, background: t.accentSoft,
+            border: `1px solid ${t.accent}40`, borderRadius: t.radius,
+            padding: "4px 12px", cursor: "pointer", fontFamily: "inherit",
+          }}>Reset to 100%</button>
+        </div>
+      </Card>
+
+      <Card theme={t} pad={20}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: t.text, marginBottom: 4 }}>Font size</div>
+        <div style={{ fontSize: 11, color: t.textMuted, marginBottom: 16 }}>
+          Scales text only — layout stays fixed. Current: {Math.round(textScale * 100)}%
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <span style={{ fontSize: 11, color: t.textMuted, minWidth: 28 }}>80%</span>
+          <input
+            type="range" min={0.8} max={1.4} step={0.05} value={textScale}
+            onChange={(e) => setTextScale(parseFloat(e.target.value))}
+            style={{ flex: 1, accentColor: t.accent, cursor: "pointer" }}
+          />
+          <span style={{ fontSize: 11, color: t.textMuted, minWidth: 32 }}>140%</span>
+        </div>
+        <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
+          <button onClick={() => setTextScale(1.0)} style={{
             fontSize: 11, color: t.accent, background: t.accentSoft,
             border: `1px solid ${t.accent}40`, borderRadius: t.radius,
             padding: "4px 12px", cursor: "pointer", fontFamily: "inherit",

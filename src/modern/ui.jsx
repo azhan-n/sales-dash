@@ -28,7 +28,7 @@ export function Btn({ children, variant = "secondary", size = "md", onClick, the
   const isPri = variant === "primary";
   const isGhost = variant === "ghost";
   const pad = size === "sm" ? "6px 10px" : size === "xs" ? "4px 8px" : "8px 14px";
-  const fs = size === "sm" ? 12 : size === "xs" ? 11 : 13;
+  const fs = t.fz ? t.fz(size === "sm" ? 12 : size === "xs" ? 11 : 13) : (size === "sm" ? 12 : size === "xs" ? 11 : 13);
   const bg = isPri ? t.accent : isGhost ? "transparent" : t.surface;
   const fg = isPri ? (t.isDark ? "#0a0a0f" : "#fff") : t.text;
   return (
@@ -56,7 +56,7 @@ export function Badge({ children, color, theme, style }) {
   const fg = color || t.textSec;
   return <span style={{
     display: "inline-flex", alignItems: "center", gap: 4,
-    padding: "2px 8px", fontSize: 11, fontWeight: 500,
+    padding: "2px 8px", fontSize: t?.fz ? t.fz(11) : 11, fontWeight: 500,
     background: bg, color: fg,
     borderRadius: t.brutal ? 0 : 999,
     border: t.brutal ? `1.5px solid ${fg}` : "none",
@@ -96,7 +96,7 @@ const pill = (color, bg, t) => ({
   display: "inline-flex", alignItems: "center",
   padding: "2px 8px", borderRadius: t.brutal ? 0 : 999,
   background: bg, color,
-  fontVariantNumeric: "tabular-nums", fontWeight: 600, fontSize: 12,
+  fontVariantNumeric: "tabular-nums", fontWeight: 600, fontSize: t.fz ? t.fz(12) : 12,
   whiteSpace: "nowrap",
 });
 
@@ -143,7 +143,7 @@ export function CardNumBadge({ value, theme: t }) {
       display: "inline-flex", alignItems: "center",
       padding: "2px 7px", borderRadius: t.brutal ? 0 : 6,
       background: t.surfaceDeep, color: t.textSec,
-      fontFamily: "ui-monospace, monospace", fontSize: 11, fontWeight: 500,
+      fontFamily: "ui-monospace, monospace", fontSize: t.fz ? t.fz(11) : 11, fontWeight: 500,
       letterSpacing: "0.04em", whiteSpace: "nowrap",
     }}>••{value}</span>
   );
@@ -178,14 +178,14 @@ export function OwnerBadge({ id, name, theme: t }) {
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 5,
       padding: "2px 8px 2px 2px", borderRadius: t.brutal ? 0 : 999,
-      background: bg, color, fontWeight: 600, fontSize: 12,
+      background: bg, color, fontWeight: 600, fontSize: t.fz ? t.fz(12) : 12,
       whiteSpace: "nowrap", maxWidth: 160, overflow: "hidden",
     }}>
       <span style={{
         width: 18, height: 18, borderRadius: "50%",
         background: color, color: "#fff", flexShrink: 0,
         display: "inline-flex", alignItems: "center", justifyContent: "center",
-        fontSize: 9, fontWeight: 700,
+        fontSize: t.fz ? t.fz(9) : 9, fontWeight: 700,
       }}>{initials}</span>
       <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{name || "—"}</span>
     </span>

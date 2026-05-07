@@ -32,7 +32,7 @@ export function TrendChart({ data, theme, mode = "area", height = 220, yFormat =
       {tickVals.map((tv, i) => (
         <g key={i}>
           <line x1={pad.l} x2={w - pad.r} y1={y(tv)} y2={y(tv)} stroke={t.border} strokeDasharray="2 3" />
-          <text x={pad.l - 8} y={y(tv) + 4} textAnchor="end" fontSize="10" fill={t.textMuted}>{yFormat(tv)}</text>
+          <text x={pad.l - 8} y={y(tv) + 4} textAnchor="end" fontSize={t.fz ? t.fz(10) : 10} fill={t.textMuted}>{yFormat(tv)}</text>
         </g>
       ))}
       {mode === "bars" && data.map((d, i) => {
@@ -50,7 +50,7 @@ export function TrendChart({ data, theme, mode = "area", height = 220, yFormat =
       {data.map((d, i) => {
         const step = Math.max(1, Math.ceil(data.length / 12));
         if (i % step !== 0 && i !== data.length - 1) return null;
-        return <text key={i} x={x(i)} y={height - 8} textAnchor="middle" fontSize="10" fill={t.textMuted}>{d.label}</text>;
+        return <text key={i} x={x(i)} y={height - 8} textAnchor="middle" fontSize={t.fz ? t.fz(10) : 10} fill={t.textMuted}>{d.label}</text>;
       })}
     </svg>
   );
@@ -81,12 +81,12 @@ export function Donut({ data, theme, size = 180, thickness = 28 }) {
         {segs.map((s, i) => (
           <path key={i} d={s.path} fill="none" stroke={s.color} strokeWidth={thickness} strokeLinecap="butt" />
         ))}
-        <text x={cx} y={cy - 4} textAnchor="middle" fontSize="11" fill={t.textMuted}>Total</text>
-        <text x={cx} y={cy + 14} textAnchor="middle" fontSize="16" fontWeight="600" fill={t.text}>{total.toLocaleString(undefined, { maximumFractionDigits: 0 })}</text>
+        <text x={cx} y={cy - 4} textAnchor="middle" fontSize={t.fz ? t.fz(11) : 11} fill={t.textMuted}>Total</text>
+        <text x={cx} y={cy + 14} textAnchor="middle" fontSize={t.fz ? t.fz(16) : 16} fontWeight="600" fill={t.text}>{total.toLocaleString(undefined, { maximumFractionDigits: 0 })}</text>
       </svg>
       <div style={{ display: "grid", gap: 8, minWidth: 140 }}>
         {segs.map((s, i) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: t.fz ? t.fz(12) : 12 }}>
             <span style={{ width: 10, height: 10, borderRadius: 2, background: s.color, flexShrink: 0 }} />
             <span style={{ color: t.text, flex: 1 }}>{s.label}</span>
             <span style={{ color: t.textMuted, fontVariantNumeric: "tabular-nums" }}>{(s.pct * 100).toFixed(1)}%</span>
@@ -117,17 +117,17 @@ export function Scatter({ data, theme, height = 220, xLabel = "Buy rate", yLabel
         return (
           <g key={i}>
             <line x1={pad.l} x2={w - pad.r} y1={gy} y2={gy} stroke={t.border} strokeDasharray="2 3" />
-            <text x={pad.l - 8} y={gy + 4} textAnchor="end" fontSize="10" fill={t.textMuted}>{v.toFixed(2)}</text>
+            <text x={pad.l - 8} y={gy + 4} textAnchor="end" fontSize={t.fz ? t.fz(10) : 10} fill={t.textMuted}>{v.toFixed(2)}</text>
           </g>
         );
       })}
       {[0, 0.25, 0.5, 0.75, 1].map((f, i) => {
         const gx = pad.l + iw * f;
         const v = xmin + (xmax - xmin) * f;
-        return <text key={i} x={gx} y={height - 16} textAnchor="middle" fontSize="10" fill={t.textMuted}>{v.toFixed(2)}</text>;
+        return <text key={i} x={gx} y={height - 16} textAnchor="middle" fontSize={t.fz ? t.fz(10) : 10} fill={t.textMuted}>{v.toFixed(2)}</text>;
       })}
-      <text x={(pad.l + w - pad.r) / 2} y={height - 2} textAnchor="middle" fontSize="10" fill={t.textMuted}>{xLabel} →</text>
-      <text x={10} y={(pad.t + height - pad.b) / 2} textAnchor="middle" fontSize="10" fill={t.textMuted} transform={`rotate(-90, 10, ${(pad.t + height - pad.b) / 2})`}>↑ {yLabel}</text>
+      <text x={(pad.l + w - pad.r) / 2} y={height - 2} textAnchor="middle" fontSize={t.fz ? t.fz(10) : 10} fill={t.textMuted}>{xLabel} →</text>
+      <text x={10} y={(pad.t + height - pad.b) / 2} textAnchor="middle" fontSize={t.fz ? t.fz(10) : 10} fill={t.textMuted} transform={`rotate(-90, 10, ${(pad.t + height - pad.b) / 2})`}>↑ {yLabel}</text>
       {data.map((d, i) => (
         <circle key={i} cx={px(d.x)} cy={py(d.y)} r="4" fill={d.color || t.accent} opacity="0.75" />
       ))}
@@ -157,7 +157,7 @@ export function Histogram({ data, theme, height = 180, bins = 10 }) {
         return (
           <g key={i}>
             <line x1={pad.l} x2={w - pad.r} y1={gy} y2={gy} stroke={t.border} strokeDasharray="2 3" />
-            <text x={pad.l - 6} y={gy + 4} textAnchor="end" fontSize="10" fill={t.textMuted}>{Math.round(cmax * f)}</text>
+            <text x={pad.l - 6} y={gy + 4} textAnchor="end" fontSize={t.fz ? t.fz(10) : 10} fill={t.textMuted}>{Math.round(cmax * f)}</text>
           </g>
         );
       })}
@@ -169,7 +169,7 @@ export function Histogram({ data, theme, height = 180, bins = 10 }) {
         return (
           <g key={i}>
             <rect x={x + 2} y={y} width={bw - 4} height={h} fill={t.accent} opacity="0.85" rx="2" />
-            {i % 2 === 0 && <text x={x + bw / 2} y={height - 8} textAnchor="middle" fontSize="9" fill={t.textMuted}>{binStart.toFixed(0)}%</text>}
+            {i % 2 === 0 && <text x={x + bw / 2} y={height - 8} textAnchor="middle" fontSize={t.fz ? t.fz(9) : 9} fill={t.textMuted}>{binStart.toFixed(0)}%</text>}
           </g>
         );
       })}
@@ -207,7 +207,7 @@ export function StackedBars({ data, theme, height = 200 }) {
         const gy = pad.t + ih * (1 - f);
         return <g key={i}>
           <line x1={pad.l} x2={w - pad.r} y1={gy} y2={gy} stroke={t.border} strokeDasharray="2 3" />
-          <text x={pad.l - 6} y={gy + 4} textAnchor="end" fontSize="10" fill={t.textMuted}>{fmtCompact(max * f)}</text>
+          <text x={pad.l - 6} y={gy + 4} textAnchor="end" fontSize={t.fz ? t.fz(10) : 10} fill={t.textMuted}>{fmtCompact(max * f)}</text>
         </g>;
       })}
       {data.map((d, i) => {
@@ -219,7 +219,7 @@ export function StackedBars({ data, theme, height = 200 }) {
           <rect x={x} y={y(d.gross)} width={bwi} height={gh} fill={t.accent} opacity="0.2" rx="2" />
           <rect x={x + bwi * 0.15} y={y(d.cost)} width={bwi * 0.7} height={ch} fill={t.textMuted} opacity="0.35" rx="2" />
           <rect x={x} y={y(d.net + d.cost) - 2} width={bwi} height={3} fill={t.positive} />
-          {i % Math.max(1, Math.ceil(data.length / 8)) === 0 && <text x={x + bwi / 2} y={height - 8} textAnchor="middle" fontSize="10" fill={t.textMuted}>{d.label}</text>}
+          {i % Math.max(1, Math.ceil(data.length / 8)) === 0 && <text x={x + bwi / 2} y={height - 8} textAnchor="middle" fontSize={t.fz ? t.fz(10) : 10} fill={t.textMuted}>{d.label}</text>}
         </g>;
       })}
     </svg>

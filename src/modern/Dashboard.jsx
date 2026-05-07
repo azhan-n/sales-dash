@@ -5,13 +5,13 @@ import { TrendChart, Donut, Scatter, Histogram, Sparkline } from "./charts";
 import { aggregateByMonth, aggregateByCardType, computeStats } from "./aggregations";
 import { OwnerStatsPanel } from "./OwnerStatsPanel";
 
-function HeroStat({ label, value, suffix }) {
+function HeroStat({ label, value, suffix, theme: t }) {
   return (
     <div>
-      <div style={{ fontSize: 10, fontWeight: 600, opacity: 0.8, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
+      <div style={{ fontSize: t.fz(10), fontWeight: 600, opacity: 0.8, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
       <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginTop: 4 }}>
-        <span style={{ fontSize: 18, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{value}</span>
-        {suffix && <span style={{ fontSize: 10, opacity: 0.75 }}>{suffix}</span>}
+        <span style={{ fontSize: t.fz(18), fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{value}</span>
+        {suffix && <span style={{ fontSize: t.fz(10), opacity: 0.75 }}>{suffix}</span>}
       </div>
     </div>
   );
@@ -25,10 +25,10 @@ function StatTile({ theme: t, label, value, sub, spark, positive, icon, tileColo
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 2 }}>
             {icon && <span style={{ color: tc, display: "flex", flexShrink: 0 }}>{icon(13)}</span>}
-            <div style={{ fontSize: 11, fontWeight: t.fw?.label ?? 500, color: t.textMuted }}>{label}</div>
+            <div style={{ fontSize: t.fz(11), fontWeight: t.fw?.label ?? 500, color: t.textMuted }}>{label}</div>
           </div>
           <div style={{ fontSize: "clamp(14px, 4cqi, 20px)", fontWeight: t.fw?.value ?? 600, color: t.text, letterSpacing: "-0.02em", marginTop: 2, fontVariantNumeric: "tabular-nums", lineHeight: 1.15, wordBreak: "break-all" }}>{value}</div>
-          <div style={{ fontSize: 10, color: t.textMuted, marginTop: 2 }}>{sub}</div>
+          <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 2 }}>{sub}</div>
         </div>
         {spark && <Sparkline values={spark} theme={t} positive={positive} w={70} h={30} />}
       </div>
@@ -45,15 +45,15 @@ function DualStatTile({ theme: t, labelA, valueA, subA, labelB, valueB, subB }) 
     <Card theme={t} pad={16} style={{ borderTop: `3px solid ${rc}` }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 11, fontWeight: 500, color: t.textMuted }}>{labelA}</div>
+          <div style={{ fontSize: t.fz(11), fontWeight: 500, color: t.textMuted }}>{labelA}</div>
           <div style={{ marginTop: 4 }}><RateBadge value={valueA} theme={t} /></div>
-          <div style={{ fontSize: 10, color: t.textMuted, marginTop: 3 }}>{subA}</div>
+          <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 3 }}>{subA}</div>
         </div>
         <div style={{ width: 1, background: t.border, alignSelf: "stretch", flexShrink: 0 }} />
         <div style={{ flex: 1, minWidth: 0, textAlign: "right" }}>
-          <div style={{ fontSize: 11, fontWeight: 500, color: t.textMuted }}>{labelB}</div>
+          <div style={{ fontSize: t.fz(11), fontWeight: 500, color: t.textMuted }}>{labelB}</div>
           <div style={{ marginTop: 4 }}><RateBadge value={valueB} theme={t} /></div>
-          <div style={{ fontSize: 10, color: t.textMuted, marginTop: 3 }}>{subB}</div>
+          <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 3 }}>{subB}</div>
         </div>
       </div>
     </Card>
@@ -93,9 +93,9 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
     <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24 }}>
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 600, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Overview</div>
-          <h1 style={{ margin: 0, fontSize: isMobile ? 22 : 28, fontWeight: 600, letterSpacing: "-0.02em", color: t.text }}>Welcome back.</h1>
-          <div style={{ fontSize: 13, color: t.textSec, marginTop: 4 }}>Here's how your book looks.</div>
+          <div style={{ fontSize: t.fz(11), fontWeight: 600, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Overview</div>
+          <h1 style={{ margin: 0, fontSize: t.fz(isMobile ? 22 : 28), fontWeight: 600, letterSpacing: "-0.02em", color: t.text }}>Welcome back.</h1>
+          <div style={{ fontSize: t.fz(13), color: t.textSec, marginTop: 4 }}>Here's how your book looks.</div>
         </div>
         {!isMobile && (
           <div style={{ display: "flex", gap: 8 }}>
@@ -113,23 +113,23 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
         }}>
           <div style={{ position: "absolute", inset: 0, background: "radial-gradient(400px 200px at 100% 0%, rgba(255,255,255,0.25), transparent 60%)", pointerEvents: "none" }} />
           <div style={{ position: "relative" }}>
-            <div style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", opacity: 0.85 }}>Profit this month</div>
+            <div style={{ fontSize: t.fz(11), fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", opacity: 0.85 }}>Profit this month</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 6 }}>
               <div style={{ fontSize: isMobile ? "clamp(22px, 8vw, 30px)" : "clamp(28px, 3.5vw, 40px)", fontWeight: 600, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums", lineHeight: 1.1, wordBreak: "break-all" }}>
                 {fmtFull(thisMonthNet)}
               </div>
-              <div style={{ fontSize: 14, opacity: 0.85 }}>MVR</div>
+              <div style={{ fontSize: t.fz(14), opacity: 0.85 }}>MVR</div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, fontSize: 12, opacity: 0.95, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, fontSize: t.fz(12), opacity: 0.95, flexWrap: "wrap" }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 3, padding: "2px 6px", background: "rgba(255,255,255,0.2)", borderRadius: 999 }}>
                 {momPct >= 0 ? I.arrowUp(11) : I.arrowDown(11)} {Math.abs(momPct).toFixed(1)}%
               </span>
               <span>vs previous month ({fmtFull(prevMonthNet)} MVR)</span>
             </div>
             <div style={{ marginTop: 20, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.18)" }}>
-              <HeroStat label="Gross" value={fmtFull(stats.totalGross)} suffix="MVR" />
-              <HeroStat label="Cost" value={fmtFull(stats.totalCost)} suffix="MVR" />
-              <HeroStat label="Margin" value={stats.avgMargin.toFixed(1) + "%"} />
+              <HeroStat label="Gross" value={fmtFull(stats.totalGross)} suffix="MVR" theme={t} />
+              <HeroStat label="Cost" value={fmtFull(stats.totalCost)} suffix="MVR" theme={t} />
+              <HeroStat label="Margin" value={stats.avgMargin.toFixed(1) + "%"} theme={t} />
             </div>
           </div>
         </Card>
@@ -150,9 +150,9 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ width: 3, height: 14, borderRadius: 2, background: t.accent, flexShrink: 0 }} />
-                <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Net profit trend</div>
+                <div style={{ fontSize: t.fz(13), fontWeight: 600, color: t.text }}>Net profit trend</div>
               </div>
-              <div style={{ fontSize: 11, color: t.textMuted }}>Monthly</div>
+              <div style={{ fontSize: t.fz(11), color: t.textMuted }}>Monthly</div>
             </div>
           </div>
           <TrendChart data={trendData} theme={t} mode={chartStyle} height={isMobile ? 180 : 240} />
@@ -162,9 +162,9 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
           <div style={{ marginBottom: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ width: 3, height: 14, borderRadius: 2, background: t.accent, flexShrink: 0 }} />
-              <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Cards by volume</div>
+              <div style={{ fontSize: t.fz(13), fontWeight: 600, color: t.text }}>Cards by volume</div>
             </div>
-            <div style={{ fontSize: 11, color: t.textMuted }}>Share of sell amount (USD)</div>
+            <div style={{ fontSize: t.fz(11), color: t.textMuted }}>Share of sell amount (USD)</div>
           </div>
           <Donut data={cardTypeBreakdown} theme={t} size={isMobile ? 160 : 180} thickness={24} />
         </Card>
@@ -174,9 +174,9 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
         <div style={{ marginBottom: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ width: 3, height: 14, borderRadius: 2, background: t.accent, flexShrink: 0 }} />
-            <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Rate dispersion</div>
+            <div style={{ fontSize: t.fz(13), fontWeight: 600, color: t.text }}>Rate dispersion</div>
           </div>
-          <div style={{ fontSize: 11, color: t.textMuted }}>Each dot = one transaction</div>
+          <div style={{ fontSize: t.fz(11), color: t.textMuted }}>Each dot = one transaction</div>
         </div>
         <Scatter data={scatterData} theme={t} height={isMobile ? 160 : 200} xLabel="Buy rate (MVR/USD)" yLabel="Sell rate" />
       </Card>
@@ -186,9 +186,9 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
           <div style={{ marginBottom: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ width: 3, height: 14, borderRadius: 2, background: t.accent, flexShrink: 0 }} />
-              <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Margin distribution</div>
+              <div style={{ fontSize: t.fz(13), fontWeight: 600, color: t.text }}>Margin distribution</div>
             </div>
-            <div style={{ fontSize: 11, color: t.textMuted }}>Across all transactions</div>
+            <div style={{ fontSize: t.fz(11), color: t.textMuted }}>Across all transactions</div>
           </div>
           <Histogram data={margins} theme={t} height={isMobile ? 140 : 180} />
         </Card>
@@ -197,9 +197,9 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ width: 3, height: 14, borderRadius: 2, background: t.accent, flexShrink: 0 }} />
-                <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Recent activity</div>
+                <div style={{ fontSize: t.fz(13), fontWeight: 600, color: t.text }}>Recent activity</div>
               </div>
-              <div style={{ fontSize: 11, color: t.textMuted }}>Latest 5 transactions</div>
+              <div style={{ fontSize: t.fz(11), color: t.textMuted }}>Latest 5 transactions</div>
             </div>
             <Btn theme={t} variant="ghost" size="sm" onClick={() => setRoute("transactions")}>View all →</Btn>
           </div>
@@ -224,7 +224,7 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
                         <OwnerBadge id={owner?.id ?? tx.ownerId} name={ownerName} theme={t} />
-                        <span style={{ fontSize: 11, color: t.textMuted }}>{fmtDate(tx.date)}</span>
+                        <span style={{ fontSize: t.fz(11), color: t.textMuted }}>{fmtDate(tx.date)}</span>
                       </div>
                       <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
                         <UsdBadge value={tx.sellAmount} theme={t} />
@@ -235,7 +235,7 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
                 );
               }
               return (
-                <div key={tx.id} style={{ display: "grid", gridTemplateColumns: "70px 1fr 110px 80px 110px", alignItems: "center", gap: 10, padding: "10px 20px", borderTop: `1px solid ${t.border}`, fontSize: 12 }}>
+                <div key={tx.id} style={{ display: "grid", gridTemplateColumns: "70px 1fr 110px 80px 110px", alignItems: "center", gap: 10, padding: "10px 20px", borderTop: `1px solid ${t.border}`, fontSize: t.fz(12) }}>
                   <div style={{ color: t.textMuted, fontVariantNumeric: "tabular-nums" }}>{fmtDate(tx.date)}</div>
                   <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, flexWrap: "wrap" }}>
                     <CardTypeBadge type={cardType} theme={t} />
@@ -249,7 +249,7 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
               );
             })}
             {recent.length === 0 && (
-              <div style={{ padding: 32, textAlign: "center", color: t.textMuted, fontSize: 12 }}>No transactions yet.</div>
+              <div style={{ padding: 32, textAlign: "center", color: t.textMuted, fontSize: t.fz(12) }}>No transactions yet.</div>
             )}
           </div>
         </Card>
