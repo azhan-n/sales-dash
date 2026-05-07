@@ -20,19 +20,31 @@ function HeroStat({ label, value, suffix, theme: t }) {
 function StatTile({ theme: t, label, value, sub, spark, positive, icon, tileColor }) {
   const tc = tileColor || t.accent;
   return (
-    <Card theme={t} pad={16} style={{ borderTop: `3px solid ${tc}`, background: t.surface }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 2 }}>
-            {icon && <span style={{ color: tc, display: "flex", flexShrink: 0 }}>{icon(13)}</span>}
-            <div style={{ fontSize: t.fz(11), fontWeight: t.fw?.label ?? 500, color: t.textMuted }}>{label}</div>
-          </div>
-          <div style={{ fontSize: "calc(clamp(14px, 4cqi, 20px) * var(--fz-scale, 1))", fontWeight: t.fw?.value ?? 600, color: t.text, letterSpacing: "-0.02em", marginTop: 2, fontVariantNumeric: "tabular-nums", lineHeight: 1.15, wordBreak: "break-all" }}>{value}</div>
-          <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 2 }}>{sub}</div>
+    <div style={{
+      background: `linear-gradient(135deg, ${tc}28 0%, ${tc}12 100%)`,
+      border: `1.5px solid ${tc}40`,
+      borderRadius: 16,
+      padding: "18px 16px",
+      position: "relative",
+      overflow: "hidden",
+      containerType: "inline-size",
+      boxShadow: `0 2px 12px ${tc}18`,
+    }}>
+      <div style={{ position: "absolute", top: -20, right: -12, width: 72, height: 72, borderRadius: "50%", background: tc, opacity: 0.15, filter: "blur(24px)", pointerEvents: "none" }} />
+      <div style={{ position: "relative" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 8 }}>
+          {icon && <span style={{ color: tc, display: "flex", flexShrink: 0 }}>{icon(13)}</span>}
+          <span style={{ color: tc, fontSize: t.fz(11), fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em" }}>{label}</span>
         </div>
-        {spark && <Sparkline values={spark} theme={t} positive={positive} w={70} h={30} />}
+        <div style={{ fontSize: "calc(clamp(14px, 4cqi, 22px) * var(--fz-scale, 1))", fontWeight: 700, color: t.text, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums", lineHeight: 1.15, wordBreak: "break-all" }}>{value}</div>
+        {sub && <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 3 }}>{sub}</div>}
       </div>
-    </Card>
+      {spark && (
+        <div style={{ position: "absolute", bottom: 8, right: 10, opacity: 0.55 }}>
+          <Sparkline values={spark} theme={t} positive={positive} w={56} h={22} />
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -42,21 +54,27 @@ const RATE_COLOR = (isDark) => isDark ? "#5eead4" : "#0f766e";
 function DualStatTile({ theme: t, labelA, valueA, subA, labelB, valueB, subB }) {
   const rc = RATE_COLOR(t.isDark);
   return (
-    <Card theme={t} pad={16} style={{ borderTop: `3px solid ${rc}` }}>
+    <div style={{
+      background: `linear-gradient(135deg, ${rc}28 0%, ${rc}12 100%)`,
+      border: `1.5px solid ${rc}40`,
+      borderRadius: 16,
+      padding: "18px 16px",
+      boxShadow: `0 2px 12px ${rc}18`,
+    }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: t.fz(11), fontWeight: 500, color: t.textMuted }}>{labelA}</div>
-          <div style={{ marginTop: 4 }}><RateBadge value={valueA} theme={t} /></div>
+          <div style={{ fontSize: t.fz(11), fontWeight: 700, color: rc, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>{labelA}</div>
+          <RateBadge value={valueA} theme={t} />
           <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 3 }}>{subA}</div>
         </div>
-        <div style={{ width: 1, background: t.border, alignSelf: "stretch", flexShrink: 0 }} />
+        <div style={{ width: 1, background: `${rc}30`, alignSelf: "stretch", flexShrink: 0 }} />
         <div style={{ flex: 1, minWidth: 0, textAlign: "right" }}>
-          <div style={{ fontSize: t.fz(11), fontWeight: 500, color: t.textMuted }}>{labelB}</div>
-          <div style={{ marginTop: 4 }}><RateBadge value={valueB} theme={t} /></div>
+          <div style={{ fontSize: t.fz(11), fontWeight: 700, color: rc, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>{labelB}</div>
+          <RateBadge value={valueB} theme={t} />
           <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 3 }}>{subB}</div>
         </div>
       </div>
-    </Card>
+    </div>
   );
 }
 
