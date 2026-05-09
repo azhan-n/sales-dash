@@ -24,22 +24,27 @@ function StatTile({ theme: t, label, value, sub, spark, positive, icon, tileColo
   if (isCircular) {
     return (
       <div style={{
-        display: "inline-flex", flexDirection: "column",
-        width: "100%",
-        borderRadius: 999,
-        background: `${tc}20`,
-        border: `1.5px solid ${tc}40`,
-        padding: "16px 22px",
-        boxSizing: "border-box",
-        gap: 4,
-        containerType: "inline-size",
+        width: "100%", borderRadius: 999,
+        background: `${tc}15`, border: `1.5px solid ${tc}35`,
+        padding: "12px 20px", boxSizing: "border-box",
+        display: "flex", alignItems: "center", gap: 14,
+        overflow: "hidden",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-          {icon && <span style={{ color: tc, display: "flex", flexShrink: 0 }}>{icon(13)}</span>}
-          <span style={{ fontSize: t.fz(11), fontWeight: 700, color: tc, textTransform: "uppercase", letterSpacing: "0.07em" }}>{label}</span>
+        {icon && (
+          <div style={{
+            width: 36, height: 36, borderRadius: "50%",
+            background: `${tc}22`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: tc, flexShrink: 0,
+          }}>
+            {icon(16)}
+          </div>
+        )}
+        <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+          <div style={{ fontSize: t.fz(10), fontWeight: 700, color: tc, textTransform: "uppercase", letterSpacing: "0.07em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginBottom: 3 }}>{label}</div>
+          <div style={{ overflow: "hidden" }}>{value}</div>
+          {sub && <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{sub}</div>}
         </div>
-        <div style={{ fontSize: "calc(clamp(14px, 4cqi, 20px) * var(--fz-scale, 1))", fontWeight: 700, color: t.text, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums", lineHeight: 1.2, wordBreak: "break-all" }}>{value}</div>
-        {sub && <div style={{ fontSize: t.fz(10), color: t.textMuted }}>{sub}</div>}
       </div>
     );
   }
@@ -71,22 +76,20 @@ function DualStatTile({ theme: t, labelA, valueA, subA, labelB, valueB, subB }) 
   if (isCircular) {
     return (
       <div style={{
-        borderRadius: 999,
-        background: `${rc}20`,
-        border: `1.5px solid ${rc}40`,
-        padding: "16px 22px",
-        display: "flex", justifyContent: "space-between", gap: 8,
+        borderRadius: 999, background: `${rc}15`, border: `1.5px solid ${rc}35`,
+        padding: "12px 20px", display: "flex", gap: 12, overflow: "hidden",
+        alignItems: "center",
       }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: t.fz(11), fontWeight: 700, color: rc, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 4 }}>{labelA}</div>
-          <RateBadge value={valueA} theme={t} />
-          <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 3 }}>{subA}</div>
+        <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+          <div style={{ fontSize: t.fz(10), fontWeight: 700, color: rc, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{labelA}</div>
+          <div style={{ overflow: "hidden" }}><RateBadge value={valueA} theme={t} /></div>
+          <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{subA}</div>
         </div>
         <div style={{ width: 1, background: `${rc}30`, alignSelf: "stretch", flexShrink: 0 }} />
-        <div style={{ flex: 1, minWidth: 0, textAlign: "right" }}>
-          <div style={{ fontSize: t.fz(11), fontWeight: 700, color: rc, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 4 }}>{labelB}</div>
-          <RateBadge value={valueB} theme={t} />
-          <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 3 }}>{subB}</div>
+        <div style={{ flex: 1, minWidth: 0, overflow: "hidden", textAlign: "right" }}>
+          <div style={{ fontSize: t.fz(10), fontWeight: 700, color: rc, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{labelB}</div>
+          <div style={{ overflow: "hidden", display: "flex", justifyContent: "flex-end" }}><RateBadge value={valueB} theme={t} /></div>
+          <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{subB}</div>
         </div>
       </div>
     );
@@ -114,6 +117,7 @@ function DualStatTile({ theme: t, labelA, valueA, subA, labelB, valueB, subB }) 
 
 export function ModernDashboard({ theme, transactions, monthly: monthlyProp, owners, ownerStats, getCard, getOwner, setRoute, chartStyle, isMobile }) {
   const t = theme;
+  const isCircular = t.key === "circular";
   const I = useIcons();
   const stats = computeStats(transactions);
   const localMonthly = aggregateByMonth(transactions);
@@ -187,7 +191,7 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
           </div>
         </Card>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: isMobile ? 8 : 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isCircular ? "1fr" : "repeat(2, 1fr)", gap: isMobile ? 8 : 12 }}>
           <StatTile theme={t} label="Transactions" value={<CountBadge value={transactions.length} theme={t} label="tx" />} sub="current period" spark={localMonthly.map((m) => m.count)} positive icon={I.list} tileColor={t.accent} />
           <StatTile theme={t} label="USDT Sold" value={<UsdBadge value={stats.totalSellAmount} theme={t} />} sub="Total sell volume" positive icon={I.dollar} tileColor={USD_COLOR(t.isDark)} />
           <StatTile theme={t} label="USD Used" value={<UsdBadge value={stats.totalBuyAmount} theme={t} />} sub="Total buy volume" positive icon={I.dollar} tileColor={USD_COLOR(t.isDark)} />
