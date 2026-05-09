@@ -1,4 +1,4 @@
-// Themed confirm dialog for the Modern (Ledgerline) view.
+// Themed confirm dialog for the Modern (Tether Line) view.
 import React, { useEffect, useRef } from "react";
 import { Modal } from "./Modal";
 import { Btn } from "./ui";
@@ -31,8 +31,8 @@ export function ConfirmDialog({ open, title, message, confirmLabel = "Confirm", 
           </svg>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: t.text, marginBottom: 4, lineHeight: 1.35 }}>{title}</div>
-          {message && <div style={{ fontSize: 13, color: t.textSec, lineHeight: 1.5 }}>{message}</div>}
+          <div style={{ fontSize: t.fz(14), fontWeight: 600, color: t.text, marginBottom: 4, lineHeight: 1.35 }}>{title}</div>
+          {message && <div style={{ fontSize: t.fz(13), color: t.textSec, lineHeight: 1.5 }}>{message}</div>}
         </div>
       </div>
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 16 }}>
@@ -41,7 +41,7 @@ export function ConfirmDialog({ open, title, message, confirmLabel = "Confirm", 
           ref={confirmRef}
           onClick={onConfirm}
           style={{
-            padding: "8px 14px", fontSize: 13, fontWeight: 500,
+            padding: "8px 14px", fontSize: t.fz(13), fontWeight: 500,
             background: danger ? dangerColor : t.accent,
             color: "#fff",
             border: `1px solid ${danger ? dangerColor : t.accent}`,

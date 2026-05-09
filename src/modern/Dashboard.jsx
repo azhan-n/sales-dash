@@ -1,30 +1,64 @@
 // Modern Overview — hero KPI + sparkline tiles + charts + recent activity
 import React from "react";
-import { Card, Btn, CardTypeBadge, I, fmtFull, fmtUSD, fmtDate, cardColors } from "./ui";
-import { TrendChart, Donut, Scatter, Histogram, Sparkline, StackedBars } from "./charts";
+import { Card, Btn, CardTypeBadge, CardNumBadge, NetBadge, GrossBadge, CostBadge, UsdBadge, RateBadge, MarginBadge, CountBadge, OwnerBadge, fmtFull, fmtUSD, fmtDate, cardColors, useIcons } from "./ui";
+import { TrendChart, Donut, Scatter, Histogram, Sparkline } from "./charts";
 import { aggregateByMonth, aggregateByCardType, computeStats } from "./aggregations";
 import { OwnerStatsPanel } from "./OwnerStatsPanel";
 
-function HeroStat({ label, value, suffix }) {
+function HeroStat({ label, value, suffix, theme: t }) {
   return (
     <div>
-      <div style={{ fontSize: 10, fontWeight: 600, opacity: 0.8, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
+      <div style={{ fontSize: t.fz(10), fontWeight: 600, opacity: 0.8, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
       <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginTop: 4 }}>
-        <span style={{ fontSize: 18, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{value}</span>
-        {suffix && <span style={{ fontSize: 10, opacity: 0.75 }}>{suffix}</span>}
+        <span style={{ fontSize: t.fz(18), fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{value}</span>
+        {suffix && <span style={{ fontSize: t.fz(10), opacity: 0.75 }}>{suffix}</span>}
       </div>
     </div>
   );
 }
 
-function StatTile({ theme: t, label, value, sub, spark, positive }) {
+function StatTile({ theme: t, label, value, sub, spark, positive, icon, tileColor }) {
+  const tc = tileColor || t.accent;
+  const isCircular = t.key === "circular";
+
+  if (isCircular) {
+    return (
+      <div style={{
+        width: "100%", borderRadius: 999,
+        background: `${tc}15`, border: `1.5px solid ${tc}35`,
+        padding: "12px 20px", boxSizing: "border-box",
+        display: "flex", alignItems: "center", gap: 14,
+        overflow: "hidden",
+      }}>
+        {icon && (
+          <div style={{
+            width: 36, height: 36, borderRadius: "50%",
+            background: `${tc}22`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: tc, flexShrink: 0,
+          }}>
+            {icon(16)}
+          </div>
+        )}
+        <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+          <div style={{ fontSize: t.fz(10), fontWeight: 700, color: tc, textTransform: "uppercase", letterSpacing: "0.07em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginBottom: 3 }}>{label}</div>
+          <div style={{ overflow: "hidden" }}>{value}</div>
+          {sub && <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{sub}</div>}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <Card theme={t} pad={16}>
+    <Card theme={t} pad={16} style={{ borderTop: `3px solid ${tc}`, background: t.surface }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 11, fontWeight: 500, color: t.textMuted }}>{label}</div>
-          <div style={{ fontSize: "clamp(14px, 4cqi, 20px)", fontWeight: 600, color: t.text, letterSpacing: "-0.02em", marginTop: 2, fontVariantNumeric: "tabular-nums", lineHeight: 1.15, wordBreak: "break-all" }}>{value}</div>
-          <div style={{ fontSize: 10, color: t.textMuted, marginTop: 2 }}>{sub}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 2 }}>
+            {icon && <span style={{ color: tc, display: "flex", flexShrink: 0 }}>{icon(13)}</span>}
+            <div style={{ fontSize: t.fz(11), fontWeight: t.fw?.label ?? 500, color: t.textMuted }}>{label}</div>
+          </div>
+          <div style={{ fontSize: "calc(clamp(14px, 4cqi, 20px) * var(--fz-scale, 1))", fontWeight: t.fw?.value ?? 600, color: t.text, letterSpacing: "-0.02em", marginTop: 2, fontVariantNumeric: "tabular-nums", lineHeight: 1.15, wordBreak: "break-all" }}>{value}</div>
+          <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 2 }}>{sub}</div>
         </div>
         {spark && <Sparkline values={spark} theme={t} positive={positive} w={70} h={30} />}
       </div>
@@ -32,23 +66,83 @@ function StatTile({ theme: t, label, value, sub, spark, positive }) {
   );
 }
 
-function LegendDot({ color, label, t }) {
-  return <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: t.textSec, fontSize: 11 }}>
-    <span style={{ width: 10, height: 10, borderRadius: 2, background: color }} />{label}
-  </span>;
+const USD_COLOR  = (isDark) => isDark ? "#c4b5fd" : "#7c3aed";
+const RATE_COLOR = (isDark) => isDark ? "#5eead4" : "#0f766e";
+
+function DualStatTile({ theme: t, labelA, valueA, subA, labelB, valueB, subB }) {
+  const rc = RATE_COLOR(t.isDark);
+  const isCircular = t.key === "circular";
+
+  if (isCircular) {
+    return (
+      <div style={{
+        borderRadius: 999, background: `${rc}15`, border: `1.5px solid ${rc}35`,
+        padding: "12px 20px", display: "flex", gap: 12, overflow: "hidden",
+        alignItems: "center",
+      }}>
+        <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+          <div style={{ fontSize: t.fz(10), fontWeight: 700, color: rc, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{labelA}</div>
+          <div style={{ overflow: "hidden" }}><RateBadge value={valueA} theme={t} /></div>
+          <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{subA}</div>
+        </div>
+        <div style={{ width: 1, background: `${rc}30`, alignSelf: "stretch", flexShrink: 0 }} />
+        <div style={{ flex: 1, minWidth: 0, overflow: "hidden", textAlign: "right" }}>
+          <div style={{ fontSize: t.fz(10), fontWeight: 700, color: rc, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{labelB}</div>
+          <div style={{ overflow: "hidden", display: "flex", justifyContent: "flex-end" }}><RateBadge value={valueB} theme={t} /></div>
+          <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{subB}</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Card theme={t} pad={16} style={{ borderTop: `3px solid ${rc}` }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: t.fz(11), fontWeight: 500, color: t.textMuted }}>{labelA}</div>
+          <div style={{ marginTop: 4 }}><RateBadge value={valueA} theme={t} /></div>
+          <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 3 }}>{subA}</div>
+        </div>
+        <div style={{ width: 1, background: t.border, alignSelf: "stretch", flexShrink: 0 }} />
+        <div style={{ flex: 1, minWidth: 0, textAlign: "right" }}>
+          <div style={{ fontSize: t.fz(11), fontWeight: 500, color: t.textMuted }}>{labelB}</div>
+          <div style={{ marginTop: 4 }}><RateBadge value={valueB} theme={t} /></div>
+          <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 3 }}>{subB}</div>
+        </div>
+      </div>
+    </Card>
+  );
 }
 
-export function ModernDashboard({ theme, transactions, owners, ownerStats, getCard, getOwner, setRoute, chartStyle, isMobile }) {
+
+export function ModernDashboard({ theme, transactions, monthly: monthlyProp, owners, ownerStats, getCard, getOwner, setRoute, chartStyle, isMobile }) {
   const t = theme;
+  const isCircular = t.key === "circular";
+  const I = useIcons();
   const stats = computeStats(transactions);
-  const monthly = aggregateByMonth(transactions);
-  const trendData = monthly.map((m) => ({ label: m.label, value: m.net }));
-  const profitCostData = monthly.map((m) => ({ label: m.label, gross: m.gross, cost: m.cost, net: m.net }));
+  const localMonthly = aggregateByMonth(transactions);
+
+  // Build combined trend: Supabase monthly records (full history) + current-period computed months.
+  // Current period wins on label collision so live data is always fresh.
+  const trendMap = new Map((monthlyProp || []).map((m) => [m.month, { label: m.month, value: m.profit }]));
+  localMonthly.forEach((m) => trendMap.set(m.label, { label: m.label, value: m.net }));
+  const trendData = [...trendMap.values()];
+
+  // Corrected MoM% using Supabase monthly as previous when current period has only 1 month.
+  const lastSaved = (monthlyProp || [])[(monthlyProp || []).length - 1];
+  const usingArchivedPrev = localMonthly.length < 2 && !!lastSaved;
+  const prevMonthNet = localMonthly.length >= 2
+    ? localMonthly[localMonthly.length - 2].net
+    : (lastSaved ? Number(lastSaved.profit) || 0 : 0);
+  const prevMonthLabel = usingArchivedPrev ? lastSaved.month : null;
+  const thisMonthNet = localMonthly.length > 0 ? localMonthly[localMonthly.length - 1].net : 0;
+  const momPct = prevMonthNet ? ((thisMonthNet - prevMonthNet) / Math.abs(prevMonthNet)) * 100 : 0;
   const cardTypeBreakdown = aggregateByCardType(transactions, getCard);
-  const scatterData = transactions.slice(0, 80).map((tx) => ({
-    x: Number(tx.buyRate) || 0, y: Number(tx.sellRate) || 0,
-    color: cardColors[getCard(tx.cardId)?.type] || t.accent,
-  }));
+  const scatterData = transactions.slice(0, 80).map((tx) => {
+    const card = getCard(tx.cardId);
+    const cardType = card?.type ?? tx.cardType ?? "";
+    return { x: Number(tx.buyRate) || 0, y: Number(tx.sellRate) || 0, color: cardColors[cardType] || t.accent };
+  });
   const margins = transactions.map((tx) => Number(tx.profitMargin) || 0);
   const recent = transactions.slice(0, 5);
 
@@ -56,9 +150,9 @@ export function ModernDashboard({ theme, transactions, owners, ownerStats, getCa
     <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24 }}>
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 600, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Overview</div>
-          <h1 style={{ margin: 0, fontSize: isMobile ? 22 : 28, fontWeight: 600, letterSpacing: "-0.02em", color: t.text }}>Welcome back.</h1>
-          <div style={{ fontSize: 13, color: t.textSec, marginTop: 4 }}>Here's how your book looks.</div>
+          <div style={{ fontSize: t.fz(11), fontWeight: 600, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Overview</div>
+          <h1 style={{ margin: 0, fontSize: t.fz(isMobile ? 22 : 28), fontWeight: 600, letterSpacing: "-0.02em", color: t.text }}>Welcome back.</h1>
+          <div style={{ fontSize: t.fz(13), color: t.textSec, marginTop: 4 }}>Here's how your book looks.</div>
         </div>
         {!isMobile && (
           <div style={{ display: "flex", gap: 8 }}>
@@ -76,32 +170,34 @@ export function ModernDashboard({ theme, transactions, owners, ownerStats, getCa
         }}>
           <div style={{ position: "absolute", inset: 0, background: "radial-gradient(400px 200px at 100% 0%, rgba(255,255,255,0.25), transparent 60%)", pointerEvents: "none" }} />
           <div style={{ position: "relative" }}>
-            <div style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", opacity: 0.85 }}>All-time net profit</div>
+            <div style={{ fontSize: t.fz(11), fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", opacity: 0.85 }}>Profit this month</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 6 }}>
-              <div style={{ fontSize: isMobile ? "clamp(22px, 8vw, 30px)" : "clamp(28px, 3.5vw, 40px)", fontWeight: 600, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums", lineHeight: 1.1, wordBreak: "break-all" }}>
-                {fmtFull(stats.totalNet)}
+              <div style={{ fontSize: isMobile ? "calc(clamp(22px, 8vw, 30px) * var(--fz-scale, 1))" : "calc(clamp(28px, 3.5vw, 40px) * var(--fz-scale, 1))", fontWeight: 600, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums", lineHeight: 1.1, wordBreak: "break-all" }}>
+                {fmtFull(thisMonthNet)}
               </div>
-              <div style={{ fontSize: 14, opacity: 0.85 }}>MVR</div>
+              <div style={{ fontSize: t.fz(14), opacity: 0.85 }}>MVR</div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, fontSize: 12, opacity: 0.95, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, fontSize: t.fz(12), opacity: 0.95, flexWrap: "wrap" }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 3, padding: "2px 6px", background: "rgba(255,255,255,0.2)", borderRadius: 999 }}>
-                {stats.momPct >= 0 ? I.arrowUp(11) : I.arrowDown(11)} {Math.abs(stats.momPct).toFixed(1)}%
+                {momPct >= 0 ? I.arrowUp(11) : I.arrowDown(11)} {Math.abs(momPct).toFixed(1)}%
               </span>
-              <span>vs previous month ({fmtFull(stats.prevMonthNet)} MVR)</span>
+              <span>vs {usingArchivedPrev ? `${prevMonthLabel} (archived)` : "previous month"} · {fmtFull(prevMonthNet)} MVR</span>
             </div>
             <div style={{ marginTop: 20, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.18)" }}>
-              <HeroStat label="Gross profit" value={fmtFull(stats.totalGross)} suffix="MVR" />
-              <HeroStat label="Cost basis" value={fmtFull(stats.totalCost)} suffix="MVR" />
-              <HeroStat label="Margin" value={stats.avgMargin.toFixed(1) + "%"} />
+              <HeroStat label="Gross" value={fmtFull(stats.totalGross)} suffix="MVR" theme={t} />
+              <HeroStat label="Cost" value={fmtFull(stats.totalCost)} suffix="MVR" theme={t} />
+              <HeroStat label="Margin" value={stats.avgMargin.toFixed(1) + "%"} theme={t} />
             </div>
           </div>
         </Card>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: isMobile ? 8 : 12 }}>
-          <StatTile theme={t} label="Transactions" value={transactions.length.toString()} sub="12-month window" spark={monthly.map((m) => m.count)} positive />
-          <StatTile theme={t} label="Avg. sell rate" value={stats.avgSellRate.toFixed(2)} sub="MVR / USD" spark={monthly.map((m) => m.avgSellRate)} positive />
-          <StatTile theme={t} label="This month" value={fmtFull(stats.thisMonthNet)} sub={`${stats.thisMonthCount} transactions`} spark={monthly.slice(-6).map((m) => m.net)} positive={stats.thisMonthNet >= 0} />
-          <StatTile theme={t} label="Best month" value={fmtFull(stats.bestMonth.net)} sub={stats.bestMonth.label} spark={monthly.map((m) => m.net)} positive />
+        <div style={{ display: "grid", gridTemplateColumns: isCircular ? "1fr" : "repeat(2, 1fr)", gap: isMobile ? 8 : 12 }}>
+          <StatTile theme={t} label="Transactions" value={<CountBadge value={transactions.length} theme={t} label="tx" />} sub="current period" spark={localMonthly.map((m) => m.count)} positive icon={I.list} tileColor={t.accent} />
+          <StatTile theme={t} label="USDT Sold" value={<UsdBadge value={stats.totalSellAmount} theme={t} />} sub="Total sell volume" positive icon={I.dollar} tileColor={USD_COLOR(t.isDark)} />
+          <StatTile theme={t} label="USD Used" value={<UsdBadge value={stats.totalBuyAmount} theme={t} />} sub="Total buy volume" positive icon={I.dollar} tileColor={USD_COLOR(t.isDark)} />
+          <StatTile theme={t} label="Avg profit / tx" value={<NetBadge value={stats.avgNetProfit} theme={t} />} sub="Per transaction" spark={localMonthly.map((m) => m.count ? m.net / m.count : 0)} positive={stats.avgNetProfit >= 0} icon={I.trending} tileColor={stats.avgNetProfit >= 0 ? t.positive : t.negative} />
+          <StatTile theme={t} label="Best month" value={<GrossBadge value={stats.bestMonth.net} theme={t} />} sub={stats.bestMonth.label} spark={localMonthly.map((m) => m.net)} positive icon={I.calendar} tileColor={t.isDark ? "#fdba74" : "#ea580c"} />
+          <DualStatTile theme={t} labelA="Avg sell rate" valueA={stats.avgSellRate.toFixed(2)} subA="MVR / USD" labelB="Avg buy rate" valueB={stats.avgBuyRate.toFixed(2)} subB="MVR / USD" />
         </div>
       </div>
 
@@ -109,8 +205,11 @@ export function ModernDashboard({ theme, transactions, owners, ownerStats, getCa
         <Card theme={t} pad={isMobile ? 14 : 20}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4, gap: 8, flexWrap: "wrap" }}>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Net profit trend</div>
-              <div style={{ fontSize: 11, color: t.textMuted }}>Monthly</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 3, height: 14, borderRadius: 2, background: t.accent, flexShrink: 0 }} />
+                <div style={{ fontSize: t.fz(13), fontWeight: 600, color: t.text }}>Net profit trend</div>
+              </div>
+              <div style={{ fontSize: t.fz(11), color: t.textMuted }}>Monthly</div>
             </div>
           </div>
           <TrendChart data={trendData} theme={t} mode={chartStyle} height={isMobile ? 180 : 240} />
@@ -118,48 +217,46 @@ export function ModernDashboard({ theme, transactions, owners, ownerStats, getCa
 
         <Card theme={t} pad={isMobile ? 14 : 20}>
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Cards by volume</div>
-            <div style={{ fontSize: 11, color: t.textMuted }}>Share of sell amount (USD)</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 3, height: 14, borderRadius: 2, background: t.accent, flexShrink: 0 }} />
+              <div style={{ fontSize: t.fz(13), fontWeight: 600, color: t.text }}>Cards by volume</div>
+            </div>
+            <div style={{ fontSize: t.fz(11), color: t.textMuted }}>Share of sell amount (USD)</div>
           </div>
           <Donut data={cardTypeBreakdown} theme={t} size={isMobile ? 160 : 180} thickness={24} />
         </Card>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "minmax(0, 1fr) minmax(0, 1fr)", gap: isMobile ? 12 : 16 }}>
-        <Card theme={t} pad={isMobile ? 14 : 20}>
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Gross vs cost</div>
-            <div style={{ fontSize: 11, color: t.textMuted }}>Stacked monthly flows</div>
+      <Card theme={t} pad={isMobile ? 14 : 20}>
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 3, height: 14, borderRadius: 2, background: t.accent, flexShrink: 0 }} />
+            <div style={{ fontSize: t.fz(13), fontWeight: 600, color: t.text }}>Rate dispersion</div>
           </div>
-          <StackedBars data={profitCostData} theme={t} height={isMobile ? 160 : 200} />
-          <div style={{ display: "flex", gap: 16, marginTop: 12, fontSize: 11, flexWrap: "wrap" }}>
-            <LegendDot color={t.accent} label="Gross" t={t} />
-            <LegendDot color={t.textMuted} label="Cost" t={t} />
-            <LegendDot color={t.positive} label="Net" t={t} />
-          </div>
-        </Card>
-        <Card theme={t} pad={isMobile ? 14 : 20}>
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Rate dispersion</div>
-            <div style={{ fontSize: 11, color: t.textMuted }}>Each dot = one transaction</div>
-          </div>
-          <Scatter data={scatterData} theme={t} height={isMobile ? 160 : 200} xLabel="Buy rate (MVR/USD)" yLabel="Sell rate" />
-        </Card>
-      </div>
+          <div style={{ fontSize: t.fz(11), color: t.textMuted }}>Each dot = one transaction</div>
+        </div>
+        <Scatter data={scatterData} theme={t} height={isMobile ? 160 : 200} xLabel="Buy rate (MVR/USD)" yLabel="Sell rate" />
+      </Card>
 
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "minmax(0, 1fr) minmax(0, 1.6fr)", gap: isMobile ? 12 : 16 }}>
         <Card theme={t} pad={isMobile ? 14 : 20}>
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Margin distribution</div>
-            <div style={{ fontSize: 11, color: t.textMuted }}>Across all transactions</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 3, height: 14, borderRadius: 2, background: t.accent, flexShrink: 0 }} />
+              <div style={{ fontSize: t.fz(13), fontWeight: 600, color: t.text }}>Margin distribution</div>
+            </div>
+            <div style={{ fontSize: t.fz(11), color: t.textMuted }}>Across all transactions</div>
           </div>
           <Histogram data={margins} theme={t} height={isMobile ? 140 : 180} />
         </Card>
         <Card theme={t} pad={0} style={{ overflow: "hidden" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: isMobile ? "14px 16px" : "16px 20px", borderBottom: `1px solid ${t.border}` }}>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>Recent activity</div>
-              <div style={{ fontSize: 11, color: t.textMuted }}>Latest 5 transactions</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 3, height: 14, borderRadius: 2, background: t.accent, flexShrink: 0 }} />
+                <div style={{ fontSize: t.fz(13), fontWeight: 600, color: t.text }}>Recent activity</div>
+              </div>
+              <div style={{ fontSize: t.fz(11), color: t.textMuted }}>Latest 5 transactions</div>
             </div>
             <Btn theme={t} variant="ghost" size="sm" onClick={() => setRoute("transactions")}>View all →</Btn>
           </div>
@@ -167,39 +264,49 @@ export function ModernDashboard({ theme, transactions, owners, ownerStats, getCa
             {recent.map((tx) => {
               const card = getCard(tx.cardId);
               const owner = getOwner(tx.ownerId);
+              const cardType  = card?.type   ?? tx.cardType   ?? "";
+              const cardNum   = card?.number ?? tx.cardNumber ?? "";
+              const ownerName = owner?.name  ?? tx.owner      ?? "";
               const pos = (Number(tx.netProfit) || 0) >= 0;
               if (isMobile) {
                 return (
                   <div key={tx.id} style={{ padding: "12px 16px", borderTop: `1px solid ${t.border}`, display: "flex", flexDirection: "column", gap: 6 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
-                        <CardTypeBadge type={card?.type} theme={t} />
-                        <span style={{ color: t.textSec, fontSize: 11, fontVariantNumeric: "tabular-nums" }}>••{card?.number}</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, flex: 1, flexWrap: "wrap" }}>
+                        <CardTypeBadge type={cardType} theme={t} />
+                        <CardNumBadge value={cardNum} theme={t} />
                       </div>
-                      <div style={{ color: pos ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums", fontSize: 13, whiteSpace: "nowrap" }}>{pos ? "+" : ""}{fmtFull(tx.netProfit)}</div>
+                      <NetBadge value={tx.netProfit} theme={t} />
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: t.textMuted }}>
-                      <span>{owner?.name} · {fmtDate(tx.date)}</span>
-                      <span style={{ fontVariantNumeric: "tabular-nums" }}>{fmtUSD(tx.sellAmount)}</span>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+                        <OwnerBadge id={owner?.id ?? tx.ownerId} name={ownerName} theme={t} />
+                        <span style={{ fontSize: t.fz(11), color: t.textMuted }}>{fmtDate(tx.date)}</span>
+                      </div>
+                      <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                        <UsdBadge value={tx.sellAmount} theme={t} />
+                        <MarginBadge value={tx.profitMargin} theme={t} />
+                      </div>
                     </div>
                   </div>
                 );
               }
               return (
-                <div key={tx.id} style={{ display: "grid", gridTemplateColumns: "70px 1fr 120px 100px", alignItems: "center", gap: 12, padding: "12px 20px", borderTop: `1px solid ${t.border}`, fontSize: 12 }}>
+                <div key={tx.id} style={{ display: "grid", gridTemplateColumns: "70px 1fr 110px 80px 110px", alignItems: "center", gap: 10, padding: "10px 20px", borderTop: `1px solid ${t.border}`, fontSize: t.fz(12) }}>
                   <div style={{ color: t.textMuted, fontVariantNumeric: "tabular-nums" }}>{fmtDate(tx.date)}</div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-                    <CardTypeBadge type={card?.type} theme={t} />
-                    <span style={{ color: t.textSec, fontVariantNumeric: "tabular-nums" }}>••{card?.number}</span>
-                    <span style={{ color: t.textMuted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>· {owner?.name}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, flexWrap: "wrap" }}>
+                    <CardTypeBadge type={cardType} theme={t} />
+                    <CardNumBadge value={cardNum} theme={t} />
+                    <OwnerBadge id={owner?.id ?? tx.ownerId} name={ownerName} theme={t} />
                   </div>
-                  <div style={{ color: t.textSec, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>{fmtUSD(tx.sellAmount)}</div>
-                  <div style={{ color: pos ? t.positive : t.negative, fontWeight: 600, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>{pos ? "+" : ""}{fmtFull(tx.netProfit)}</div>
+                  <div style={{ textAlign: "right" }}><UsdBadge value={tx.sellAmount} theme={t} /></div>
+                  <div style={{ textAlign: "right" }}><MarginBadge value={tx.profitMargin} theme={t} /></div>
+                  <div style={{ textAlign: "right" }}><NetBadge value={tx.netProfit} theme={t} /></div>
                 </div>
               );
             })}
             {recent.length === 0 && (
-              <div style={{ padding: 32, textAlign: "center", color: t.textMuted, fontSize: 12 }}>No transactions yet.</div>
+              <div style={{ padding: 32, textAlign: "center", color: t.textMuted, fontSize: t.fz(12) }}>No transactions yet.</div>
             )}
           </div>
         </Card>

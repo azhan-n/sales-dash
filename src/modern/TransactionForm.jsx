@@ -4,15 +4,18 @@ import React, { useEffect, useRef, useState } from "react";
 import { Modal } from "./Modal";
 import { Btn, fmtFull } from "./ui";
 
-const toInputDate = (ddmmyy) => {
-  if (!ddmmyy) return "";
-  const [dd, mm, yy] = ddmmyy.split("/");
-  return dd && mm && yy ? `20${yy}-${mm}-${dd}` : "";
+// dd/mm/yyyy ↔ yyyy-mm-dd (for input[type=date]). Tolerates legacy dd/mm/yy on read.
+const toInputDate = (s) => {
+  if (!s) return "";
+  const [dd, mm, yy] = s.split("/");
+  if (!dd || !mm || !yy) return "";
+  const yyyy = yy.length === 2 ? `20${yy}` : yy;
+  return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
 };
 const fromInputDate = (yyyymmdd) => {
   if (!yyyymmdd) return "";
   const [yyyy, mm, dd] = yyyymmdd.split("-");
-  return dd && mm && yyyy ? `${dd}/${mm}/${yyyy.slice(-2)}` : "";
+  return dd && mm && yyyy ? `${dd}/${mm}/${yyyy}` : "";
 };
 
 export function TransactionForm({
@@ -103,9 +106,9 @@ export function TransactionForm({
   const net = gross - cost;
   const margin = cost > 0 ? (net / cost) * 100 : 0;
 
-  const labelStyle = { display: "block", fontSize: 11, fontWeight: 500, marginBottom: 6, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" };
+  const labelStyle = { display: "block", fontSize: t.fz(11), fontWeight: 500, marginBottom: 6, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" };
   const inputStyle = (field) => ({
-    padding: "8px 10px", fontSize: 13,
+    padding: "8px 10px", fontSize: t.fz(13),
     border: `1px solid ${errors[field] ? "#ef4444" : t.border}`,
     borderRadius: t.radius,
     width: "100%",
@@ -118,7 +121,7 @@ export function TransactionForm({
     transition: "border-color 0.15s, box-shadow 0.15s",
   });
   const errMsg = (f) => errors[f] && (
-    <div style={{ fontSize: 11, color: "#ef4444", marginTop: 4 }}>{errors[f]}</div>
+    <div style={{ fontSize: t.fz(11), color: "#ef4444", marginTop: 4 }}>{errors[f]}</div>
   );
 
   return (
@@ -132,7 +135,7 @@ export function TransactionForm({
         <>
           <Btn theme={t} onClick={reset}>Cancel</Btn>
           <button onClick={submit} disabled={submitting} style={{
-            padding: "8px 14px", fontSize: 13, fontWeight: 500,
+            padding: "8px 14px", fontSize: t.fz(13), fontWeight: 500,
             background: t.accent, color: t.isDark ? "#0a0a0f" : "#fff",
             border: `1px solid ${t.accent}`, borderRadius: t.radius,
             cursor: submitting ? "not-allowed" : "pointer", opacity: submitting ? 0.7 : 1,
@@ -191,7 +194,7 @@ export function TransactionForm({
           <input type="number" step="0.01" min="0" value={txForm.sellRate} onChange={(e) => { setTxForm({ ...txForm, sellRate: e.target.value }); if (errors.sellRate) setErrors((p) => ({ ...p, sellRate: null })); }} style={inputStyle("sellRate")} />
           {errMsg("sellRate")}
           {showRateWarning && (
-            <div style={{ marginTop: 6, padding: "6px 8px", background: "rgba(217,119,6,0.10)", border: "1px solid rgba(217,119,6,0.25)", borderRadius: t.radiusSm, fontSize: 11, color: t.textSec }}>
+            <div style={{ marginTop: 6, padding: "6px 8px", background: "rgba(217,119,6,0.10)", border: "1px solid rgba(217,119,6,0.25)", borderRadius: t.radiusSm, fontSize: t.fz(11), color: t.textSec }}>
               Rate {currentSellRate.toFixed(2)} is {rateDevPct.toFixed(1)}% {rateDevDir} the recent average ({rateAvg.toFixed(2)})
             </div>
           )}
@@ -216,10 +219,10 @@ export function TransactionForm({
 function Computed({ label, value, t, suffix = "MVR", color }) {
   return (
     <div>
-      <div style={{ fontSize: 10, fontWeight: 600, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
-      <div style={{ fontSize: 16, fontWeight: 600, color: color || t.text, fontVariantNumeric: "tabular-nums", marginTop: 2 }}>
+      <div style={{ fontSize: t.fz(10), fontWeight: 600, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
+      <div style={{ fontSize: t.fz(16), fontWeight: 600, color: color || t.text, fontVariantNumeric: "tabular-nums", marginTop: 2 }}>
         {suffix === "%" ? `${value.toFixed(1)}%` : fmtFull(value)}
-        {suffix !== "%" && <span style={{ fontSize: 10, color: t.textMuted, fontWeight: 500, marginLeft: 4 }}>{suffix}</span>}
+        {suffix !== "%" && <span style={{ fontSize: t.fz(10), color: t.textMuted, fontWeight: 500, marginLeft: 4 }}>{suffix}</span>}
       </div>
     </div>
   );

@@ -1,11 +1,12 @@
-// ModernApp — top-level Modern (Ledgerline) shell. Reads existing app state via props,
+// ModernApp — top-level Modern (Tether Line) shell. Reads existing app state via props,
 // derives a design-system theme object from the active palette, and renders the right view.
 // Owns its own modal tree (TransactionForm, MonthlyForm, ConfirmDialog) styled to the Modern theme.
 import React, { useEffect, useMemo, useState } from "react";
 import { getThemeColors } from "../themes";
-import { inferArchivePeriod } from "../utils";
+import { inferArchivePeriod, parseDate, getTodayDate } from "../utils";
 import { Sidebar, TopBar, BottomTabs } from "./Nav";
-import { I } from "./ui";
+import { I, IconContext, useIcons } from "./ui";
+import { ICON_PACKS } from "../iconPacks";
 import { ModernDashboard } from "./Dashboard";
 import { ModernTransactions } from "./Transactions";
 import { ModernMonthly } from "./Monthly";
@@ -27,7 +28,32 @@ function useIsMobile(bp = 760) {
   return m;
 }
 
-function buildTheme({ themeKey, palette, font }) {
+function makeModernIcons(packKey) {
+  const pack = ICON_PACKS[packKey];
+  if (!pack) return I;
+  const c = (Comp) => (p) => React.createElement(Comp, { size: p });
+  return {
+    ...I,
+    home:     c(pack.LayoutGrid),
+    list:     c(pack.List),
+    calendar: c(pack.Calendar),
+    settings: c(pack.Settings),
+    plus:     c(pack.Plus),
+    search:   c(pack.Search),
+    download: c(pack.Download),
+    edit:     c(pack.Pencil),
+    trash:    c(pack.Trash2),
+    x:        c(pack.X),
+    filter:   c(pack.Filter),
+    chevron:  c(pack.ChevronDown),
+    trending: c(pack.TrendingUp),
+    dollar:   c(pack.DollarSign),
+    user:     c(pack.User),
+    timer:    c(pack.Timer),
+  };
+}
+
+function buildTheme({ themeKey, palette, font, boldText }) {
   const c = palette;
   const isDark = !!c.isDark;
   const radius = c.radius || "10px";
@@ -66,11 +92,16 @@ function buildTheme({ themeKey, palette, font }) {
     isDark,
     glass: themeKey === "glass" || themeKey === "liquid_glass",
     brutal: themeKey === "brutalist",
+    bold: !!boldText,
+    fw: boldText
+      ? { label: 600, body: 500, value: 700, heading: 800, heavy: 900 }
+      : { label: 500, body: 400, value: 600, heading: 700, heavy: 800 },
+    fz: (n) => `calc(${n}px * var(--fz-scale, 1))`,
   };
 }
 
 export function ModernApp({
-  themeKey, palette, font, isMobile: parentIsMobile,
+  themeKey, palette, font, userEmail = "", isMobile: parentIsMobile,
   // shared data
   transactions, owners, cards, monthly,
   ownerStats,
@@ -95,7 +126,7 @@ export function ModernApp({
   editingMonthlyId, setEditingMonthlyId,
   submitMonthly, deleteMonthlyRecord,
   // archive history
-  historyPeriods, selectedPeriod, setSelectedPeriod,
+  historyPeriods, selectedPeriod, setSelectedPeriod, fetchHistoryForPeriod,
   historyTransactions, loadingHistory,
   onArchive,
 }) {
@@ -105,6 +136,14 @@ export function ModernApp({
   const [chartStyle, setChartStyle] = useState(() => lsGet("modern_chartStyle", "area"));
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editModeMonthly, setEditModeMonthly] = useState(false);
+  const [fontScale, setFontScale] = useState(() => parseFloat(lsGet("modern_fontScale")) || 1.0);
+  const [textScale, setTextScale] = useState(() => parseFloat(lsGet("modern_textScale")) || 1.0);
+  const [iconPack, setIconPack] = useState(() => lsGet("iconPack") || "lucide");
+  const [boldText, setBoldText] = useState(() => lsGet("boldText") === "true");
+  useEffect(() => { lsSet("modern_fontScale", fontScale.toString()); }, [fontScale]);
+  useEffect(() => { lsSet("modern_textScale", textScale.toString()); }, [textScale]);
+  useEffect(() => { lsSet("iconPack", iconPack); }, [iconPack]);
+  useEffect(() => { lsSet("boldText", boldText.toString()); }, [boldText]);
 
   // Confirm dialog state for delete actions originating in Modern.
   const [confirmDelete, setConfirmDelete] = useState(null);    // { kind, payload }
@@ -114,26 +153,35 @@ export function ModernApp({
   useEffect(() => { lsSet("modern_route", route); }, [route]);
   useEffect(() => { lsSet("modern_chartStyle", chartStyle); }, [chartStyle]);
 
-  const theme = useMemo(() => buildTheme({ themeKey, palette, font }), [themeKey, palette, font]);
+  const theme = useMemo(() => buildTheme({ themeKey, palette, font, boldText }), [themeKey, palette, font, boldText]);
+  const icons = useMemo(() => makeModernIcons(iconPack), [iconPack]);
 
   const navItems = [
-    { key: "dashboard", label: "Overview", icon: I.home },
-    { key: "transactions", label: "Transactions", icon: I.list },
-    { key: "monthly", label: "Monthly", icon: I.calendar },
-    { key: "settings", label: "Settings", icon: I.settings },
+    { key: "dashboard", label: "Overview", icon: icons.home },
+    { key: "transactions", label: "Transactions", icon: icons.list },
+    { key: "monthly", label: "Monthly", icon: icons.calendar },
+    { key: "settings", label: "Settings", icon: icons.settings },
   ];
 
   const isHistory = selectedPeriod && selectedPeriod !== "current";
   const sourceTxs = isHistory ? (historyTransactions || []) : transactions;
 
+  // txs switches to history when a period is selected (used by Transactions tab).
   const txs = useMemo(() => sourceTxs.map((t) => ({
     ...t,
-    date: t.date instanceof Date ? t.date : new Date(t.date),
+    date: parseDate(t.date),
   })), [sourceTxs]);
+
+  // currentTxs is always the live current-period data regardless of period selection.
+  // Used by Dashboard so the Overview never shows archived data.
+  const currentTxs = useMemo(() => transactions.map((t) => ({
+    ...t,
+    date: parseDate(t.date),
+  })), [transactions]);
 
   const handleAddTx = () => {
     setEditingTxId(null);
-    setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "15.42", buyAmount: "", sellRate: "", sellAmount: "", date: defaultDate() });
+    setTxForm({ cardType: "VISA DEBIT", cardNumber: "", owner: "", buyRate: "15.42", buyAmount: "", sellRate: "", sellAmount: "", date: getTodayDate() });
     setShowTxForm(true);
   };
 
@@ -160,18 +208,21 @@ export function ModernApp({
   };
 
   const pageStyle = {
-    minHeight: "100vh",
+    minHeight: "100dvh",
     background: theme.bg,
     backgroundImage: theme.bgGrad || undefined,
     color: theme.text,
     fontFamily: `"${font}", -apple-system, BlinkMacSystemFont, sans-serif`,
     display: "flex",
     WebkitFontSmoothing: "antialiased",
+    zoom: fontScale,
+    "--fz-scale": textScale,
   };
 
   const bulkCount = confirmDelete?.kind === "bulk" ? (selectedTxIds?.size || 0) : 0;
 
   return (
+    <IconContext.Provider value={icons}>
     <div style={pageStyle}>
       <Sidebar
         theme={theme}
@@ -182,6 +233,7 @@ export function ModernApp({
         isMobile={isMobile}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
+        fontScale={fontScale}
       />
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
         <TopBar
@@ -189,18 +241,23 @@ export function ModernApp({
           route={route}
           navItems={navItems}
           isMobile={isMobile}
+          userEmail={userEmail}
           onMenuClick={() => setDrawerOpen(true)}
           onAdd={handleAddTx}
+          fontScale={fontScale}
         />
         <main style={{
           flex: 1,
-          padding: isMobile ? "16px 14px 24px" : "24px clamp(16px, 3vw, 40px) 48px",
+          padding: isMobile
+            ? "16px 14px calc(76px + env(safe-area-inset-bottom))"
+            : "24px clamp(16px, 3vw, 40px) 48px",
           maxWidth: 1440, width: "100%", margin: "0 auto",
         }}>
           {route === "dashboard" && (
             <ModernDashboard
               theme={theme}
-              transactions={txs}
+              transactions={currentTxs}
+              monthly={monthly}
               owners={owners}
               ownerStats={ownerStats}
               getCard={getCardById}
@@ -224,7 +281,7 @@ export function ModernApp({
               isMobile={isMobile}
               historyPeriods={historyPeriods}
               selectedPeriod={selectedPeriod}
-              setSelectedPeriod={setSelectedPeriod}
+              setSelectedPeriod={(p) => { setSelectedPeriod(p); if (p !== "current") fetchHistoryForPeriod(p); }}
               loadingHistory={loadingHistory}
               selectedTxIds={selectedTxIds}
               setSelectedTxIds={setSelectedTxIds}
@@ -259,10 +316,18 @@ export function ModernApp({
               setChartStyle={setChartStyle}
               onSwitchToClassic={onExitModern}
               isMobile={isMobile}
+              fontScale={fontScale}
+              setFontScale={setFontScale}
+              textScale={textScale}
+              setTextScale={setTextScale}
+              iconPack={iconPack}
+              setIconPack={setIconPack}
+              boldText={boldText}
+              setBoldText={setBoldText}
             />
           )}
         </main>
-        {isMobile && <BottomTabs theme={theme} navItems={navItems} route={route} setRoute={setRoute} />}
+        {isMobile && <BottomTabs theme={theme} navItems={navItems} route={route} setRoute={setRoute} fontScale={fontScale} />}
       </div>
 
       {/* Themed transaction form */}
@@ -337,15 +402,8 @@ export function ModernApp({
         onCancel={() => setConfirmArchive(false)}
       />
     </div>
+    </IconContext.Provider>
   );
-}
-
-function defaultDate() {
-  const d = new Date();
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yy = String(d.getFullYear()).slice(-2);
-  return `${dd}/${mm}/${yy}`;
 }
 
 export { getThemeColors };

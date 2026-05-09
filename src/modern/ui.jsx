@@ -1,5 +1,6 @@
 // Modern view UI primitives — icons, Btn, Badge, Card, formatters
 import React from "react";
+import { parseDate } from "../utils";
 
 export const I = {
   home: (p = 16) => <svg width={p} height={p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11L12 4l9 7" /><path d="M5 10v10h14V10" /></svg>,
@@ -19,12 +20,15 @@ export const I = {
   menu: (p = 16) => <svg width={p} height={p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M3 12h18M3 18h18" /></svg>,
 };
 
+export const IconContext = React.createContext(null);
+export function useIcons() { return React.useContext(IconContext) || I; }
+
 export function Btn({ children, variant = "secondary", size = "md", onClick, theme, style, ...rest }) {
   const t = theme;
   const isPri = variant === "primary";
   const isGhost = variant === "ghost";
   const pad = size === "sm" ? "6px 10px" : size === "xs" ? "4px 8px" : "8px 14px";
-  const fs = size === "sm" ? 12 : size === "xs" ? 11 : 13;
+  const fs = t.fz ? t.fz(size === "sm" ? 12 : size === "xs" ? 11 : 13) : (size === "sm" ? 12 : size === "xs" ? 11 : 13);
   const bg = isPri ? t.accent : isGhost ? "transparent" : t.surface;
   const fg = isPri ? (t.isDark ? "#0a0a0f" : "#fff") : t.text;
   return (
@@ -52,7 +56,7 @@ export function Badge({ children, color, theme, style }) {
   const fg = color || t.textSec;
   return <span style={{
     display: "inline-flex", alignItems: "center", gap: 4,
-    padding: "2px 8px", fontSize: 11, fontWeight: 500,
+    padding: "2px 8px", fontSize: t?.fz ? t.fz(11) : 11, fontWeight: 500,
     background: bg, color: fg,
     borderRadius: t.brutal ? 0 : 999,
     border: t.brutal ? `1.5px solid ${fg}` : "none",
@@ -87,6 +91,107 @@ export function CardTypeBadge({ type, theme }) {
   return <Badge color={cardColors[type] || theme.textMuted} theme={theme}>{type || "—"}</Badge>;
 }
 
+// ── Semantic value badges ──────────────────────────────────────────────────
+const pill = (color, bg, t) => ({
+  display: "inline-flex", alignItems: "center",
+  padding: "2px 8px", borderRadius: t.brutal ? 0 : 999,
+  background: bg, color,
+  fontVariantNumeric: "tabular-nums", fontWeight: 600, fontSize: t.fz ? t.fz(12) : 12,
+  whiteSpace: "nowrap",
+});
+
+export function NetBadge({ value, theme: t }) {
+  const v = Number(value) || 0;
+  const pos = v >= 0;
+  const color = pos ? t.positive : t.negative;
+  return <span style={pill(color, color + "22", t)}>{pos ? "+" : "−"}{fmtFull(Math.abs(v))}</span>;
+}
+export function GrossBadge({ value, theme: t }) {
+  const color = t.isDark ? "#fdba74" : "#ea580c";
+  const bg    = t.isDark ? "rgba(253,186,116,0.18)" : "#fff7ed";
+  return <span style={pill(color, bg, t)}>{fmtFull(Number(value) || 0)}</span>;
+}
+export function CostBadge({ value, theme: t }) {
+  const color = t.isDark ? "#93c5fd" : "#2563eb";
+  const bg    = t.isDark ? "rgba(147,197,253,0.18)" : "#eff6ff";
+  return <span style={pill(color, bg, t)}>{fmtFull(Number(value) || 0)}</span>;
+}
+export function UsdBadge({ value, theme: t }) {
+  const color = t.isDark ? "#c4b5fd" : "#7c3aed";
+  const bg    = t.isDark ? "rgba(196,181,253,0.18)" : "#f5f3ff";
+  return <span style={pill(color, bg, t)}>{fmtUSD(value)}</span>;
+}
+export function RateBadge({ value, theme: t, decimals = 2 }) {
+  const color = t.isDark ? "#5eead4" : "#0f766e";
+  const bg    = t.isDark ? "rgba(94,234,212,0.18)" : "#f0fdfa";
+  return <span style={pill(color, bg, t)}>{(Number(value) || 0).toFixed(decimals)}</span>;
+}
+export function MarginBadge({ value, theme: t }) {
+  const v = Number(value) || 0;
+  let color, bg;
+  if (v >= 15)     { color = t.positive;  bg = t.positive + "22"; }
+  else if (v >= 5) { color = t.isDark ? "#fcd34d" : "#d97706"; bg = t.isDark ? "rgba(252,211,77,0.18)" : "#fffbeb"; }
+  else             { color = t.negative;  bg = t.negative + "22"; }
+  return <span style={pill(color, bg, t)}>{v.toFixed(1)}%</span>;
+}
+export function CountBadge({ value, theme: t, label = "" }) {
+  return <span style={pill(t.accent, t.accentSoft, t)}>{Number(value).toLocaleString()}{label && ` ${label}`}</span>;
+}
+export function CardNumBadge({ value, theme: t }) {
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center",
+      padding: "2px 7px", borderRadius: t.brutal ? 0 : 6,
+      background: t.surfaceDeep, color: t.textSec,
+      fontFamily: "ui-monospace, monospace", fontSize: t.fz ? t.fz(11) : 11, fontWeight: 500,
+      letterSpacing: "0.04em", whiteSpace: "nowrap",
+    }}>••{value}</span>
+  );
+}
+
+// ── Owner color system ─────────────────────────────────────────────────────
+const OWNER_PALETTE = [
+  { color: "#7c3aed", bg: "rgba(124,58,237,0.14)" },   // violet
+  { color: "#0891b2", bg: "rgba(8,145,178,0.14)" },    // cyan
+  { color: "#d97706", bg: "rgba(217,119,6,0.14)" },    // amber
+  { color: "#db2777", bg: "rgba(219,39,119,0.14)" },   // pink
+  { color: "#059669", bg: "rgba(5,150,105,0.14)" },    // emerald
+  { color: "#dc2626", bg: "rgba(220,38,38,0.14)" },    // red
+  { color: "#2563eb", bg: "rgba(37,99,235,0.14)" },    // blue
+  { color: "#ea580c", bg: "rgba(234,88,12,0.14)" },    // orange
+  { color: "#6d28d9", bg: "rgba(109,40,217,0.14)" },   // purple
+  { color: "#0f766e", bg: "rgba(15,118,110,0.14)" },   // teal
+];
+
+export function ownerColor(idOrName) {
+  const s = String(idOrName ?? "");
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) & 0xffff;
+  return OWNER_PALETTE[h % OWNER_PALETTE.length];
+}
+
+export function OwnerBadge({ id, name, theme: t }) {
+  const key = id ?? name ?? "";
+  const { color, bg } = ownerColor(key);
+  const initials = String(name || "?").trim().split(/\s+/).map((p) => p[0] ?? "").join("").slice(0, 2).toUpperCase() || "?";
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 5,
+      padding: "2px 8px 2px 2px", borderRadius: t.brutal ? 0 : 999,
+      background: bg, color, fontWeight: 600, fontSize: t.fz ? t.fz(12) : 12,
+      whiteSpace: "nowrap", maxWidth: 160, overflow: "hidden",
+    }}>
+      <span style={{
+        width: 18, height: 18, borderRadius: "50%",
+        background: color, color: "#fff", flexShrink: 0,
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        fontSize: t.fz ? t.fz(9) : 9, fontWeight: 700,
+      }}>{initials}</span>
+      <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{name || "—"}</span>
+    </span>
+  );
+}
+
 export function fmtMVR(v, digits = 2) {
   if (v == null || isNaN(v)) return "—";
   const sign = v < 0 ? "−" : "";
@@ -113,8 +218,8 @@ export function fmtInt(v) {
   return Number(v).toLocaleString();
 }
 export function fmtDate(d) {
-  const dt = d instanceof Date ? d : new Date(d);
-  if (isNaN(dt.getTime())) return "—";
+  const dt = parseDate(d);
+  if (!dt) return "—";
   return dt.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" });
 }
 
