@@ -14,15 +14,17 @@ export function ModernSettings({
 }) {
   const t = theme;
 
+  const sectionAnim = (i) => ({ animation: `slideUp .38s cubic-bezier(.16,1,.3,1) ${Math.min(i, 6) * 0.05}s both` });
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div>
+      <div style={sectionAnim(0)}>
         <div style={{ fontSize: t.fz(11), fontWeight: 600, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Settings</div>
         <h1 style={{ margin: 0, fontSize: t.fz(26), fontWeight: 600, letterSpacing: "-0.02em", color: t.text }}>Appearance</h1>
         <div style={{ fontSize: t.fz(13), color: t.textSec, marginTop: 4 }}>Tweak the look and feel of your workspace.</div>
       </div>
 
-      <Card theme={t} pad={20}>
+      <Card theme={t} pad={20} style={sectionAnim(1)}>
         <div style={{ fontSize: t.fz(13), fontWeight: 600, color: t.text, marginBottom: 4 }}>Theme</div>
         <div style={{ fontSize: t.fz(11), color: t.textMuted, marginBottom: 12 }}>All 10 themes work in Modern view.</div>
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(3, 1fr)" : "repeat(auto-fill, minmax(120px, 1fr))", gap: 8 }}>
@@ -44,7 +46,7 @@ export function ModernSettings({
         </div>
       </Card>
 
-      <Card theme={t} pad={20}>
+      <Card theme={t} pad={20} style={sectionAnim(2)}>
         <div style={{ fontSize: t.fz(13), fontWeight: 600, color: t.text, marginBottom: 4 }}>Font</div>
         <div style={{ fontSize: t.fz(11), color: t.textMuted, marginBottom: 12 }}>Applies across the whole app.</div>
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(auto-fill, minmax(140px, 1fr))", gap: 6 }}>
@@ -59,7 +61,7 @@ export function ModernSettings({
         </div>
       </Card>
 
-      <Card theme={t} pad={20}>
+      <Card theme={t} pad={20} style={sectionAnim(3)}>
         <div style={{ fontSize: t.fz(13), fontWeight: 600, color: t.text, marginBottom: 4 }}>UI Scale</div>
         <div style={{ fontSize: t.fz(11), color: t.textMuted, marginBottom: 16 }}>
           Scales all UI elements &amp; spacing. Current: {Math.round(fontScale * 100)}%
@@ -82,7 +84,7 @@ export function ModernSettings({
         </div>
       </Card>
 
-      <Card theme={t} pad={20}>
+      <Card theme={t} pad={20} style={sectionAnim(4)}>
         <div style={{ fontSize: t.fz(13), fontWeight: 600, color: t.text, marginBottom: 4 }}>Font size</div>
         <div style={{ fontSize: t.fz(11), color: t.textMuted, marginBottom: 16 }}>
           Scales text only — layout stays fixed. Current: {Math.round(textScale * 100)}%
@@ -105,7 +107,7 @@ export function ModernSettings({
         </div>
       </Card>
 
-      <Card theme={t} pad={20}>
+      <Card theme={t} pad={20} style={sectionAnim(5)}>
         <div style={{ fontSize: t.fz(13), fontWeight: 600, color: t.text, marginBottom: 4 }}>Chart style</div>
         <div style={{ fontSize: t.fz(11), color: t.textMuted, marginBottom: 12 }}>Used on Overview and Monthly trend charts.</div>
         <div style={{ display: "flex", gap: 8 }}>
@@ -120,7 +122,7 @@ export function ModernSettings({
         </div>
       </Card>
 
-      <Card theme={t} pad={20}>
+      <Card theme={t} pad={20} style={sectionAnim(6)}>
         <div style={{ fontSize: t.fz(13), fontWeight: 600, color: t.text, marginBottom: 4 }}>Icon pack</div>
         <div style={{ fontSize: t.fz(11), color: t.textMuted, marginBottom: 12 }}>Synced with Classic view.</div>
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)", gap: 8 }}>
@@ -148,7 +150,7 @@ export function ModernSettings({
         </div>
       </Card>
 
-      <Card theme={t} pad={20}>
+      <Card theme={t} pad={20} style={sectionAnim(7)}>
         <div
           onClick={() => setBoldText?.(!boldText)}
           style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", gap: 12 }}
@@ -171,7 +173,7 @@ export function ModernSettings({
         </div>
       </Card>
 
-      <Card theme={t} pad={20}>
+      <Card theme={t} pad={20} style={sectionAnim(8)}>
         <div style={{ fontSize: t.fz(13), fontWeight: 600, color: t.text, marginBottom: 4 }}>Layout</div>
         <div style={{ fontSize: t.fz(11), color: t.textMuted, marginBottom: 12 }}>You're using the Modern (Tether Line) layout.</div>
         <Btn theme={t} onClick={onSwitchToClassic}>Switch to Classic layout</Btn>

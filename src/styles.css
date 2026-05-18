@@ -166,6 +166,23 @@ html {
   from { background-position: 200% 0; }
   to   { background-position: -200% 0; }
 }
+/* SVG path draw — pair with pathLength="1" and stroke-dasharray: 1 on the
+   target so it works regardless of the path's actual length. */
+@keyframes drawIn {
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+}
+/* Bar grow from baseline. Target needs an inline transform-origin in
+   user-space pixel coordinates matching the SVG viewBox. */
+@keyframes barGrow {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+/* Scale + fade for scatter dots, badge pops, etc. */
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.6); }
+  to   { opacity: 1; transform: scale(1); }
+}
 
 /* Reduced motion: kill animations and instant transitions */
 @media (prefers-reduced-motion: reduce) {

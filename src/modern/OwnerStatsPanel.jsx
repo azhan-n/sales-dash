@@ -39,14 +39,17 @@ export function OwnerStatsPanel({ theme, ownerStats, owners, transactions, getCa
       )}
 
       <div>
-        {rows.map((r) => {
+        {rows.map((r, idx) => {
           const expanded = expandedId === r.owner.id;
           const recent = transactions
             .filter((tx) => tx.ownerId === r.owner.id)
             .slice(0, 5);
           const pos = r.stats.totalNetProfit >= 0;
           return (
-            <div key={r.owner.id} style={{ borderTop: `1px solid ${t.border}` }}>
+            <div key={r.owner.id} style={{
+              borderTop: `1px solid ${t.border}`,
+              animation: `slideUp .32s ease-out ${Math.min(idx, 8) * 0.04}s both`,
+            }}>
               <button
                 onClick={() => setExpandedId(expanded ? null : r.owner.id)}
                 style={{
