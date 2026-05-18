@@ -253,6 +253,7 @@ export function ModernApp({
             : "24px clamp(16px, 3vw, 40px) 48px",
           maxWidth: 1440, width: "100%", margin: "0 auto",
         }}>
+          <div key={route} style={{ animation: "slideUp .28s cubic-bezier(.16,1,.3,1) both" }}>
           {route === "dashboard" && (
             <ModernDashboard
               theme={theme}
@@ -326,6 +327,7 @@ export function ModernApp({
               setBoldText={setBoldText}
             />
           )}
+          </div>
         </main>
         {isMobile && <BottomTabs theme={theme} navItems={navItems} route={route} setRoute={setRoute} fontScale={fontScale} />}
       </div>

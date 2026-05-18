@@ -23,6 +23,35 @@ export const I = {
 export const IconContext = React.createContext(null);
 export function useIcons() { return React.useContext(IconContext) || I; }
 
+// Eases a numeric value from its previous render value toward `target` over
+// `duration` ms. On first mount it counts up from 0. Respects reduced motion.
+export function useCountUp(target, duration = 800) {
+  const reduced = typeof window !== "undefined"
+    && window.matchMedia
+    && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const safeTarget = Number(target) || 0;
+  const [value, setValue] = React.useState(reduced ? safeTarget : 0);
+  React.useEffect(() => {
+    if (reduced) { setValue(safeTarget); return; }
+    let raf;
+    let start;
+    const from = value;
+    const to = safeTarget;
+    if (Math.abs(from - to) < 0.5) { setValue(to); return; }
+    const tick = (t) => {
+      if (start == null) start = t;
+      const k = Math.min(1, (t - start) / duration);
+      const eased = 1 - Math.pow(1 - k, 3);
+      setValue(from + (to - from) * eased);
+      if (k < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [safeTarget, duration, reduced]);
+  return value;
+}
+
 export function Btn({ children, variant = "secondary", size = "md", onClick, theme, style, ...rest }) {
   const t = theme;
   const isPri = variant === "primary";
@@ -40,12 +69,14 @@ export function Btn({ children, variant = "secondary", size = "md", onClick, the
       cursor: "pointer",
       display: "inline-flex", alignItems: "center", gap: 6,
       whiteSpace: "nowrap",
-      transition: "all .15s",
+      transition: "background .15s ease, border-color .15s ease, color .15s ease, transform .12s ease, box-shadow .15s ease",
       fontFamily: "inherit",
       ...style,
     }}
       onMouseEnter={(e) => { if (!isPri && !isGhost) e.currentTarget.style.background = t.surfaceAlt; if (isGhost) e.currentTarget.style.background = t.accentSoft; }}
-      onMouseLeave={(e) => { if (!isPri && !isGhost) e.currentTarget.style.background = t.surface; if (isGhost) e.currentTarget.style.background = "transparent"; }}
+      onMouseLeave={(e) => { if (!isPri && !isGhost) e.currentTarget.style.background = t.surface; if (isGhost) e.currentTarget.style.background = "transparent"; e.currentTarget.style.transform = ""; }}
+      onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.97)"; }}
+      onMouseUp={(e) => { e.currentTarget.style.transform = ""; }}
       {...rest}>{children}</button>
   );
 }
@@ -65,18 +96,33 @@ export function Badge({ children, color, theme, style }) {
   }}>{children}</span>;
 }
 
-export function Card({ children, theme, style, pad = 16 }) {
+export function Card({ children, theme, style, pad = 16, hoverable = true, onClick, ...rest }) {
   const t = theme;
-  return <div style={{
-    background: t.surface,
-    border: `1px solid ${t.border}`,
-    borderRadius: t.radius,
-    padding: pad,
-    boxShadow: t.shadow,
-    backdropFilter: t.glass ? "blur(20px) saturate(150%)" : undefined,
-    WebkitBackdropFilter: t.glass ? "blur(20px) saturate(150%)" : undefined,
-    ...style,
-  }}>{children}</div>;
+  const baseShadow = (style && style.boxShadow) || t.shadow;
+  const lift = hoverable && !t.brutal;
+  return <div
+    onClick={onClick}
+    style={{
+      background: t.surface,
+      border: `1px solid ${t.border}`,
+      borderRadius: t.radius,
+      padding: pad,
+      boxShadow: baseShadow,
+      backdropFilter: t.glass ? "blur(20px) saturate(150%)" : undefined,
+      WebkitBackdropFilter: t.glass ? "blur(20px) saturate(150%)" : undefined,
+      transition: lift ? "transform .2s cubic-bezier(.4,0,.2,1), box-shadow .2s cubic-bezier(.4,0,.2,1), border-color .2s ease" : undefined,
+      ...style,
+    }}
+    onMouseEnter={lift ? (e) => {
+      e.currentTarget.style.transform = "translateY(-2px)";
+      if (t.shadowHover) e.currentTarget.style.boxShadow = t.shadowHover;
+    } : undefined}
+    onMouseLeave={lift ? (e) => {
+      e.currentTarget.style.transform = "";
+      e.currentTarget.style.boxShadow = baseShadow;
+    } : undefined}
+    {...rest}
+  >{children}</div>;
 }
 
 export const cardColors = {
