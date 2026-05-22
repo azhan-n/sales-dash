@@ -138,50 +138,56 @@ export function CardTypeBadge({ type, theme }) {
 }
 
 // ── Semantic value badges ──────────────────────────────────────────────────
-const pill = (color, bg, t) => ({
-  display: "inline-flex", alignItems: "center",
-  padding: "2px 8px", borderRadius: t.brutal ? 0 : 999,
-  background: bg, color,
-  fontVariantNumeric: "tabular-nums", fontWeight: 600, fontSize: t.fz ? t.fz(12) : 12,
-  whiteSpace: "nowrap",
-});
+const pill = (color, bg, t, size = "md") => {
+  const dims = size === "lg"
+    ? { padding: "3px 12px", fontSize: t.fz ? t.fz(20) : 20, fontWeight: 700, letterSpacing: "-0.01em" }
+    : { padding: "2px 8px",  fontSize: t.fz ? t.fz(12) : 12, fontWeight: 600 };
+  return {
+    display: "inline-flex", alignItems: "center",
+    borderRadius: t.brutal ? 0 : 999,
+    background: bg, color,
+    fontVariantNumeric: "tabular-nums",
+    whiteSpace: "nowrap",
+    ...dims,
+  };
+};
 
-export function NetBadge({ value, theme: t }) {
+export function NetBadge({ value, theme: t, size = "md" }) {
   const v = Number(value) || 0;
   const pos = v >= 0;
   const color = pos ? t.positive : t.negative;
-  return <span style={pill(color, color + "22", t)}>{pos ? "+" : "−"}{fmtFull(Math.abs(v))}</span>;
+  return <span style={pill(color, color + "22", t, size)}>{pos ? "+" : "−"}{fmtFull(Math.abs(v))}</span>;
 }
-export function GrossBadge({ value, theme: t }) {
+export function GrossBadge({ value, theme: t, size = "md" }) {
   const color = t.isDark ? "#fdba74" : "#ea580c";
   const bg    = t.isDark ? "rgba(253,186,116,0.18)" : "#fff7ed";
-  return <span style={pill(color, bg, t)}>{fmtFull(Number(value) || 0)}</span>;
+  return <span style={pill(color, bg, t, size)}>{fmtFull(Number(value) || 0)}</span>;
 }
-export function CostBadge({ value, theme: t }) {
+export function CostBadge({ value, theme: t, size = "md" }) {
   const color = t.isDark ? "#93c5fd" : "#2563eb";
   const bg    = t.isDark ? "rgba(147,197,253,0.18)" : "#eff6ff";
-  return <span style={pill(color, bg, t)}>{fmtFull(Number(value) || 0)}</span>;
+  return <span style={pill(color, bg, t, size)}>{fmtFull(Number(value) || 0)}</span>;
 }
-export function UsdBadge({ value, theme: t }) {
+export function UsdBadge({ value, theme: t, size = "md" }) {
   const color = t.isDark ? "#c4b5fd" : "#7c3aed";
   const bg    = t.isDark ? "rgba(196,181,253,0.18)" : "#f5f3ff";
-  return <span style={pill(color, bg, t)}>{fmtUSD(value)}</span>;
+  return <span style={pill(color, bg, t, size)}>{fmtUSD(value)}</span>;
 }
-export function RateBadge({ value, theme: t, decimals = 2 }) {
+export function RateBadge({ value, theme: t, decimals = 2, size = "md" }) {
   const color = t.isDark ? "#5eead4" : "#0f766e";
   const bg    = t.isDark ? "rgba(94,234,212,0.18)" : "#f0fdfa";
-  return <span style={pill(color, bg, t)}>{(Number(value) || 0).toFixed(decimals)}</span>;
+  return <span style={pill(color, bg, t, size)}>{(Number(value) || 0).toFixed(decimals)}</span>;
 }
-export function MarginBadge({ value, theme: t }) {
+export function MarginBadge({ value, theme: t, size = "md" }) {
   const v = Number(value) || 0;
   let color, bg;
   if (v >= 15)     { color = t.positive;  bg = t.positive + "22"; }
   else if (v >= 5) { color = t.isDark ? "#fcd34d" : "#d97706"; bg = t.isDark ? "rgba(252,211,77,0.18)" : "#fffbeb"; }
   else             { color = t.negative;  bg = t.negative + "22"; }
-  return <span style={pill(color, bg, t)}>{v.toFixed(1)}%</span>;
+  return <span style={pill(color, bg, t, size)}>{v.toFixed(1)}%</span>;
 }
-export function CountBadge({ value, theme: t, label = "" }) {
-  return <span style={pill(t.accent, t.accentSoft, t)}>{Number(value).toLocaleString()}{label && ` ${label}`}</span>;
+export function CountBadge({ value, theme: t, label = "", size = "md" }) {
+  return <span style={pill(t.accent, t.accentSoft, t, size)}>{Number(value).toLocaleString()}{label && ` ${label}`}</span>;
 }
 export function CardNumBadge({ value, theme: t }) {
   return (

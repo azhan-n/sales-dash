@@ -182,22 +182,22 @@ export function ModernMonthly({
         {[
           <Card key="net" theme={t} pad={16} style={{ borderTop: `3px solid ${t.positive}` }}>
             <div style={{ fontSize: t.fz(11), fontWeight: 500, color: t.textMuted, marginBottom: 6 }}>Current period net</div>
-            <NetBadge value={stats.totalNet} theme={t} />
+            <NetBadge value={stats.totalNet} theme={t} size="lg" />
             <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 4 }}>MVR</div>
           </Card>,
           <Card key="avg" theme={t} pad={16} style={{ borderTop: `3px solid ${t.isDark ? "#fdba74" : "#ea580c"}` }}>
             <div style={{ fontSize: t.fz(11), fontWeight: 500, color: t.textMuted, marginBottom: 6 }}>Avg / month</div>
-            <GrossBadge value={txMonthly.length ? stats.totalNet / txMonthly.length : 0} theme={t} />
+            <GrossBadge value={txMonthly.length ? stats.totalNet / txMonthly.length : 0} theme={t} size="lg" />
             <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 4 }}>MVR</div>
           </Card>,
           <Card key="best" theme={t} pad={16} style={{ borderTop: `3px solid ${t.positive}` }}>
             <div style={{ fontSize: t.fz(11), fontWeight: 500, color: t.textMuted, marginBottom: 6 }}>Best month</div>
-            <NetBadge value={stats.bestMonth.net} theme={t} />
+            <NetBadge value={stats.bestMonth.net} theme={t} size="lg" />
             <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 4 }}>{stats.bestMonth.label}</div>
           </Card>,
           <Card key="trend" theme={t} pad={16} style={{ borderTop: `3px solid ${stats.trendPct >= 0 ? t.positive : t.negative}` }}>
             <div style={{ fontSize: t.fz(11), fontWeight: 500, color: t.textMuted, marginBottom: 6 }}>Trend</div>
-            <MarginBadge value={stats.trendPct} theme={t} />
+            <MarginBadge value={stats.trendPct} theme={t} size="lg" />
             <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 4 }}>vs first half</div>
           </Card>,
         ].map((tile, i) => (
