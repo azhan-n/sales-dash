@@ -1,6 +1,6 @@
 // Modern Monthly view — hero card + saved records + KPI tiles + trend chart + bar list
 import React, { useState } from "react";
-import { Card, Btn, NetBadge, GrossBadge, CountBadge, MarginBadge, fmtFull, useIcons } from "./ui";
+import { Card, Btn, NetBadge, GrossBadge, CountBadge, MarginBadge, fmtFull, useIcons, useCountUp } from "./ui";
 import { TrendChart, StackedBars } from "./charts";
 import { aggregateByMonth, computeStats } from "./aggregations";
 import { exportMonthlyPDF } from "../utils";
@@ -28,6 +28,7 @@ export function ModernMonthly({
 
   // All-time stats from saved Supabase monthly records
   const totalAllTime = monthly.reduce((s, m) => s + (Number(m.profit) || 0), 0);
+  const animatedTotalAllTime = useCountUp(totalAllTime, 900);
   const avgMonthly = monthly.length ? totalAllTime / monthly.length : 0;
   const bestSaved = monthly.reduce(
     (a, b) => (Number(b.profit) > Number(a.profit) ? b : a),
@@ -87,7 +88,7 @@ export function ModernMonthly({
             <div style={{ fontSize: t.fz(11), fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", opacity: 0.85 }}>All-time net profit</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 6 }}>
               <div style={{ fontSize: isMobile ? "calc(clamp(22px, 8vw, 30px) * var(--fz-scale, 1))" : "calc(clamp(28px, 3.5vw, 40px) * var(--fz-scale, 1))", fontWeight: 600, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums", lineHeight: 1.1, wordBreak: "break-all" }}>
-                {fmtFull(totalAllTime)}
+                {fmtFull(animatedTotalAllTime)}
               </div>
               <div style={{ fontSize: t.fz(14), opacity: 0.85 }}>MVR</div>
             </div>
@@ -137,7 +138,14 @@ export function ModernMonthly({
                 ? ((profit - prevProfit) / Math.abs(prevProfit)) * 100
                 : null;
               return (
-                <div key={m.id} style={{ padding: isMobile ? "10px 16px" : "12px 20px", borderTop: `1px solid ${t.border}`, display: "grid", gridTemplateColumns: editModeMonthly ? "1fr auto auto auto" : "1fr auto auto", gap: 10, alignItems: "center" }}>
+                <div key={m.id} style={{
+                  padding: isMobile ? "10px 16px" : "12px 20px",
+                  borderTop: `1px solid ${t.border}`,
+                  display: "grid",
+                  gridTemplateColumns: editModeMonthly ? "1fr auto auto auto" : "1fr auto auto",
+                  gap: 10, alignItems: "center",
+                  animation: `slideUp .35s ease-out ${Math.min(i, 8) * 0.04}s both`,
+                }}>
                   <div style={{ fontSize: t.fz(13), color: t.text, fontWeight: 500 }}>{m.month}</div>
                   {/* MoM % badge */}
                   <div style={{ minWidth: 56, textAlign: "right" }}>
@@ -171,26 +179,32 @@ export function ModernMonthly({
 
       {/* KPI tiles from current transactions */}
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 12 }}>
-        <Card theme={t} pad={16} style={{ borderTop: `3px solid ${t.positive}` }}>
-          <div style={{ fontSize: t.fz(11), fontWeight: 500, color: t.textMuted, marginBottom: 6 }}>Current period net</div>
-          <NetBadge value={stats.totalNet} theme={t} />
-          <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 4 }}>MVR</div>
-        </Card>
-        <Card theme={t} pad={16} style={{ borderTop: `3px solid ${t.isDark ? "#fdba74" : "#ea580c"}` }}>
-          <div style={{ fontSize: t.fz(11), fontWeight: 500, color: t.textMuted, marginBottom: 6 }}>Avg / month</div>
-          <GrossBadge value={txMonthly.length ? stats.totalNet / txMonthly.length : 0} theme={t} />
-          <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 4 }}>MVR</div>
-        </Card>
-        <Card theme={t} pad={16} style={{ borderTop: `3px solid ${t.positive}` }}>
-          <div style={{ fontSize: t.fz(11), fontWeight: 500, color: t.textMuted, marginBottom: 6 }}>Best month</div>
-          <NetBadge value={stats.bestMonth.net} theme={t} />
-          <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 4 }}>{stats.bestMonth.label}</div>
-        </Card>
-        <Card theme={t} pad={16} style={{ borderTop: `3px solid ${stats.trendPct >= 0 ? t.positive : t.negative}` }}>
-          <div style={{ fontSize: t.fz(11), fontWeight: 500, color: t.textMuted, marginBottom: 6 }}>Trend</div>
-          <MarginBadge value={stats.trendPct} theme={t} />
-          <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 4 }}>vs first half</div>
-        </Card>
+        {[
+          <Card key="net" theme={t} pad={16} style={{ borderTop: `3px solid ${t.positive}` }}>
+            <div style={{ fontSize: t.fz(11), fontWeight: 500, color: t.textMuted, marginBottom: 6 }}>Current period net</div>
+            <NetBadge value={stats.totalNet} theme={t} size="lg" />
+            <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 4 }}>MVR</div>
+          </Card>,
+          <Card key="avg" theme={t} pad={16} style={{ borderTop: `3px solid ${t.isDark ? "#fdba74" : "#ea580c"}` }}>
+            <div style={{ fontSize: t.fz(11), fontWeight: 500, color: t.textMuted, marginBottom: 6 }}>Avg / month</div>
+            <GrossBadge value={txMonthly.length ? stats.totalNet / txMonthly.length : 0} theme={t} size="lg" />
+            <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 4 }}>MVR</div>
+          </Card>,
+          <Card key="best" theme={t} pad={16} style={{ borderTop: `3px solid ${t.positive}` }}>
+            <div style={{ fontSize: t.fz(11), fontWeight: 500, color: t.textMuted, marginBottom: 6 }}>Best month</div>
+            <NetBadge value={stats.bestMonth.net} theme={t} size="lg" />
+            <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 4 }}>{stats.bestMonth.label}</div>
+          </Card>,
+          <Card key="trend" theme={t} pad={16} style={{ borderTop: `3px solid ${stats.trendPct >= 0 ? t.positive : t.negative}` }}>
+            <div style={{ fontSize: t.fz(11), fontWeight: 500, color: t.textMuted, marginBottom: 6 }}>Trend</div>
+            <MarginBadge value={stats.trendPct} theme={t} size="lg" />
+            <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 4 }}>vs first half</div>
+          </Card>,
+        ].map((tile, i) => (
+          <div key={tile.key} style={{ animation: `slideUp .42s cubic-bezier(.16,1,.3,1) ${i * 0.06}s both` }}>
+            {tile}
+          </div>
+        ))}
       </div>
 
       {/* Trend chart — uses saved monthly records when available, falls back to transaction-derived data */}

@@ -160,7 +160,7 @@ export function ModernTransactions({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap", animation: "slideUp .35s cubic-bezier(.16,1,.3,1) 0s both" }}>
         <div>
           <div style={{ fontSize: t.fz(11), fontWeight: 600, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Ledger</div>
           <h1 style={{ margin: 0, fontSize: t.fz(26), fontWeight: 600, letterSpacing: "-0.02em", color: t.text }}>Transactions</h1>
@@ -179,14 +179,14 @@ export function ModernTransactions({
       </div>
 
       {isHistory && (
-        <div style={{ padding: "10px 14px", background: t.surfaceAlt, border: `1px solid ${t.border}`, borderRadius: t.radius, fontSize: t.fz(12), color: t.textSec }}>
+        <div style={{ padding: "10px 14px", background: t.surfaceAlt, border: `1px solid ${t.border}`, borderRadius: t.radius, fontSize: t.fz(12), color: t.textSec, animation: "slideUp .35s cubic-bezier(.16,1,.3,1) .06s both" }}>
           Viewing archived period <strong style={{ color: t.text }}>{selectedPeriod}</strong>. Editing and bulk actions are disabled.
           {loadingHistory && <span style={{ marginLeft: 8, color: t.textMuted }}>Loading…</span>}
         </div>
       )}
 
       {/* Filter panel */}
-      <Card theme={t} pad={12} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <Card theme={t} pad={12} style={{ display: "flex", flexDirection: "column", gap: 8, animation: "slideUp .35s cubic-bezier(.16,1,.3,1) .12s both" }}>
         {/* Row 1: search + view toggle + clear */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, background: t.surfaceAlt, border: `1px solid ${t.border}`, borderRadius: 6, padding: "4px 10px", flex: "1 1 200px", minWidth: 160 }}>
@@ -227,7 +227,7 @@ export function ModernTransactions({
 
       {/* Bulk action bar */}
       {showActions && selectedInFiltered.length > 0 && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", background: t.accentSoft, border: `1px solid ${t.borderStrong || t.border}`, borderRadius: t.radius, gap: 12, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", background: t.accentSoft, border: `1px solid ${t.borderStrong || t.border}`, borderRadius: t.radius, gap: 12, flexWrap: "wrap", animation: "slideDown .25s cubic-bezier(.16,1,.3,1) both" }}>
           <div style={{ fontSize: t.fz(13), color: t.text, fontWeight: 500 }}>{selectedInFiltered.length} selected</div>
           <div style={{ display: "flex", gap: 8 }}>
             <Btn theme={t} size="sm" variant="ghost" onClick={clearSelection}>Clear</Btn>
@@ -240,7 +240,7 @@ export function ModernTransactions({
 
       {/* Cards view */}
       {useCards ? (
-        <Card theme={t} pad={0} style={{ overflow: "hidden" }}>
+        <Card theme={t} pad={0} style={{ overflow: "hidden", animation: "slideUp .35s cubic-bezier(.16,1,.3,1) .18s both" }}>
           <div style={{ padding: "10px 14px", borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: t.surfaceAlt }}>
             <div style={{ fontSize: t.fz(11), fontWeight: 600, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>Sort</div>
             <SelectChip theme={t} value={sort.key + ":" + sort.dir} onChange={(v) => { const [key, dir] = v.split(":"); setSort({ key, dir }); }}
@@ -317,7 +317,7 @@ export function ModernTransactions({
         </Card>
       ) : (
         /* Table view */
-        <Card theme={t} pad={0} style={{ overflow: "hidden" }}>
+        <Card theme={t} pad={0} style={{ overflow: "hidden", animation: "slideUp .35s cubic-bezier(.16,1,.3,1) .18s both" }}>
           <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: t.fz(isMobile ? 12 : 13), color: t.text, minWidth: isMobile ? 900 : undefined }}>
               <thead>

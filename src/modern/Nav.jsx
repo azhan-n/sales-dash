@@ -64,11 +64,11 @@ export function Sidebar({ theme, navItems, route, setRoute, onAdd, isMobile, ope
             fontSize: t.fz(13), fontWeight: t.fw?.label ?? 500,
             fontFamily: "inherit",
             textAlign: "left",
-            transition: "background .15s",
+            transition: "background .2s ease, color .2s ease, padding-left .2s cubic-bezier(.16,1,.3,1), border-left-color .2s ease",
           }}
             onMouseEnter={(e) => { if (route !== n.key) e.currentTarget.style.background = t.surfaceAlt; }}
             onMouseLeave={(e) => { if (route !== n.key) e.currentTarget.style.background = "transparent"; }}>
-            <span style={{ display: "flex", color: "inherit" }}>{n.icon(16)}</span>
+            <span style={{ display: "flex", color: "inherit", transition: "transform .2s ease" }}>{n.icon(16)}</span>
             {n.label}
           </button>
         ))}
@@ -169,26 +169,32 @@ export function BottomTabs({ theme, navItems, route, setRoute, fontScale = 1 }) 
       backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
       zoom: fontScale,
     }}>
-      {navItems.map((n) => (
-        <button key={n.key} onClick={() => setRoute(n.key)} style={{
-          flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
-          padding: "6px 4px",
-          background: "transparent", border: "none", cursor: "pointer",
-          color: route === n.key ? t.accent : t.textMuted,
-          fontFamily: "inherit", fontSize: t.fz(10), fontWeight: t.fw?.label ?? 500,
-          position: "relative",
-        }}>
-          {/* accent bar */}
-          <div style={{
-            position: "absolute", top: 0, left: "20%", right: "20%",
-            height: 2, borderRadius: 999,
-            background: route === n.key ? t.accent : "transparent",
-            transition: "background .2s",
-          }} />
-          {n.icon(18)}
-          <span>{n.label}</span>
-        </button>
-      ))}
+      {navItems.map((n) => {
+        const active = route === n.key;
+        return (
+          <button key={n.key} onClick={() => setRoute(n.key)} style={{
+            flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
+            padding: "6px 4px",
+            background: "transparent", border: "none", cursor: "pointer",
+            color: active ? t.accent : t.textMuted,
+            fontFamily: "inherit", fontSize: t.fz(10), fontWeight: t.fw?.label ?? 500,
+            position: "relative",
+            transition: "color .2s ease",
+          }}>
+            {/* accent bar */}
+            <div style={{
+              position: "absolute", top: 0, left: "20%", right: "20%",
+              height: 2, borderRadius: 999,
+              background: t.accent,
+              opacity: active ? 1 : 0,
+              transform: active ? "scaleX(1)" : "scaleX(0.4)",
+              transition: "opacity .2s ease, transform .25s cubic-bezier(.16,1,.3,1)",
+            }} />
+            <span style={{ transform: active ? "translateY(-1px)" : "translateY(0)", transition: "transform .2s cubic-bezier(.16,1,.3,1)", display: "flex" }}>{n.icon(18)}</span>
+            <span>{n.label}</span>
+          </button>
+        );
+      })}
     </nav>
   );
 }

@@ -40,12 +40,29 @@ export function TrendChart({ data, theme, mode = "area", height = 220, yFormat =
         const bx = x(i) - bw / 2;
         const by = y(Math.max(d.value, 0));
         const bh = Math.abs(y(d.value) - y(0));
-        return <rect key={i} x={bx} y={by} width={bw} height={bh} rx="2" fill={t.accent} opacity="0.85" />;
+        const baseline = y(0);
+        return (
+          <g key={i} style={{
+            transformOrigin: `${bx + bw / 2}px ${baseline}px`,
+            animation: "barGrow .5s cubic-bezier(.16,1,.3,1) both",
+            animationDelay: `${i * 40}ms`,
+          }}>
+            <rect x={bx} y={by} width={bw} height={bh} rx="2" fill={t.accent} opacity="0.85" />
+          </g>
+        );
       })}
-      {mode === "area" && <path d={areaPath} fill={`url(#${gradId})`} />}
-      {(mode === "area" || mode === "line") && <path d={linePath} fill="none" stroke={t.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />}
+      {mode === "area" && <path d={areaPath} fill={`url(#${gradId})`} style={{ animation: "fadeIn .5s ease-out .25s both" }} />}
+      {(mode === "area" || mode === "line") && (
+        <path d={linePath} fill="none" stroke={t.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+          pathLength="1" style={{ strokeDasharray: 1, animation: "drawIn .7s cubic-bezier(.4,0,.2,1) both" }} />
+      )}
       {(mode === "area" || mode === "line") && data.map((d, i) => (
-        <circle key={i} cx={x(i)} cy={y(d.value)} r="3" fill={t.surface} stroke={t.accent} strokeWidth="1.5" />
+        <circle key={i} cx={x(i)} cy={y(d.value)} r="3" fill={t.surface} stroke={t.accent} strokeWidth="1.5"
+          style={{
+            transformOrigin: `${x(i)}px ${y(d.value)}px`,
+            animation: "popIn .35s ease-out both",
+            animationDelay: `${i * 40 + 400}ms`,
+          }} />
       ))}
       {data.map((d, i) => {
         const step = Math.max(1, Math.ceil(data.length / 12));
@@ -79,14 +96,24 @@ export function Donut({ data, theme, size = 180, thickness = 28 }) {
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         <circle cx={cx} cy={cy} r={r} fill="none" stroke={t.surfaceDeep} strokeWidth={thickness} />
         {segs.map((s, i) => (
-          <path key={i} d={s.path} fill="none" stroke={s.color} strokeWidth={thickness} strokeLinecap="butt" />
+          <path key={i} d={s.path} fill="none" stroke={s.color} strokeWidth={thickness} strokeLinecap="butt"
+            pathLength="1" style={{
+              strokeDasharray: 1,
+              animation: "drawIn .6s cubic-bezier(.4,0,.2,1) both",
+              animationDelay: `${i * 70}ms`,
+            }} />
         ))}
         <text x={cx} y={cy - 4} textAnchor="middle" fontSize={t.fz ? t.fz(11) : 11} fill={t.textMuted}>Total</text>
         <text x={cx} y={cy + 14} textAnchor="middle" fontSize={t.fz ? t.fz(16) : 16} fontWeight="600" fill={t.text}>{total.toLocaleString(undefined, { maximumFractionDigits: 0 })}</text>
       </svg>
       <div style={{ display: "grid", gap: 8, minWidth: 140 }}>
         {segs.map((s, i) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: t.fz ? t.fz(12) : 12 }}>
+          <div key={i} style={{
+            display: "flex", alignItems: "center", gap: 8,
+            fontSize: t.fz ? t.fz(12) : 12,
+            animation: "slideInLeft .3s ease-out both",
+            animationDelay: `${i * 40 + 300}ms`,
+          }}>
             <span style={{ width: 10, height: 10, borderRadius: 2, background: s.color, flexShrink: 0 }} />
             <span style={{ color: t.text, flex: 1 }}>{s.label}</span>
             <span style={{ color: t.textMuted, fontVariantNumeric: "tabular-nums" }}>{(s.pct * 100).toFixed(1)}%</span>
@@ -129,7 +156,12 @@ export function Scatter({ data, theme, height = 220, xLabel = "Buy rate", yLabel
       <text x={(pad.l + w - pad.r) / 2} y={height - 2} textAnchor="middle" fontSize={t.fz ? t.fz(10) : 10} fill={t.textMuted}>{xLabel} →</text>
       <text x={10} y={(pad.t + height - pad.b) / 2} textAnchor="middle" fontSize={t.fz ? t.fz(10) : 10} fill={t.textMuted} transform={`rotate(-90, 10, ${(pad.t + height - pad.b) / 2})`}>↑ {yLabel}</text>
       {data.map((d, i) => (
-        <circle key={i} cx={px(d.x)} cy={py(d.y)} r="4" fill={d.color || t.accent} opacity="0.75" />
+        <circle key={i} cx={px(d.x)} cy={py(d.y)} r="4" fill={d.color || t.accent} opacity="0.75"
+          style={{
+            transformOrigin: `${px(d.x)}px ${py(d.y)}px`,
+            animation: "popIn .3s ease-out both",
+            animationDelay: `${Math.min(i, 30) * 15}ms`,
+          }} />
       ))}
     </svg>
   );
@@ -165,10 +197,17 @@ export function Histogram({ data, theme, height = 180, bins = 10 }) {
         const h = (c / cmax) * ih;
         const x = pad.l + i * bw;
         const y = pad.t + ih - h;
+        const baseline = pad.t + ih;
         const binStart = min + i * binW;
         return (
           <g key={i}>
-            <rect x={x + 2} y={y} width={bw - 4} height={h} fill={t.accent} opacity="0.85" rx="2" />
+            <g style={{
+              transformOrigin: `${x + bw / 2}px ${baseline}px`,
+              animation: "barGrow .45s cubic-bezier(.16,1,.3,1) both",
+              animationDelay: `${i * 40}ms`,
+            }}>
+              <rect x={x + 2} y={y} width={bw - 4} height={h} fill={t.accent} opacity="0.85" rx="2" />
+            </g>
             {i % 2 === 0 && <text x={x + bw / 2} y={height - 8} textAnchor="middle" fontSize={t.fz ? t.fz(9) : 9} fill={t.textMuted}>{binStart.toFixed(0)}%</text>}
           </g>
         );
@@ -215,10 +254,17 @@ export function StackedBars({ data, theme, height = 200 }) {
         const ch = (d.cost / max) * ih;
         const x = pad.l + i * bw + bw * 0.2;
         const bwi = bw * 0.6;
+        const baseline = pad.t + ih;
         return <g key={i}>
-          <rect x={x} y={y(d.gross)} width={bwi} height={gh} fill={t.accent} opacity="0.2" rx="2" />
-          <rect x={x + bwi * 0.15} y={y(d.cost)} width={bwi * 0.7} height={ch} fill={t.textMuted} opacity="0.35" rx="2" />
-          <rect x={x} y={y(d.net + d.cost) - 2} width={bwi} height={3} fill={t.positive} />
+          <g style={{
+            transformOrigin: `${x + bwi / 2}px ${baseline}px`,
+            animation: "barGrow .5s cubic-bezier(.16,1,.3,1) both",
+            animationDelay: `${i * 50}ms`,
+          }}>
+            <rect x={x} y={y(d.gross)} width={bwi} height={gh} fill={t.accent} opacity="0.2" rx="2" />
+            <rect x={x + bwi * 0.15} y={y(d.cost)} width={bwi * 0.7} height={ch} fill={t.textMuted} opacity="0.35" rx="2" />
+            <rect x={x} y={y(d.net + d.cost) - 2} width={bwi} height={3} fill={t.positive} />
+          </g>
           {i % Math.max(1, Math.ceil(data.length / 8)) === 0 && <text x={x + bwi / 2} y={height - 8} textAnchor="middle" fontSize={t.fz ? t.fz(10) : 10} fill={t.textMuted}>{d.label}</text>}
         </g>;
       })}

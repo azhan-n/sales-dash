@@ -128,3 +128,68 @@ html {
 .hover\:text-gray-700:hover {
   color: #374151;
 }
+
+/* ── Global animation keyframes ────────────────────────────────────────────
+   Defined here so both the Classic (App.jsx) and Modern (ModernApp.jsx)
+   render paths can use them — Modern returns early and never mounts the
+   <style> block at the bottom of App.jsx. */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translate3d(0, -8px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translate3d(-12px, 0, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes shake {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  20%, 60% { transform: translate3d(-4px, 0, 0); }
+  40%, 80% { transform: translate3d(4px, 0, 0); }
+}
+@keyframes skeletonShimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+/* SVG path draw — pair with pathLength="1" and stroke-dasharray: 1 on the
+   target so it works regardless of the path's actual length. */
+@keyframes drawIn {
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+}
+/* Bar grow from baseline. Target needs an inline transform-origin in
+   user-space pixel coordinates matching the SVG viewBox. */
+@keyframes barGrow {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+/* Scale + fade for scatter dots, badge pops, etc. */
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.6); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Reduced motion: kill animations and instant transitions */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

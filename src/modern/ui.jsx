@@ -23,6 +23,35 @@ export const I = {
 export const IconContext = React.createContext(null);
 export function useIcons() { return React.useContext(IconContext) || I; }
 
+// Eases a numeric value from its previous render value toward `target` over
+// `duration` ms. On first mount it counts up from 0. Respects reduced motion.
+export function useCountUp(target, duration = 800) {
+  const reduced = typeof window !== "undefined"
+    && window.matchMedia
+    && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const safeTarget = Number(target) || 0;
+  const [value, setValue] = React.useState(reduced ? safeTarget : 0);
+  React.useEffect(() => {
+    if (reduced) { setValue(safeTarget); return; }
+    let raf;
+    let start;
+    const from = value;
+    const to = safeTarget;
+    if (Math.abs(from - to) < 0.5) { setValue(to); return; }
+    const tick = (t) => {
+      if (start == null) start = t;
+      const k = Math.min(1, (t - start) / duration);
+      const eased = 1 - Math.pow(1 - k, 3);
+      setValue(from + (to - from) * eased);
+      if (k < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [safeTarget, duration, reduced]);
+  return value;
+}
+
 export function Btn({ children, variant = "secondary", size = "md", onClick, theme, style, ...rest }) {
   const t = theme;
   const isPri = variant === "primary";
@@ -40,12 +69,14 @@ export function Btn({ children, variant = "secondary", size = "md", onClick, the
       cursor: "pointer",
       display: "inline-flex", alignItems: "center", gap: 6,
       whiteSpace: "nowrap",
-      transition: "all .15s",
+      transition: "background .15s ease, border-color .15s ease, color .15s ease, transform .12s ease, box-shadow .15s ease",
       fontFamily: "inherit",
       ...style,
     }}
       onMouseEnter={(e) => { if (!isPri && !isGhost) e.currentTarget.style.background = t.surfaceAlt; if (isGhost) e.currentTarget.style.background = t.accentSoft; }}
-      onMouseLeave={(e) => { if (!isPri && !isGhost) e.currentTarget.style.background = t.surface; if (isGhost) e.currentTarget.style.background = "transparent"; }}
+      onMouseLeave={(e) => { if (!isPri && !isGhost) e.currentTarget.style.background = t.surface; if (isGhost) e.currentTarget.style.background = "transparent"; e.currentTarget.style.transform = ""; }}
+      onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.97)"; }}
+      onMouseUp={(e) => { e.currentTarget.style.transform = ""; }}
       {...rest}>{children}</button>
   );
 }
@@ -65,18 +96,33 @@ export function Badge({ children, color, theme, style }) {
   }}>{children}</span>;
 }
 
-export function Card({ children, theme, style, pad = 16 }) {
+export function Card({ children, theme, style, pad = 16, hoverable = true, onClick, ...rest }) {
   const t = theme;
-  return <div style={{
-    background: t.surface,
-    border: `1px solid ${t.border}`,
-    borderRadius: t.radius,
-    padding: pad,
-    boxShadow: t.shadow,
-    backdropFilter: t.glass ? "blur(20px) saturate(150%)" : undefined,
-    WebkitBackdropFilter: t.glass ? "blur(20px) saturate(150%)" : undefined,
-    ...style,
-  }}>{children}</div>;
+  const baseShadow = (style && style.boxShadow) || t.shadow;
+  const lift = hoverable && !t.brutal;
+  return <div
+    onClick={onClick}
+    style={{
+      background: t.surface,
+      border: `1px solid ${t.border}`,
+      borderRadius: t.radius,
+      padding: pad,
+      boxShadow: baseShadow,
+      backdropFilter: t.glass ? "blur(20px) saturate(150%)" : undefined,
+      WebkitBackdropFilter: t.glass ? "blur(20px) saturate(150%)" : undefined,
+      transition: lift ? "transform .2s cubic-bezier(.4,0,.2,1), box-shadow .2s cubic-bezier(.4,0,.2,1), border-color .2s ease" : undefined,
+      ...style,
+    }}
+    onMouseEnter={lift ? (e) => {
+      e.currentTarget.style.transform = "translateY(-2px)";
+      if (t.shadowHover) e.currentTarget.style.boxShadow = t.shadowHover;
+    } : undefined}
+    onMouseLeave={lift ? (e) => {
+      e.currentTarget.style.transform = "";
+      e.currentTarget.style.boxShadow = baseShadow;
+    } : undefined}
+    {...rest}
+  >{children}</div>;
 }
 
 export const cardColors = {
@@ -92,50 +138,56 @@ export function CardTypeBadge({ type, theme }) {
 }
 
 // ── Semantic value badges ──────────────────────────────────────────────────
-const pill = (color, bg, t) => ({
-  display: "inline-flex", alignItems: "center",
-  padding: "2px 8px", borderRadius: t.brutal ? 0 : 999,
-  background: bg, color,
-  fontVariantNumeric: "tabular-nums", fontWeight: 600, fontSize: t.fz ? t.fz(12) : 12,
-  whiteSpace: "nowrap",
-});
+const pill = (color, bg, t, size = "md") => {
+  const dims = size === "lg"
+    ? { padding: "3px 12px", fontSize: t.fz ? t.fz(20) : 20, fontWeight: 700, letterSpacing: "-0.01em" }
+    : { padding: "2px 8px",  fontSize: t.fz ? t.fz(12) : 12, fontWeight: 600 };
+  return {
+    display: "inline-flex", alignItems: "center",
+    borderRadius: t.brutal ? 0 : 999,
+    background: bg, color,
+    fontVariantNumeric: "tabular-nums",
+    whiteSpace: "nowrap",
+    ...dims,
+  };
+};
 
-export function NetBadge({ value, theme: t }) {
+export function NetBadge({ value, theme: t, size = "md" }) {
   const v = Number(value) || 0;
   const pos = v >= 0;
   const color = pos ? t.positive : t.negative;
-  return <span style={pill(color, color + "22", t)}>{pos ? "+" : "−"}{fmtFull(Math.abs(v))}</span>;
+  return <span style={pill(color, color + "22", t, size)}>{pos ? "+" : "−"}{fmtFull(Math.abs(v))}</span>;
 }
-export function GrossBadge({ value, theme: t }) {
+export function GrossBadge({ value, theme: t, size = "md" }) {
   const color = t.isDark ? "#fdba74" : "#ea580c";
   const bg    = t.isDark ? "rgba(253,186,116,0.18)" : "#fff7ed";
-  return <span style={pill(color, bg, t)}>{fmtFull(Number(value) || 0)}</span>;
+  return <span style={pill(color, bg, t, size)}>{fmtFull(Number(value) || 0)}</span>;
 }
-export function CostBadge({ value, theme: t }) {
+export function CostBadge({ value, theme: t, size = "md" }) {
   const color = t.isDark ? "#93c5fd" : "#2563eb";
   const bg    = t.isDark ? "rgba(147,197,253,0.18)" : "#eff6ff";
-  return <span style={pill(color, bg, t)}>{fmtFull(Number(value) || 0)}</span>;
+  return <span style={pill(color, bg, t, size)}>{fmtFull(Number(value) || 0)}</span>;
 }
-export function UsdBadge({ value, theme: t }) {
+export function UsdBadge({ value, theme: t, size = "md" }) {
   const color = t.isDark ? "#c4b5fd" : "#7c3aed";
   const bg    = t.isDark ? "rgba(196,181,253,0.18)" : "#f5f3ff";
-  return <span style={pill(color, bg, t)}>{fmtUSD(value)}</span>;
+  return <span style={pill(color, bg, t, size)}>{fmtUSD(value)}</span>;
 }
-export function RateBadge({ value, theme: t, decimals = 2 }) {
+export function RateBadge({ value, theme: t, decimals = 2, size = "md" }) {
   const color = t.isDark ? "#5eead4" : "#0f766e";
   const bg    = t.isDark ? "rgba(94,234,212,0.18)" : "#f0fdfa";
-  return <span style={pill(color, bg, t)}>{(Number(value) || 0).toFixed(decimals)}</span>;
+  return <span style={pill(color, bg, t, size)}>{(Number(value) || 0).toFixed(decimals)}</span>;
 }
-export function MarginBadge({ value, theme: t }) {
+export function MarginBadge({ value, theme: t, size = "md" }) {
   const v = Number(value) || 0;
   let color, bg;
   if (v >= 15)     { color = t.positive;  bg = t.positive + "22"; }
   else if (v >= 5) { color = t.isDark ? "#fcd34d" : "#d97706"; bg = t.isDark ? "rgba(252,211,77,0.18)" : "#fffbeb"; }
   else             { color = t.negative;  bg = t.negative + "22"; }
-  return <span style={pill(color, bg, t)}>{v.toFixed(1)}%</span>;
+  return <span style={pill(color, bg, t, size)}>{v.toFixed(1)}%</span>;
 }
-export function CountBadge({ value, theme: t, label = "" }) {
-  return <span style={pill(t.accent, t.accentSoft, t)}>{Number(value).toLocaleString()}{label && ` ${label}`}</span>;
+export function CountBadge({ value, theme: t, label = "", size = "md" }) {
+  return <span style={pill(t.accent, t.accentSoft, t, size)}>{Number(value).toLocaleString()}{label && ` ${label}`}</span>;
 }
 export function CardNumBadge({ value, theme: t }) {
   return (

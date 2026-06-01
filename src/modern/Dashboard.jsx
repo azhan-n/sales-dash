@@ -1,6 +1,6 @@
 // Modern Overview — hero KPI + sparkline tiles + charts + recent activity
 import React from "react";
-import { Card, Btn, CardTypeBadge, CardNumBadge, NetBadge, GrossBadge, CostBadge, UsdBadge, RateBadge, MarginBadge, CountBadge, OwnerBadge, fmtFull, fmtUSD, fmtDate, cardColors, useIcons } from "./ui";
+import { Card, Btn, CardTypeBadge, CardNumBadge, NetBadge, GrossBadge, CostBadge, UsdBadge, RateBadge, MarginBadge, CountBadge, OwnerBadge, fmtFull, fmtUSD, fmtDate, cardColors, useIcons, useCountUp } from "./ui";
 import { TrendChart, Donut, Scatter, Histogram, Sparkline } from "./charts";
 import { aggregateByMonth, aggregateByCardType, computeStats } from "./aggregations";
 import { OwnerStatsPanel } from "./OwnerStatsPanel";
@@ -82,13 +82,13 @@ function DualStatTile({ theme: t, labelA, valueA, subA, labelB, valueB, subB }) 
       }}>
         <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
           <div style={{ fontSize: t.fz(10), fontWeight: 700, color: rc, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{labelA}</div>
-          <div style={{ overflow: "hidden" }}><RateBadge value={valueA} theme={t} /></div>
+          <div style={{ overflow: "hidden" }}><RateBadge value={valueA} theme={t} size="lg" /></div>
           <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{subA}</div>
         </div>
         <div style={{ width: 1, background: `${rc}30`, alignSelf: "stretch", flexShrink: 0 }} />
         <div style={{ flex: 1, minWidth: 0, overflow: "hidden", textAlign: "right" }}>
           <div style={{ fontSize: t.fz(10), fontWeight: 700, color: rc, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{labelB}</div>
-          <div style={{ overflow: "hidden", display: "flex", justifyContent: "flex-end" }}><RateBadge value={valueB} theme={t} /></div>
+          <div style={{ overflow: "hidden", display: "flex", justifyContent: "flex-end" }}><RateBadge value={valueB} theme={t} size="lg" /></div>
           <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{subB}</div>
         </div>
       </div>
@@ -100,13 +100,13 @@ function DualStatTile({ theme: t, labelA, valueA, subA, labelB, valueB, subB }) 
       <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: t.fz(11), fontWeight: 500, color: t.textMuted }}>{labelA}</div>
-          <div style={{ marginTop: 4 }}><RateBadge value={valueA} theme={t} /></div>
+          <div style={{ marginTop: 4 }}><RateBadge value={valueA} theme={t} size="lg" /></div>
           <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 3 }}>{subA}</div>
         </div>
         <div style={{ width: 1, background: t.border, alignSelf: "stretch", flexShrink: 0 }} />
         <div style={{ flex: 1, minWidth: 0, textAlign: "right" }}>
           <div style={{ fontSize: t.fz(11), fontWeight: 500, color: t.textMuted }}>{labelB}</div>
-          <div style={{ marginTop: 4 }}><RateBadge value={valueB} theme={t} /></div>
+          <div style={{ marginTop: 4 }}><RateBadge value={valueB} theme={t} size="lg" /></div>
           <div style={{ fontSize: t.fz(10), color: t.textMuted, marginTop: 3 }}>{subB}</div>
         </div>
       </div>
@@ -145,6 +145,7 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
   });
   const margins = transactions.map((tx) => Number(tx.profitMargin) || 0);
   const recent = transactions.slice(0, 5);
+  const animatedThisMonthNet = useCountUp(thisMonthNet, 900);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24 }}>
@@ -173,7 +174,7 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
             <div style={{ fontSize: t.fz(11), fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", opacity: 0.85 }}>Profit this month</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 6 }}>
               <div style={{ fontSize: isMobile ? "calc(clamp(22px, 8vw, 30px) * var(--fz-scale, 1))" : "calc(clamp(28px, 3.5vw, 40px) * var(--fz-scale, 1))", fontWeight: 600, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums", lineHeight: 1.1, wordBreak: "break-all" }}>
-                {fmtFull(thisMonthNet)}
+                {fmtFull(animatedThisMonthNet)}
               </div>
               <div style={{ fontSize: t.fz(14), opacity: 0.85 }}>MVR</div>
             </div>
@@ -192,12 +193,18 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
         </Card>
 
         <div style={{ display: "grid", gridTemplateColumns: isCircular ? "1fr" : "repeat(2, 1fr)", gap: isMobile ? 8 : 12 }}>
-          <StatTile theme={t} label="Transactions" value={<CountBadge value={transactions.length} theme={t} label="tx" />} sub="current period" spark={localMonthly.map((m) => m.count)} positive icon={I.list} tileColor={t.accent} />
-          <StatTile theme={t} label="USDT Sold" value={<UsdBadge value={stats.totalSellAmount} theme={t} />} sub="Total sell volume" positive icon={I.dollar} tileColor={USD_COLOR(t.isDark)} />
-          <StatTile theme={t} label="USD Used" value={<UsdBadge value={stats.totalBuyAmount} theme={t} />} sub="Total buy volume" positive icon={I.dollar} tileColor={USD_COLOR(t.isDark)} />
-          <StatTile theme={t} label="Avg profit / tx" value={<NetBadge value={stats.avgNetProfit} theme={t} />} sub="Per transaction" spark={localMonthly.map((m) => m.count ? m.net / m.count : 0)} positive={stats.avgNetProfit >= 0} icon={I.trending} tileColor={stats.avgNetProfit >= 0 ? t.positive : t.negative} />
-          <StatTile theme={t} label="Best month" value={<GrossBadge value={stats.bestMonth.net} theme={t} />} sub={stats.bestMonth.label} spark={localMonthly.map((m) => m.net)} positive icon={I.calendar} tileColor={t.isDark ? "#fdba74" : "#ea580c"} />
-          <DualStatTile theme={t} labelA="Avg sell rate" valueA={stats.avgSellRate.toFixed(2)} subA="MVR / USD" labelB="Avg buy rate" valueB={stats.avgBuyRate.toFixed(2)} subB="MVR / USD" />
+          {[
+            <StatTile key="tx" theme={t} label="Transactions" value={<CountBadge value={transactions.length} theme={t} label="tx" size="lg" />} sub="current period" spark={localMonthly.map((m) => m.count)} positive icon={I.list} tileColor={t.accent} />,
+            <StatTile key="usdt" theme={t} label="USDT Sold" value={<UsdBadge value={stats.totalSellAmount} theme={t} size="lg" />} sub="Total sell volume" positive icon={I.dollar} tileColor={USD_COLOR(t.isDark)} />,
+            <StatTile key="usd" theme={t} label="USD Used" value={<UsdBadge value={stats.totalBuyAmount} theme={t} size="lg" />} sub="Total buy volume" positive icon={I.dollar} tileColor={USD_COLOR(t.isDark)} />,
+            <StatTile key="avg" theme={t} label="Avg profit / tx" value={<NetBadge value={stats.avgNetProfit} theme={t} size="lg" />} sub="Per transaction" spark={localMonthly.map((m) => m.count ? m.net / m.count : 0)} positive={stats.avgNetProfit >= 0} icon={I.trending} tileColor={stats.avgNetProfit >= 0 ? t.positive : t.negative} />,
+            <StatTile key="best" theme={t} label="Best month" value={<GrossBadge value={stats.bestMonth.net} theme={t} size="lg" />} sub={stats.bestMonth.label} spark={localMonthly.map((m) => m.net)} positive icon={I.calendar} tileColor={t.isDark ? "#fdba74" : "#ea580c"} />,
+            <DualStatTile key="rates" theme={t} labelA="Avg sell rate" valueA={stats.avgSellRate.toFixed(2)} subA="MVR / USD" labelB="Avg buy rate" valueB={stats.avgBuyRate.toFixed(2)} subB="MVR / USD" />,
+          ].map((tile, i) => (
+            <div key={tile.key} style={{ animation: `slideUp .42s cubic-bezier(.16,1,.3,1) ${i * 0.06}s both` }}>
+              {tile}
+            </div>
+          ))}
         </div>
       </div>
 
