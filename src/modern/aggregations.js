@@ -36,7 +36,8 @@ export function aggregateByCardType(txs, getCard) {
 
 export function computeStats(txs) {
   if (!txs.length) return {
-    totalNet: 0, totalGross: 0, totalCost: 0, avgMargin: 0, momPct: 0, avgSellRate: 0,
+    totalNet: 0, totalGross: 0, totalCost: 0, totalSellAmount: 0, totalBuyAmount: 0,
+    avgMargin: 0, avgSellRate: 0, avgNetProfit: 0, avgBuyRate: 0, momPct: 0,
     thisMonthNet: 0, prevMonthNet: 0, thisMonthCount: 0, bestMonth: { label: "—", net: 0 }, trendPct: 0,
   };
   const totalNet = txs.reduce((s, t) => s + (Number(t.netProfit) || 0), 0);

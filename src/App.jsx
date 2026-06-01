@@ -583,6 +583,7 @@ function AppInner() {
 
   if (modernView) {
     return (
+      <ErrorBoundary fullPage bg={c.bg} title="Modern view failed to render" message="An unexpected error occurred. Try again, or switch back to the Classic layout.">
       <ModernApp
         themeKey={theme}
         palette={c}
@@ -638,6 +639,7 @@ function AppInner() {
         loadingHistory={loadingHistory}
         onArchive={archiveCurrentPeriodWithMonthly}
       />
+      </ErrorBoundary>
     );
   }
 
