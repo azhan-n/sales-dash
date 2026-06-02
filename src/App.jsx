@@ -33,7 +33,7 @@ function AppInner() {
   const [loading, setLoading] = useState(true);
 
   // --- Appearance (shared with Modern view) ---
-  const [theme, setTheme] = useState(() => lsGet("theme") || "sunset");
+  const [theme, setTheme] = useState(() => lsGet("theme") || "ledgerline");
   const [selectedFont, setSelectedFont] = useState(() => lsGet("font") || "Poppins");
 
   // --- Forms / editing ---
