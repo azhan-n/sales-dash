@@ -259,10 +259,20 @@ function AppInner() {
     );
   }, [selectedTxIds]);
 
-  // Auto-archive check on the 1st of the month
+  // Auto-archive check on the 1st of the month. Guarded by localStorage so it
+  // runs at most once per period — otherwise every page reload on the 1st would
+  // re-trigger the archive RPC and surface an error toast ("already archived" /
+  // "no transactions to archive").
   useEffect(() => {
     const now = new Date();
-    if (now.getDate() === 1) archiveTransactions();
+    if (now.getDate() === 1) {
+      const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const period = prev.toLocaleString("default", { month: "long", year: "numeric" });
+      if (lsGet("autoArchivedPeriod") !== period) {
+        lsSet("autoArchivedPeriod", period);
+        archiveTransactions();
+      }
+    }
     fetchHistoryPeriods();
   }, []);
 

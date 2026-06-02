@@ -35,7 +35,7 @@ export function MonthlyForm({
 
   const validate = () => {
     const e = {};
-    if (!monthlyForm.month.trim()) {
+    if (!(monthlyForm.month || "").trim()) {
       e.month = "Month is required (e.g. March 2026)";
     }
     const profit = parseFloat(monthlyForm.profit);

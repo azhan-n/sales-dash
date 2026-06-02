@@ -74,8 +74,8 @@ export function TransactionForm({
 
   const validate = () => {
     const e = {};
-    if (!txForm.owner.trim()) e.owner = "Owner is required";
-    if (!txForm.cardNumber.trim()) e.cardNumber = "Card number is required";
+    if (!(txForm.owner || "").trim()) e.owner = "Owner is required";
+    if (!(txForm.cardNumber || "").trim()) e.cardNumber = "Card number is required";
     if (!txForm.buyRate || isNaN(parseFloat(txForm.buyRate)) || parseFloat(txForm.buyRate) <= 0) e.buyRate = "Enter a valid buy rate";
     if (!txForm.buyAmount || isNaN(parseFloat(txForm.buyAmount)) || parseFloat(txForm.buyAmount) <= 0) e.buyAmount = "Enter a valid buy amount";
     if (!txForm.sellRate || isNaN(parseFloat(txForm.sellRate)) || parseFloat(txForm.sellRate) <= 0) e.sellRate = "Enter a valid sell rate";

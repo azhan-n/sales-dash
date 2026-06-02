@@ -56,7 +56,11 @@ export function ModernTransactions({
       if (ownerFilter !== "all" && ownerName !== ownerFilter) return false;
       if (filterCardNumber !== "all" && cardNum !== filterCardNumber) return false;
       if (filterDateFrom || filterDateTo) {
-        const k = tx.date instanceof Date ? tx.date.toISOString().split("T")[0] : dateSortKey(tx.date);
+        // Use local date components, not toISOString() — parseDate builds local
+        // midnight, so toISOString() shifts to the previous day in UTC+ timezones.
+        const k = tx.date instanceof Date
+          ? `${tx.date.getFullYear()}-${String(tx.date.getMonth() + 1).padStart(2, "0")}-${String(tx.date.getDate()).padStart(2, "0")}`
+          : dateSortKey(tx.date);
         if (filterDateFrom && k < filterDateFrom) return false;
         if (filterDateTo && k > filterDateTo) return false;
       }
