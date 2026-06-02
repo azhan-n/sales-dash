@@ -40,6 +40,9 @@ export function ModernTransactions({
   const [filterDateTo, setFilterDateTo] = useState("");
   const [sort, setSort] = useState({ key: "date", dir: "desc" });
   const [currentPage, setCurrentPage] = useState(1);
+  // Edit mode is off by default: the select checkboxes, bulk-action bar, and
+  // per-row edit/delete buttons stay hidden until the user clicks "Edit".
+  const [editMode, setEditMode] = useState(false);
 
   React.useEffect(() => { setCurrentPage(1); }, [q, cardFilter, ownerFilter, filterCardNumber, filterDateFrom, filterDateTo]);
   React.useEffect(() => { setFilterCardNumber("all"); }, [ownerFilter]);
@@ -56,7 +59,11 @@ export function ModernTransactions({
       if (ownerFilter !== "all" && ownerName !== ownerFilter) return false;
       if (filterCardNumber !== "all" && cardNum !== filterCardNumber) return false;
       if (filterDateFrom || filterDateTo) {
-        const k = tx.date instanceof Date ? tx.date.toISOString().split("T")[0] : dateSortKey(tx.date);
+        // Use local date components, not toISOString() — parseDate builds local
+        // midnight, so toISOString() shifts to the previous day in UTC+ timezones.
+        const k = tx.date instanceof Date
+          ? `${tx.date.getFullYear()}-${String(tx.date.getMonth() + 1).padStart(2, "0")}-${String(tx.date.getDate()).padStart(2, "0")}`
+          : dateSortKey(tx.date);
         if (filterDateFrom && k < filterDateFrom) return false;
         if (filterDateTo && k > filterDateTo) return false;
       }
@@ -143,7 +150,9 @@ export function ModernTransactions({
     </th>
   );
 
-  const showActions = !isHistory;
+  // Select + per-row edit/delete UI only shows while editing a live period.
+  const showActions = !isHistory && editMode;
+  const toggleEditMode = () => setEditMode((v) => { if (v) clearSelection(); return !v; });
 
   const PaginationBar = () => totalPages <= 1 ? null : (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderTop: `1px solid ${t.border}`, background: t.surfaceAlt, fontSize: t.fz(12), color: t.textSec, gap: 8, flexWrap: "wrap" }}>
@@ -174,7 +183,12 @@ export function ModernTransactions({
             <SelectChip theme={t} value={selectedPeriod} options={periodOptions} onChange={setSelectedPeriod} />
           )}
           <Btn theme={t} size="sm" onClick={handleExport}>{I.download(13)} Export PDF</Btn>
-          {showActions && <Btn theme={t} variant="primary" size="sm" onClick={onAdd}>{I.plus(13)} New</Btn>}
+          {!isHistory && (
+            <Btn theme={t} size="sm" variant={editMode ? "primary" : "secondary"} onClick={toggleEditMode}>
+              {editMode ? "Done" : <>{I.edit(13)} Edit</>}
+            </Btn>
+          )}
+          {!isHistory && <Btn theme={t} variant="primary" size="sm" onClick={onAdd}>{I.plus(13)} New</Btn>}
         </div>
       </div>
 

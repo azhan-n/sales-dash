@@ -152,7 +152,7 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div>
           <div style={{ fontSize: t.fz(11), fontWeight: 600, color: t.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Overview</div>
-          <h1 style={{ margin: 0, fontSize: t.fz(isMobile ? 22 : 28), fontWeight: 600, letterSpacing: "-0.02em", color: t.text }}>Welcome back.</h1>
+          <h1 style={{ margin: 0, fontSize: t.fz(isMobile ? 22 : 28), fontWeight: 600, letterSpacing: "-0.02em", color: t.text }}>Welcome, Azhan</h1>
           <div style={{ fontSize: t.fz(13), color: t.textSec, marginTop: 4 }}>Here's how your book looks.</div>
         </div>
         {!isMobile && (

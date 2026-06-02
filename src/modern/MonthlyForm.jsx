@@ -22,7 +22,7 @@ export function MonthlyForm({ theme, monthlyForm, setMonthlyForm, showMonthlyFor
 
   const validate = () => {
     const e = {};
-    if (!monthlyForm.month.trim()) e.month = "Month is required (e.g. March 2026)";
+    if (!(monthlyForm.month || "").trim()) e.month = "Month is required (e.g. March 2026)";
     const p = parseFloat(monthlyForm.profit);
     if (monthlyForm.profit === "" || isNaN(p)) e.profit = "Enter a valid profit amount";
     return e;

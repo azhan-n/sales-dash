@@ -6,7 +6,8 @@ import { ICON_PACKS, ICON_PACK_KEYS } from "../iconPacks";
 
 export function ModernSettings({
   theme, currentTheme, setTheme, font, setFont,
-  chartStyle, setChartStyle, onSwitchToClassic, isMobile,
+  chartStyle, setChartStyle, isMobile,
+  userEmail = "", handleSignOut, signingOut = false,
   fontScale = 1.0, setFontScale,
   textScale = 1.0, setTextScale,
   iconPack = "lucide", setIconPack,
@@ -174,9 +175,21 @@ export function ModernSettings({
       </Card>
 
       <Card theme={t} pad={20} style={sectionAnim(8)}>
-        <div style={{ fontSize: t.fz(13), fontWeight: 600, color: t.text, marginBottom: 4 }}>Layout</div>
-        <div style={{ fontSize: t.fz(11), color: t.textMuted, marginBottom: 12 }}>You're using the Modern (Tether Line) layout.</div>
-        <Btn theme={t} onClick={onSwitchToClassic}>Switch to Classic layout</Btn>
+        <div style={{ fontSize: t.fz(13), fontWeight: 600, color: t.text, marginBottom: 4 }}>Account</div>
+        <div style={{ fontSize: t.fz(11), color: t.textMuted, marginBottom: 12 }}>You're signed in to this workspace.</div>
+        {userEmail && (
+          <div style={{
+            display: "flex", alignItems: "center", gap: 8, marginBottom: 12,
+            padding: "8px 12px", border: `1px solid ${t.border}`, borderRadius: t.radius,
+            background: t.surface,
+          }}>
+            <span style={{ width: 7, height: 7, borderRadius: "50%", background: t.accent, flexShrink: 0 }} />
+            <span style={{ fontSize: t.fz(12), color: t.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userEmail}</span>
+          </div>
+        )}
+        <Btn theme={t} onClick={handleSignOut} disabled={signingOut}>
+          {signingOut ? "Signing out…" : "Sign out"}
+        </Btn>
       </Card>
     </div>
   );

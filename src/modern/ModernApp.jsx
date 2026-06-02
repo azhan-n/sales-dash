@@ -107,7 +107,8 @@ export function ModernApp({
   ownerStats,
   getCardById, getOwnerById,
   // settings
-  setTheme, setFont, onExitModern,
+  setTheme, setFont,
+  handleSignOut, signingOut,
   // transaction form (shared with Classic)
   txForm, setTxForm,
   showTxForm, setShowTxForm,
@@ -132,7 +133,8 @@ export function ModernApp({
 }) {
   const localIsMobile = useIsMobile(760);
   const isMobile = parentIsMobile ?? localIsMobile;
-  const [route, setRoute] = useState(() => lsGet("modern_route", "dashboard"));
+  // Always land on the Overview page on load (route is not persisted).
+  const [route, setRoute] = useState("dashboard");
   const [chartStyle, setChartStyle] = useState(() => lsGet("modern_chartStyle", "area"));
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editModeMonthly, setEditModeMonthly] = useState(false);
@@ -150,7 +152,6 @@ export function ModernApp({
   // kind: "tx" (single transaction), "bulk" (selected transactions), "monthly" (single monthly record)
   const [confirmArchive, setConfirmArchive] = useState(false);
 
-  useEffect(() => { lsSet("modern_route", route); }, [route]);
   useEffect(() => { lsSet("modern_chartStyle", chartStyle); }, [chartStyle]);
 
   const theme = useMemo(() => buildTheme({ themeKey, palette, font, boldText }), [themeKey, palette, font, boldText]);
@@ -315,7 +316,9 @@ export function ModernApp({
               setFont={setFont}
               chartStyle={chartStyle}
               setChartStyle={setChartStyle}
-              onSwitchToClassic={onExitModern}
+              userEmail={userEmail}
+              handleSignOut={handleSignOut}
+              signingOut={signingOut}
               isMobile={isMobile}
               fontScale={fontScale}
               setFontScale={setFontScale}

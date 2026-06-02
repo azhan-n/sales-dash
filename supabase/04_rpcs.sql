@@ -59,6 +59,8 @@ BEGIN
 END;
 $$;
 
--- Grant execute to anon so the dashboard can call them
-GRANT EXECUTE ON FUNCTION get_archive_periods()             TO anon;
-GRANT EXECUTE ON FUNCTION archive_transactions(TEXT)        TO anon;
+-- Grant execute to authenticated users only. These are SECURITY DEFINER and
+-- bypass RLS (archive_transactions deletes the entire transactions table), so
+-- they must NOT be callable by the public anon role.
+GRANT EXECUTE ON FUNCTION get_archive_periods()             TO authenticated;
+GRANT EXECUTE ON FUNCTION archive_transactions(TEXT)        TO authenticated;
