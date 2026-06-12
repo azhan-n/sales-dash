@@ -82,6 +82,28 @@ export const getTodayDate = () => {
   return `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}/${now.getFullYear()}`;
 };
 
+// --- Month label helpers ---
+// Saved monthly records store month as a full label ("April 2026", produced by
+// toLocaleString month:long). Charts need a canonical key so saved and
+// transaction-derived months merge instead of appearing twice.
+const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+// "April 2026" / "Apr 2026" → Date (1st of month). Null if unparseable.
+export const parseMonthLabel = (s) => {
+  if (!s) return null;
+  const m = String(s).trim().match(/^([A-Za-z]+)\.?\s+(\d{4})$/);
+  if (!m) return null;
+  const idx = MONTHS_SHORT.findIndex((n) => m[1].toLowerCase().startsWith(n.toLowerCase()));
+  if (idx === -1) return null;
+  return new Date(Number(m[2]), idx, 1);
+};
+
+// Canonical sortable month key, e.g. "2026-04".
+export const monthKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+
+// Compact chart label, e.g. "Apr '26".
+export const shortMonthYear = (d) => `${MONTHS_SHORT[d.getMonth()]} '${String(d.getFullYear()).slice(-2)}`;
+
 // --- Infer the archive-period label from transactions' dominant month ---
 // Uses normalizeDate so it handles dd/mm/yyyy, dd/mm/yy, or yyyy-mm-dd input.
 // Picks the month with the most rows and formats it as e.g. "April 2026".
@@ -218,11 +240,17 @@ export const exportTransactionsPDF = async (transactions, getCardById, getOwnerB
     doc.text(card.value, x + 10, summaryY + 34);
   });
 
+  // Views pass transactions with `date` already converted to a Date object;
+  // render it as dd/mm/yyyy instead of the default Date string.
+  const pdfDate = (d) => d instanceof Date
+    ? `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`
+    : (d || "-");
+
   const body = transactions.map((t) => {
     const cd = getCardById(t.cardId);
     const ow = getOwnerById(t.ownerId);
     return [
-      t.date || "-",
+      pdfDate(t.date),
       cd?.type || "",
       cd?.number || "",
       ow?.name || "",

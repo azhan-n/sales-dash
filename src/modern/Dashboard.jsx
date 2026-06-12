@@ -3,6 +3,7 @@ import React from "react";
 import { Card, Btn, CardTypeBadge, CardNumBadge, NetBadge, GrossBadge, CostBadge, UsdBadge, RateBadge, MarginBadge, CountBadge, OwnerBadge, fmtFull, fmtUSD, fmtDate, cardColors, useIcons, useCountUp } from "./ui";
 import { TrendChart, Donut, Scatter, Histogram, Sparkline } from "./charts";
 import { aggregateByMonth, aggregateByCardType, computeStats } from "./aggregations";
+import { parseMonthLabel, monthKey, shortMonthYear, exportTransactionsPDF } from "../utils";
 import { OwnerStatsPanel } from "./OwnerStatsPanel";
 
 function HeroStat({ label, value, suffix, theme: t }) {
@@ -123,10 +124,16 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
   const localMonthly = aggregateByMonth(transactions);
 
   // Build combined trend: Supabase monthly records (full history) + current-period computed months.
-  // Current period wins on label collision so live data is always fresh.
-  const trendMap = new Map((monthlyProp || []).map((m) => [m.month, { label: m.month, value: m.profit }]));
-  localMonthly.forEach((m) => trendMap.set(m.label, { label: m.label, value: m.net }));
-  const trendData = [...trendMap.values()];
+  // Both sides are keyed by canonical yyyy-mm so the same month merges instead of
+  // appearing twice; current-period data wins on collision so live data is always fresh.
+  const trendMap = new Map();
+  (monthlyProp || []).forEach((m) => {
+    const d = parseMonthLabel(m.month);
+    const key = d ? monthKey(d) : m.month;
+    trendMap.set(key, { sortKey: d ? key : "", label: d ? shortMonthYear(d) : m.month, value: Number(m.profit) || 0 });
+  });
+  localMonthly.forEach((m) => trendMap.set(m.key, { sortKey: m.key, label: m.label, value: m.net }));
+  const trendData = [...trendMap.values()].sort((a, b) => a.sortKey.localeCompare(b.sortKey));
 
   // Corrected MoM% using Supabase monthly as previous when current period has only 1 month.
   const lastSaved = (monthlyProp || [])[(monthlyProp || []).length - 1];
@@ -155,10 +162,11 @@ export function ModernDashboard({ theme, transactions, monthly: monthlyProp, own
           <h1 style={{ margin: 0, fontSize: t.fz(isMobile ? 22 : 28), fontWeight: 600, letterSpacing: "-0.02em", color: t.text }}>Welcome, Azhan</h1>
           <div style={{ fontSize: t.fz(13), color: t.textSec, marginTop: 4 }}>Here's how your book looks.</div>
         </div>
-        {!isMobile && (
+        {!isMobile && transactions.length > 0 && (
           <div style={{ display: "flex", gap: 8 }}>
-            <Btn theme={t} size="sm">{I.filter(13)} Last 12 months</Btn>
-            <Btn theme={t} size="sm">{I.download(13)} Export</Btn>
+            <Btn theme={t} size="sm" onClick={() => exportTransactionsPDF(transactions, getCard, getOwner, "Overview — Current Period")}>
+              {I.download(13)} Export
+            </Btn>
           </div>
         )}
       </div>
