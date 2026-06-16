@@ -1,15 +1,15 @@
 // Pure aggregation helpers shared across modern views.
-import { parseDate } from "../utils";
+import { parseDate, monthKey, shortMonthYear } from "../utils";
 
 export function aggregateByMonth(txs) {
   const map = new Map();
   txs.forEach((tx) => {
     const d = parseDate(tx.date);
     if (!d) return;
-    const key = d.getFullYear() + "-" + d.getMonth();
+    const key = monthKey(d);
     if (!map.has(key)) map.set(key, {
       key, date: new Date(d.getFullYear(), d.getMonth(), 1),
-      label: d.toLocaleDateString("en-US", { month: "short" }),
+      label: shortMonthYear(d),
       gross: 0, cost: 0, net: 0, count: 0, sellRates: [],
     });
     const m = map.get(key);

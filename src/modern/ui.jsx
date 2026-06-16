@@ -138,6 +138,11 @@ export function CardTypeBadge({ type, theme }) {
 }
 
 // ── Semantic value badges ──────────────────────────────────────────────────
+// Two densities: at table density ("md") only the semantic signals — net
+// profit (+/−) and margin health — keep their colored pills; other figures
+// render as quiet tabular text so rows don't turn into a rainbow. At stat-tile
+// size ("lg") every badge keeps its colored pill so headline KPI cards stay
+// vivid.
 const pill = (color, bg, t, size = "md") => {
   const dims = size === "lg"
     ? { padding: "3px 12px", fontSize: t.fz ? t.fz(20) : 20, fontWeight: 700, letterSpacing: "-0.01em" }
@@ -152,6 +157,16 @@ const pill = (color, bg, t, size = "md") => {
   };
 };
 
+const num = (t, size = "md") => ({
+  display: "inline-flex", alignItems: "center",
+  color: t.text,
+  fontVariantNumeric: "tabular-nums",
+  whiteSpace: "nowrap",
+  ...(size === "lg"
+    ? { fontSize: t.fz ? t.fz(20) : 20, fontWeight: t.fw?.value ?? 600, letterSpacing: "-0.01em" }
+    : { fontSize: t.fz ? t.fz(12) : 12, fontWeight: 500 }),
+});
+
 export function NetBadge({ value, theme: t, size = "md" }) {
   const v = Number(value) || 0;
   const pos = v >= 0;
@@ -159,24 +174,39 @@ export function NetBadge({ value, theme: t, size = "md" }) {
   return <span style={pill(color, color + "22", t, size)}>{pos ? "+" : "−"}{fmtFull(Math.abs(v))}</span>;
 }
 export function GrossBadge({ value, theme: t, size = "md" }) {
-  const color = t.isDark ? "#fdba74" : "#ea580c";
-  const bg    = t.isDark ? "rgba(253,186,116,0.18)" : "#fff7ed";
-  return <span style={pill(color, bg, t, size)}>{fmtFull(Number(value) || 0)}</span>;
+  const text = fmtFull(Number(value) || 0);
+  if (size === "lg") {
+    const color = t.isDark ? "#fdba74" : "#ea580c";
+    const bg    = t.isDark ? "rgba(253,186,116,0.18)" : "#fff7ed";
+    return <span style={pill(color, bg, t, size)}>{text}</span>;
+  }
+  return <span style={num(t, size)}>{text}</span>;
 }
 export function CostBadge({ value, theme: t, size = "md" }) {
-  const color = t.isDark ? "#93c5fd" : "#2563eb";
-  const bg    = t.isDark ? "rgba(147,197,253,0.18)" : "#eff6ff";
-  return <span style={pill(color, bg, t, size)}>{fmtFull(Number(value) || 0)}</span>;
+  const text = fmtFull(Number(value) || 0);
+  if (size === "lg") {
+    const color = t.isDark ? "#93c5fd" : "#2563eb";
+    const bg    = t.isDark ? "rgba(147,197,253,0.18)" : "#eff6ff";
+    return <span style={pill(color, bg, t, size)}>{text}</span>;
+  }
+  return <span style={num(t, size)}>{text}</span>;
 }
 export function UsdBadge({ value, theme: t, size = "md" }) {
-  const color = t.isDark ? "#c4b5fd" : "#7c3aed";
-  const bg    = t.isDark ? "rgba(196,181,253,0.18)" : "#f5f3ff";
-  return <span style={pill(color, bg, t, size)}>{fmtUSD(value)}</span>;
+  if (size === "lg") {
+    const color = t.isDark ? "#c4b5fd" : "#7c3aed";
+    const bg    = t.isDark ? "rgba(196,181,253,0.18)" : "#f5f3ff";
+    return <span style={pill(color, bg, t, size)}>{fmtUSD(value)}</span>;
+  }
+  return <span style={num(t, size)}>{fmtUSD(value)}</span>;
 }
 export function RateBadge({ value, theme: t, decimals = 2, size = "md" }) {
-  const color = t.isDark ? "#5eead4" : "#0f766e";
-  const bg    = t.isDark ? "rgba(94,234,212,0.18)" : "#f0fdfa";
-  return <span style={pill(color, bg, t, size)}>{(Number(value) || 0).toFixed(decimals)}</span>;
+  const text = (Number(value) || 0).toFixed(decimals);
+  if (size === "lg") {
+    const color = t.isDark ? "#5eead4" : "#0f766e";
+    const bg    = t.isDark ? "rgba(94,234,212,0.18)" : "#f0fdfa";
+    return <span style={pill(color, bg, t, size)}>{text}</span>;
+  }
+  return <span style={num(t, size)}>{text}</span>;
 }
 export function MarginBadge({ value, theme: t, size = "md" }) {
   const v = Number(value) || 0;
@@ -187,7 +217,10 @@ export function MarginBadge({ value, theme: t, size = "md" }) {
   return <span style={pill(color, bg, t, size)}>{v.toFixed(1)}%</span>;
 }
 export function CountBadge({ value, theme: t, label = "", size = "md" }) {
-  return <span style={pill(t.accent, t.accentSoft, t, size)}>{Number(value).toLocaleString()}{label && ` ${label}`}</span>;
+  if (size === "lg") {
+    return <span style={pill(t.accent, t.accentSoft, t, size)}>{Number(value).toLocaleString()}{label && ` ${label}`}</span>;
+  }
+  return <span style={num(t, size)}>{Number(value).toLocaleString()}{label && <span style={{ color: t.textMuted, marginLeft: 4 }}>{label}</span>}</span>;
 }
 export function CardNumBadge({ value, theme: t }) {
   return (

@@ -85,7 +85,7 @@ function ToastItem({ toast, onRemove }) {
         fontWeight: "500",
         minWidth: "260px",
         maxWidth: "420px",
-        transform: visible ? "translateX(0)" : "translateX(120%)",
+        transform: visible ? "translateY(0)" : "translateY(-12px)",
         opacity: visible ? 1 : 0,
         transition: "transform 0.3s cubic-bezier(.16,1,.3,1), opacity 0.3s cubic-bezier(.16,1,.3,1)",
         pointerEvents: "auto",
@@ -119,13 +119,17 @@ function ToastContainer({ toasts, onRemove }) {
     <div
       style={{
         position: "fixed",
-        bottom: "1.5rem",
-        right: "1.5rem",
+        top: "calc(1rem + env(safe-area-inset-top))",
+        left: "50%",
+        transform: "translateX(-50%)",
         display: "flex",
         flexDirection: "column",
+        alignItems: "center",
         gap: "0.5rem",
         zIndex: 9999,
         pointerEvents: "none",
+        width: "max-content",
+        maxWidth: "calc(100vw - 2rem)",
       }}
     >
       {toasts.map((t) => (

@@ -7,19 +7,13 @@ const lsSet = (key, val) => { try { localStorage.setItem(key, val); } catch {} }
 import { supabase } from "./supabaseClient";
 import { getThemeColors } from "./themes";
 import { normalizeCardType, getTodayDate, normalizeDate, inferArchivePeriod } from "./utils";
+import { loadFont } from "./fonts";
 import { ToastProvider, useToast } from "./Toast";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { ModernApp } from "./modern/ModernApp";
 import { ErrorBoundary } from "./ErrorBoundary";
 
 const APP_VERSION = typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "dev";
-
-if (typeof document !== 'undefined') {
-  const link = document.createElement('link');
-  link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&family=League+Spartan:wght@300;400;500;600;700;800;900&family=Open+Sans:wght@300;400;500;600;700;800&family=Lexend:wght@300;400;500;600;700;800;900&family=Rethink+Sans:wght@400;500;600;700;800&family=Noto+Sans:wght@300;400;500;600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap';
-  link.rel = 'stylesheet';
-  document.head.appendChild(link);
-}
 
 function AppInner() {
   const toast = useToast();
@@ -57,17 +51,27 @@ function AppInner() {
   useEffect(() => { lsSet("theme", theme); }, [theme]);
   useEffect(() => { lsSet("font", selectedFont); }, [selectedFont]);
 
-  // Sync iOS status bar & body background with theme
+  // Fetch only the active font family (Settings loads the full set for previews).
+  useEffect(() => { loadFont(selectedFont); }, [selectedFont]);
+
+  // Sync iOS status bar & body background with theme. Also drives the
+  // theme-aware bits of styles.css (scrollbars, focus rings) and tells the
+  // browser whether native UI (date pickers etc.) should render dark.
   useEffect(() => {
     document.body.style.backgroundColor = c.bg;
     document.body.style.margin = "0";
+    const root = document.documentElement;
+    root.style.colorScheme = c.isDark ? "dark" : "light";
+    root.style.setProperty("--focus-ring", c.accent);
+    root.style.setProperty("--scrollbar-thumb", c.isDark ? "rgba(255,255,255,0.22)" : "rgba(15,40,70,0.25)");
+    root.style.setProperty("--scrollbar-thumb-hover", c.isDark ? "rgba(255,255,255,0.35)" : "rgba(15,40,70,0.4)");
     let meta = document.querySelector('meta[name="theme-color"]');
     if (!meta) { meta = document.createElement("meta"); meta.name = "theme-color"; document.head.appendChild(meta); }
     meta.content = c.bg;
     const vp = document.querySelector('meta[name="viewport"]');
     if (vp && !vp.content.includes("viewport-fit")) vp.content += ", viewport-fit=cover";
     return () => { document.body.style.backgroundColor = ""; };
-  }, [c.bg]);
+  }, [c.bg, c.isDark, c.accent]);
 
   // Current user email for the Account section in settings
   useEffect(() => {

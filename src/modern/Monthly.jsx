@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Card, Btn, NetBadge, GrossBadge, CountBadge, MarginBadge, fmtFull, useIcons, useCountUp } from "./ui";
 import { TrendChart, StackedBars } from "./charts";
 import { aggregateByMonth, computeStats } from "./aggregations";
-import { exportMonthlyPDF } from "../utils";
+import { exportMonthlyPDF, parseMonthLabel, monthKey, shortMonthYear } from "../utils";
 
 export function ModernMonthly({
   theme,
@@ -35,17 +35,25 @@ export function ModernMonthly({
     { profit: -Infinity, month: "—" }
   );
 
+  // Saved records use full month labels ("April 2026"); normalize to the same
+  // canonical yyyy-mm key + short label the transaction-derived months use so
+  // both sources merge and sort chronologically instead of duplicating months.
+  const savedNorm = monthly.map((m) => {
+    const d = parseMonthLabel(m.month);
+    return { key: d ? monthKey(d) : m.month, sortKey: d ? monthKey(d) : "", label: d ? shortMonthYear(d) : m.month, value: Number(m.profit) || 0 };
+  });
+
   // Trend chart data: prefer saved monthly records (full history) over computed from current txs
   const trendData = monthly.length > 0
-    ? monthly.map((m) => ({ label: m.month, value: Number(m.profit) || 0 }))
+    ? [...savedNorm].sort((a, b) => a.sortKey.localeCompare(b.sortKey))
     : txMonthly.map((m) => ({ label: m.label, value: m.net }));
 
   // Combined gross/cost data: Supabase records (net only, no cost breakdown) + current txMonthly (full)
   const grossCostMap = new Map(
-    monthly.map((m) => [m.month, { label: m.month, gross: Number(m.profit) || 0, cost: 0, net: Number(m.profit) || 0 }])
+    savedNorm.map((m) => [m.key, { sortKey: m.sortKey, label: m.label, gross: m.value, cost: 0, net: m.value }])
   );
-  txMonthly.forEach((m) => grossCostMap.set(m.label, { label: m.label, gross: m.gross, cost: m.cost, net: m.net }));
-  const grossCostData = [...grossCostMap.values()];
+  txMonthly.forEach((m) => grossCostMap.set(m.key, { sortKey: m.key, label: m.label, gross: m.gross, cost: m.cost, net: m.net }));
+  const grossCostData = [...grossCostMap.values()].sort((a, b) => a.sortKey.localeCompare(b.sortKey));
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -249,7 +257,7 @@ export function ModernMonthly({
             const w = Math.max(2, Math.abs(m.net) / max * 100);
             return (
               <div key={m.key} style={{ padding: isMobile ? "10px 16px" : "12px 20px", borderTop: `1px solid ${t.border}`, display: "grid", gridTemplateColumns: isMobile ? "minmax(0, 1fr) 90px" : "minmax(0, 80px) 1fr 110px", gap: 12, alignItems: "center" }}>
-                <div style={{ fontSize: t.fz(12), color: t.textSec, fontWeight: 500 }}>{m.label} {m.date.getFullYear()}</div>
+                <div style={{ fontSize: t.fz(12), color: t.textSec, fontWeight: 500 }}>{m.label}</div>
                 {!isMobile && (
                   <div style={{ height: 8, background: t.surfaceDeep, borderRadius: 4, overflow: "hidden", position: "relative" }}>
                     <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${w}%`, background: pos ? t.positive : t.negative, borderRadius: 4, transition: "width .3s" }} />

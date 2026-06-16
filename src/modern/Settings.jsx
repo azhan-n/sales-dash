@@ -3,6 +3,7 @@ import React from "react";
 import { Card, Btn } from "./ui";
 import { THEME_OPTIONS, FONTS } from "../themes";
 import { ICON_PACKS, ICON_PACK_KEYS } from "../iconPacks";
+import { loadAllFonts } from "../fonts";
 
 export function ModernSettings({
   theme, currentTheme, setTheme, font, setFont,
@@ -14,6 +15,10 @@ export function ModernSettings({
   boldText = false, setBoldText,
 }) {
   const t = theme;
+
+  // Only the active font is loaded app-wide; pull in the rest so each
+  // option in the font picker can preview in its own typeface.
+  React.useEffect(() => { loadAllFonts(); }, []);
 
   const sectionAnim = (i) => ({ animation: `slideUp .38s cubic-bezier(.16,1,.3,1) ${Math.min(i, 6) * 0.05}s both` });
 
